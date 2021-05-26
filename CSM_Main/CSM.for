@@ -120,7 +120,7 @@ C     The variable "ISWITCH" is of type "SwitchType".
       TYPE (SwitchType) ISWITCH
 
 !C-----------------------------------------------------------------------
-      !Commit for TravisCI
+
       DONE = .FALSE.
       YRDOY_END = 9999999
 
