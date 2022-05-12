@@ -259,6 +259,7 @@ set(
         "Plant/CERES-IXIM-Maize/MZ_IX_RADABS.for"
         "Plant/CERES-IXIM-Maize/MZ_IX_RESPIR.for"
         "Plant/CERES-Maize/MZ_CERES.for"
+        "Plant/CERES-Maize/MZ_FreshWt.for"
         "Plant/CERES-Maize/MZ_GROSUB.for"
         "Plant/CERES-Maize/MZ_KUPTAK.for"
         "Plant/CERES-Maize/MZ_NFACTO.for"
