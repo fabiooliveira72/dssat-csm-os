@@ -1,7 +1,7 @@
 !======================================================================
 !  MZ_FreshWt, Subroutine
 !
-!  Maize fresh weight 
+!  Maize fresh weight
 !----------------------------------------------------------------------
 !  Revision history
 !  04/21/2008 CHP Written.
@@ -14,13 +14,13 @@
 !  Called : MZ_GROSUB?
 !----------------------------------------------------------------------
 
-      SUBROUTINE MZ_FreshWt (ISWITCH, ISWFWT, 
-     &    CUMDTTEG, EARS, EARWT, ISTAGE, MDATE, SLPF, 
+      SUBROUTINE MZ_FreshWt (ISWITCH, ISWFWT,
+     &    CUMDTTEG, EARS, EARWT, ISTAGE, MDATE, SLPF,
      &    STGDOY, SUMDTT, SWFAC, NSTRES, YRPLT,
 ! KJB- PASS IN WTNCAN, WTNSD, WTNVEG, STOVWT, TOPWT, PODWT, SDWT, SKERWT, SHELPC, P5, RELDTTEG
-     &    WTNCAN, WTNSD, WTNVEG, STOVWT, TOPWT, 
+     &    WTNCAN, WTNSD, WTNVEG, STOVWT, TOPWT,
      &    PODWT, SDWT, SKERWT, SHELPC, P5,RELDTTEG)
-!----------------------------------------------------------------------     
+!----------------------------------------------------------------------
       USE ModuleDefs
       USE ModuleData
       IMPLICIT  NONE
@@ -36,22 +36,22 @@
 ! KJB - REAL FOR:  VEGDMC, SLPVEG, SLPGRN, MILKZ0, GRNDMC,STAVEG, STAGRN, STACON, CONDIG, OMDIG, NEL, UFL, UFL2, UFLHA
       REAL        VEGDMC, SLPVEG, SLPGRN, MILKZ0
       REAL        GRNDMC,STAVEG, STAGRN, STACON, CONDIG, OMDIG
-      REAL        NEL, UFL, UFL2, UFLHA, MILKLN, STATOT
+      REAL        NEL, UFL, UFL2, UFLHA, MILKLN, STATCON
 
       REAL        EARS1_2
       REAL        FWYLD1_2
-      REAL        CUMDTTEG      
-      INTEGER     DOY         
-      INTEGER     DYNAMIC     
+      REAL        CUMDTTEG
+      INTEGER     DOY
+      INTEGER     DYNAMIC
       REAL        EARDMC
       REAL        EARFWT
       REAL        EARMKT
-      REAL        EARS        
-      REAL        EARWT       
-      CHARACTER*6 ERRKEY 
+      REAL        EARS
+      REAL        EARWT
+      CHARACTER*6 ERRKEY
       PARAMETER       (ERRKEY='MZ_FWt')
       CHARACTER*6  SECTION
-      CHARACTER*10, PARAMETER :: SGFile = "FORAGE.OUT"  
+      CHARACTER*10, PARAMETER :: SGFile = "FORAGE.OUT"
       CHARACTER*12 FILES
       CHARACTER*30 FILEIO
       CHARACTER*80 C80
@@ -60,17 +60,19 @@
       REAL        EARSFCY
       REAL        FWYLDFCY
       REAL        FWYIELD
-      INTEGER     ISTAGE  
-      CHARACTER*1 ISWFWT  
+      INTEGER     ISTAGE
+      CHARACTER*1 ISWFWT
       INTEGER     MDATE
       REAL        MKTFWYLD
       INTEGER     NOUTSG
-      REAL        NSTRES      
+      REAL        NSTRES
       REAL        SLPF
-      INTEGER     STGDOY(20) 
-      REAL        SUMDTT      
-      REAL        SWFAC       
+      INTEGER     STGDOY(20)
+      REAL        SUMDTT
+      REAL        SWFAC
       REAL        XFWYLDFCY
+      REAL        IRDMC
+      REAL        CVGDMC
       INTEGER     YRDOY
       INTEGER     LUNIO, LNUM, LUNCRP, FOUND, ISECT
 
@@ -79,7 +81,7 @@
       INTEGER DAP, DAS, ERRNUM, FROP, TIMDIF, YEAR, YRPLT, ERR
 
       TYPE (ControlType) CONTROL
-  
+
       IF (ISWFWT == 'N' .OR. ISWITCH % IDETG == 'N') RETURN
 
       CALL GET (CONTROL)
@@ -109,15 +111,16 @@
           WRITE (NOUTSG, 1002)
 
  1002 FORMAT ('@YEAR DOY   DAS   DAP',
-     &   ' TOTFW VEGDM TOTDM EARFW EARDM EARFR SDFRC',
-     &   ' TOPWT PODWT  SDWT MILKL STATO OMDIG   NEL   UFL  UFL2')
+     &   '  TOFWT  VGDMC  TODMC  ERFWT  ERDMC  SDDMC  ERFRC  SDFRC',
+     &   '  TOPWT  PODWT   SDWT  MILKL  STCON  OMDIG    NEL',
+     &   '    UFL   UFL2  UFLHA')
 
 C READ AND PASS IN:  VEGDMC, SLPVEG, SLPGRN, MILKZ0, STAVEG, STAGRN, CONDIG
 !-------------------------------------------------------
 !     Read input file name (ie. DSSAT45.INP) and path
 !-------------------------------------------------------
       CALL GETLUN('FILEIO', LUNIO)
-      OPEN (LUNIO, FILE = FILEIO,STATUS = 'OLD',IOSTAT=ERR)  
+      OPEN (LUNIO, FILE = FILEIO,STATUS = 'OLD',IOSTAT=ERR)
       IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILEIO,0)
       REWIND (LUNIO)
       READ(LUNIO,50,IOSTAT=ERR) FILES, PATHSR; LNUM = 7
@@ -140,19 +143,20 @@ C READ AND PASS IN:  VEGDMC, SLPVEG, SLPGRN, MILKZ0, STAVEG, STAGRN, CONDIG
         !IGNORE HEADER Line
         CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
         CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
-        READ(C80,'(7(F7.0))',IOSTAT=ERR)
-     &     VEGDMC,STAVEG,SLPVEG,SLPGRN,STAGRN,CONDIG,MILKZ0 
+        READ(C80,'(9(F7.0))',IOSTAT=ERR)
+     &     VEGDMC,STAVEG,SLPVEG,SLPGRN,STAGRN,CONDIG,MILKZ0,IRDMC,
+     &     CVGDMC
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
 
       ENDIF
-      
+
       CLOSE(LUNCRP)
-      
-      
-      WRITE(*,*) "FORAGE SILAGE SPE:", 
-     & VEGDMC,STAVEG,SLPVEG,SLPGRN,STAGRN,CONDIG,MILKZ0 
+
+
+      WRITE(*,*) "FORAGE SILAGE SPE:",
+     & VEGDMC,STAVEG,SLPVEG,SLPGRN,STAGRN,CONDIG,MILKZ0
 !----------------------------------------------------------------
-      
+
 C  SET TO ZERO FOR NEW VARIABLES COMPUTED HERE (NOT IN LIST BELOW, LOOK ABOVE FOR NEW REAL)
           EARS1_2   = 0.0
           FWYLD1_2  = 0.0
@@ -168,21 +172,18 @@ C  SET TO ZERO FOR NEW VARIABLES COMPUTED HERE (NOT IN LIST BELOW, LOOK ABOVE FO
 !-----------------------------------------------------------------------
 !                     DYNAMIC = INTEGR
 !-----------------------------------------------------------------------
-      ELSEIF(DYNAMIC.EQ.INTEGR) THEN   
-   
+      ELSEIF(DYNAMIC.EQ.INTEGR) THEN
+
           IF (ISTAGE .EQ. 3) THEN
 
 ! JIL 04/03/2006 Calculate ear fresh weight
               IF (CUMDTTEG .GT. 0.001) THEN
-                EARDMC = 0.05 + 0.0002 * CUMDTTEG ! Fraction (0.05-0.1)
+                EARDMC = IRDMC + 0.0002 * CUMDTTEG ! Fraction (0.05-0.1)
                 PODFWT = PODWT / EARDMC           ! g/M2
 ! KJB - NEW MATH:  VEGDMC = 0.18 (NEED THIS AS EXTERNAL CONSTANT)
-                VEGDMC = 0.18
-                STAVEG = 0.20
-                CONDIG = 0.30
 ! KJB -           TOTFWT = TOPWT / VEGDMC
 ! KJB - MAYBE INCREASE TOTDMC AS EARDMC STARTS TO INCREASE.  SEPARATE PART MATH
-                TOTFWT = (TOPWT-PODWT) * VEGDMC + PODWT/EARDMC
+                TOTFWT = (TOPWT-PODWT) * CVGDMC + PODWT/EARDMC
                 TOTDMC = TOPWT / TOTFWT
                 EARFRC = PODWT / TOPWT
                 SDFRC = 0.0
@@ -208,17 +209,14 @@ C  THIS COMES FROM BRAGA ET AL. 2008
 !      --------------------------------------------------------------------
 
           ELSEIF (ISTAGE .EQ. 4) THEN
-            
+
 ! JIL 04/03/2006 Calculate ear fresh weight
-            EARDMC = 0.1 + 0.0002*SUMDTT
+            EARDMC = IRDMC + 0.05 + 0.0002*SUMDTT
             PODFWT = PODWT / EARDMC           ! g/M2
 ! KJB -  NEW MATH:  VEGDMC = 0.18 (NEED THIS AS EXTERNAL CONSTANT)
-            VEGDMC = 0.18
-            STAVEG = 0.20
-            CONDIG = 0.30
 ! KJB -            TOTFWT = TOPWT / VEGDMC
 ! KJB - MAYBE INCREASE TOTDMC AS EARDMC STARTS TO INCREASE.  SEPARATE PART MATH
-            TOTFWT = (TOPWT-PODWT) * VEGDMC + PODWT/EARDMC
+            TOTFWT = (TOPWT-PODWT) * CVGDMC + PODWT/EARDMC
             TOTDMC = TOPWT / TOTFWT
             EARFRC = PODWT / TOPWT
             SDFRC = 0.0
@@ -244,20 +242,9 @@ C  THIS COMES FROM BRAGA ET AL. 2008
           ELSEIF (ISTAGE .EQ. 5) THEN
 
 ! JIL 04/03/2006 Calculate ear fresh weight
-            EARDMC = 0.1 + 0.0002*SUMDTT
+            EARDMC = IRDMC + 0.05 + 0.0002*SUMDTT
             PODFWT = PODWT / EARDMC           ! g/M2
-! KJB - NEW MATH:  VEGDMC = 0.18 (NEED THIS AS EXTERNAL CONSTANT)
-            VEGDMC = 0.18
-            STAVEG = 0.20
-            SLPVEG =  0.8
-            SLPGRN =  3.0
-            STAGRN = 20.0
-            CONDIG = 0.30
-            MILKZ0 = 200.
 ! KJB -           TOTFWT = TOPWT / VEGDMC
-! KJB -  MAYBE INCREASE TOTDMC AS EARDMC STARTS TO INCREASE.  SEPARATE PART MATH
-            TOTFWT = (TOPWT-PODWT) * VEGDMC + PODWT/EARDMC
-            TOTDMC = TOPWT / TOTFWT
 ! KJB -  POSSIBLY NEED TO USE SDDMC AS A FUNCION OF MILKLN, AND NEW MATH FOR TOTFWT AND TOTDMC
             EARFRC = PODWT / TOPWT
             SDFRC = SDWT / TOPWT
@@ -267,8 +254,12 @@ C  THIS COMES FROM BRAGA ET AL. 2008
             IF (SUMDTT .GE. MILKZ0) THEN
               MILKLN = (SUMDTT - MILKZ0) / P5
             ENDIF
-            VEGDMC = VEGDMC + SLPVEG * MILKLN
+! KJB - COMMENTED OUT VEGDMC IS BAD
+            VEGDMC = CVGDMC + SLPVEG * MILKLN
             GRNDMC = VEGDMC * 2.0 + SLPGRN * MILKLN
+! KJB -  MAYBE INCREASE TOTDMC AS EARDMC STARTS TO INCREASE.  SEPARATE PART MATH
+            TOTFWT = (TOPWT-PODWT) / VEGDMC + PODWT/EARDMC
+            TOTDMC = TOPWT / TOTFWT
 ! KJB -  TOTAL?           STATOT = SDWT*CONS2*MILKLN+ TOPWT * 0.05 (CONS2 AND 0.05 MAY WANT EXTERNAL CONSTANTS).  !GET CONC,DIVIDE THIS BY TOPWT?
 ! KJB - STACON AND OMDIG ARE FRACTIONS
 ! KJB -           STACON = CONS2*MILKLN+ STAVEG (CONS2 AND 0.05 MAY WANT EXTERNAL CONSTANTS AS STARCH CONCENTRATIONS)
@@ -276,7 +267,7 @@ C  THIS COMES FROM BRAGA ET AL. 2008
 ! KJB -           OMDIG = STACON + 6.25 * WTNCAN/TOPWT + CONDIG (CONDIG IS DIGESTIBILITY OF NON-PROTEIN, NON-STARCH)
 ! KJB -    ASSUMES THAT STARCH AND PROTEIN ARE 100% DIGESTIBLE.
             OMDIG = STACON + 6.25 * WTNCAN/TOPWT + CONDIG
-            NEL = 0.0174 * OMDIG + 0.000076 * OMDIG * OMDIG
+            NEL = 0.0174*(OMDIG*100.0)+0.000076*(OMDIG * 100.0)**2
 ! KJB - FROM FLORES (2004)  UNITS ARE  MCal/kgDM
             UFL = NEL / 1.70
             UFLHA = UFL * TOPWT
@@ -285,7 +276,7 @@ C  THIS COMES FROM BRAGA ET AL. 2008
 ! KJB - FOR ALTERNATIVE TO GET TO UFL,
             UFL2 = EARFRC * 1.08 + (1.0 - EARFRC) * 0.61
 ! KJB -  THIS COMES FROM BRAGA ET AL. 2008
-          ENDIF    
+          ENDIF
 
 
 !----------------------------------------------------------------------
@@ -305,7 +296,7 @@ C  THIS COMES FROM BRAGA ET AL. 2008
 
 !            Max fraction of Fancy FW in Marketable FW
           IF (MKTFWYLD .GT. 0.0) THEN
-             XFWYLDFCY = AMAX1(0.0,0.919 * (1.0-EXP(-0.00012*MKTFWYLD)))   
+             XFWYLDFCY = AMAX1(0.0,0.919 * (1.0-EXP(-0.00012*MKTFWYLD)))
              FWYLDFCY = XFWYLDFCY * MKTFWYLD
              EARSFCY  = 4.053 * FWYLDFCY
           ELSE
@@ -320,11 +311,10 @@ C  THIS COMES FROM BRAGA ET AL. 2008
 !----------------------------------------------------------------------
 !                     DYNAMIC = OUTPUT
 !----------------------------------------------------------------------
-      
+
       ELSEIF(DYNAMIC.EQ.OUTPUT) THEN
 
 !     04/04/2006 JIL, Output file for sweet corn fresh mass simulation
-
       IF (ISTAGE .GE. 3) THEN
 
         FROP = CONTROL % FROP
@@ -333,21 +323,25 @@ C  THIS COMES FROM BRAGA ET AL. 2008
         DAP  = TIMDIF(YRPLT, YRDOY)
 
         IF ((MOD(DAS,FROP) .EQ. 0)    !Daily output every FROP days,
-     &      .OR. (YRDOY .EQ. STGDOY(3))     !on tassel init date, and
-     &      .OR. (YRDOY .EQ. MDATE)) THEN   !at harvest maturity 
+!     &      .OR. (YRDOY .EQ. STGDOY(3))     !on tassel init date, and
+     &      .OR. (YRDOY .EQ. MDATE)) THEN   !at harvest maturity
 
           CALL YR_DOY(YRDOY, YEAR, DOY)
- 
+
  ! KJB - NEW OUTPUT:  TOTFWT,VEGDMC, TOTDMC, EARFWT,EARDMC, EARFRC,SDFRC,TOPWT, PODWT,SDWT,
  ! KJB - NEW OUTPUT:  TOTDMC, VEGDMC, SLPVEG, SLPGRN, GRNDMC, STAVEG, STAGRN, CONDIG, MILKLN,STACON,OMDIG,NEL,UFL,UFL2, UFLHA
  ! KJB - TOTFWT & UFLHA & OTHERS? NEED TO BE OUTPUT PER HECTARE.  SEE OTHER OUTPUT MATH, AND MULTIPLY BY 10 TO GO G/M2 TO KG/HA
 
  ! FO - Write output for Forage.OUT
-           WRITE (NOUTSG,1111) YEAR, DOY, DAS, DAP, TOTFWT,VEGDMC,
-     &            TOTDMC, EARFWT,EARDMC, EARFRC,SDFRC,TOPWT,
-     &            PODWT,SDWT,MILKLN,STATOT,OMDIG,NEL,UFL,UFL2
-          
- 1111 FORMAT (1X,I4,1X,I3.3,2(1X,I5),16(F6.1))
+           WRITE (NOUTSG,1111) YEAR, DOY, DAS, DAP,
+     &            NINT(TOTFWT*10),VEGDMC,TOTDMC,
+     &            NINT(PODFWT*10.0),EARDMC, GRNDMC,
+     &            EARFRC,SDFRC,NINT(TOPWT* 10.),
+     &            NINT(PODWT*10.0),NINT(SDWT*10.0),
+     &            MILKLN,STACON,OMDIG,NEL,UFL,UFL2,NINT(UFLHA*10.0)
+
+ 1111 FORMAT(1X,I4,1X,I3.3,2(1X,I5),I7,2(F7.2),
+     &       I7,4(F7.2),3(I7),6(F7.2),I7)
 
         ENDIF
       ENDIF
@@ -363,7 +357,5 @@ C  THIS COMES FROM BRAGA ET AL. 2008
       ENDIF       !Endif for DYNAMIC LOOP
 
       RETURN
-      
+
       END SUBROUTINE MZ_FreshWt
-
-

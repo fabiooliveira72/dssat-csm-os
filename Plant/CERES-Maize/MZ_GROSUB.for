@@ -97,7 +97,8 @@
       REAL        CO2         
       REAL        CSD1        
       REAL        CSD2        
-      REAL        CUMDTTEG      
+      REAL        CUMDTTEG
+      REAL        RELDTTEG      
       REAL        CURV
       REAL        DLAYR(NL)   
       REAL        DS(NL)   
@@ -106,7 +107,8 @@
       REAL        DTT         
       REAL        DUMMY           
       INTEGER     DYNAMIC     
-      REAL        EARS        
+      REAL        EARS
+      REAL        EAR        
       REAL        EARWT       
       CHARACTER*6     ECONO 
       INTEGER     EMAT        
@@ -297,7 +299,7 @@
       REAL        TNLAB
       REAL        TMIN        
       REAL        TOPWT
-      REAL        TOTNUP      
+      REAL        TOTNUP
       REAL        TRNU    
       REAL        TRWUP
       REAL        TSEN
@@ -360,6 +362,7 @@
       TYPE (ResidueType) SENESCE 
       TYPE (SwitchType)  ISWITCH
   
+      CHARACTER*1 ISWFWT  
 !----------------------------------------------------------------------
 !     CHP 3/31/2006
 !     Proportion of lignin in STOVER and Roots
@@ -668,6 +671,7 @@ C-GH 60     FORMAT(25X,F5.2,13X,F5.2,7X,F5.2)
 !          CSD2   = 0.0
           CMAT   = 0
           CUMDTTEG=0.0
+          RELDTTEG=0.0
           CumLeafSenes = 0.0
           CumLeafSenesY = 0.0
           CumLfNSenes = 0.0
@@ -675,6 +679,7 @@ C-GH 60     FORMAT(25X,F5.2,13X,F5.2,7X,F5.2)
 !          DM     = 0.0
           DUMMY  = 0.0
           EARS   = 0.0 
+          EAR    = 0.0 
           EARWT  = 0.0
           EMAT   = 0
           EP1    = 0.0
@@ -838,6 +843,13 @@ C-GH 60     FORMAT(25X,F5.2,13X,F5.2,7X,F5.2)
      &      PConc_Shut, PConc_Root, PConc_Shel, PConc_Seed, !Output
      &      PStres1, PStres2, PUptake, FracRts)             !Output
 
+! FO - Added CALL for MZ_FreshWt
+      ISWFWT = 'Y'
+      CALL MZ_FreshWt (ISWITCH, ISWFWT, 
+     &    CUMDTTEG, EARS, EARWT, ISTAGE, MDATE, SLPF, 
+     &    STGDOY, SUMDTT, SWFAC, NSTRES, YRPLT,
+     &    WTNCAN, WTNSD, WTNVEG, STOVWT, TOPWT, 
+     &    PODWT, SDWT, SKERWT, SHELPC, P5,RELDTTEG)
 !-----------------------------------------------------------------------  
 !-----------------------------------------------------------------------
 !
@@ -1980,6 +1992,15 @@ C-GH 60     FORMAT(25X,F5.2,13X,F5.2,7X,F5.2)
           CumLfNSenes = CumLfNSenes + 
      &               (CumLeafSenes - CumLeafSenesY) * STOVN / STOVWT
 
+
+! FO - Added CALL for MZ_FreshWt
+      ISWFWT = 'Y'
+      CALL MZ_FreshWt (ISWITCH, ISWFWT, 
+     &    CUMDTTEG, EARS, EARWT, ISTAGE, MDATE, SLPF, 
+     &    STGDOY, SUMDTT, SWFAC, NSTRES, YRPLT,
+     &    WTNCAN, WTNSD, WTNVEG, STOVWT, TOPWT, 
+     &    PODWT, SDWT, SKERWT, SHELPC, P5,RELDTTEG)
+
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
 !
@@ -2025,6 +2046,14 @@ C-GH 60     FORMAT(25X,F5.2,13X,F5.2,7X,F5.2)
      &      PConc_Shut, PConc_Root, PConc_Shel, PConc_Seed, !Output
      &      PStres1, PStres2, PUptake, FracRts)             !Output
 
+! FO - Added CALL for MZ_FreshWt
+      ISWFWT = 'Y'
+          CALL MZ_FreshWt (ISWITCH, ISWFWT, 
+     &    CUMDTTEG, EARS, EARWT, ISTAGE, MDATE, SLPF, 
+     &    STGDOY, SUMDTT, SWFAC, NSTRES, YRPLT,
+     &    WTNCAN, WTNSD, WTNVEG, STOVWT, TOPWT, 
+     &    PODWT, SDWT, SKERWT, SHELPC, P5,RELDTTEG)
+
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
 !
@@ -2066,6 +2095,13 @@ C-GH 60     FORMAT(25X,F5.2,13X,F5.2,7X,F5.2)
      &      PConc_Shut, PConc_Root, PConc_Shel, PConc_Seed, !Output
      &      PStres1, PStres2, PUptake, FracRts)             !Output
 
+! FO - Added CALL for MZ_FreshWt
+      ISWFWT = 'Y'
+        CALL MZ_FreshWt (ISWITCH, ISWFWT, 
+     &    CUMDTTEG, EARS, EARWT, ISTAGE, MDATE, SLPF, 
+     &    STGDOY, SUMDTT, SWFAC, NSTRES, YRPLT,
+     &    WTNCAN, WTNSD, WTNVEG, STOVWT, TOPWT, 
+     &    PODWT, SDWT, SKERWT, SHELPC, P5,RELDTTEG)
 !       Senesced leaves do not fall to the ground and so are added to
 !         surface litter only at harvest.
         SENESCE % ResWt(0)  = CumLeafSenes
@@ -2300,12 +2336,12 @@ C-GH 60     FORMAT(25X,F5.2,13X,F5.2,7X,F5.2)
 ! WSIDOT      !Stem loss due to pests, g stem/m2/day
 
 
-! WTNCAN      !Weight of nitrogen in above ground biomass (stem, leaf, grain), kg N/ha
-! WTNLF       !Weight of nitrogen in leaf tissue, kg N/ha
+! WTNCAN      !Weight of nitrogen in above ground biomass (stem, leaf, grain), g[N] / m2[ground]
+! WTNLF       !Weight of nitrogen in leaf tissue, g[N] / m2[ground]
 ! WTNSD       !Weight of nitrogen in seed, g[N] / m2[ground]
-! WTNST       !Weight of nitrogen in stem tissue, kg N/ha
+! WTNST       !Weight of nitrogen in stem tissue, g[N] / m2[ground]
 ! WTNUP       !Total N uptake, g/m2
-! WTNVEG      !Weight of nitrogen in vegetative tissue, kg N/ha
+! WTNVEG      !Weight of nitrogen in vegetative tissue, g[N] / m2[ground]
 ! XANC        !Nitrogen concentration in above ground biomass %
 ! XHLAI       !Healthy leaf area index used to compute transpiration in water balance routine, m2/m2
 ! XLFWT       !New leaf weight today, g/plant

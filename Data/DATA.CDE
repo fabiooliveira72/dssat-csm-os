@@ -1351,6 +1351,25 @@ RSRWH  Resid. Stor.Wt. Residual storage organ weight after forage harv. (kg/ha) 
 RRTWH  Resid. Root Wt. Residual root weight after forage harvest (kg/ha)        .
 RLAIH  Resid. LAI      Residual leaf area index after forage harvest            .
 
+*SILAGE
+@CDE   LABEL           DESCRIPTION............................................  SYNONYMS
+TOTFW  Lavel Silage    Description Silage                                       .
+VEGDM  Lavel Silage    Description Silage                                       .
+TOTDM  Lavel Silage    Description Silage                                       .
+EARFW  Lavel Silage    Description Silage                                       .
+EARDM  Lavel Silage    Description Silage                                       .
+EARFR  Lavel Silage    Description Silage                                       .
+SDFRC  Lavel Silage    Description Silage                                       .
+TOPWT  Lavel Silage    Description Silage                                       .
+PODWT  Lavel Silage    Description Silage                                       .
+SDWT   Lavel Silage    Description Silage                                       .
+MILKL  Lavel Silage    Description Silage                                       .
+STATO  Lavel Silage    Description Silage                                       .
+OMDIG  Lavel Silage    Description Silage                                       .
+NEL    Lavel Silage    Description Silage                                       .
+UFL    Lavel Silage    Description Silage                                       .
+UFL2   Lavel Silage    Description Silage                                       .
+
 *Greenhouse Gas Emissions
 CCEQC  CO2eq-CO2      CO2 emissions as CO2 equivalent (kg[CO2eq]/ha)            .
 CH4BLC Cum_CH4_bal     Cumulative CH4 balance (kg[C]/ha)                        .
