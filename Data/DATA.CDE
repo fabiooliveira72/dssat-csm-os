@@ -1353,26 +1353,26 @@ RLAIH  Resid. LAI      Residual leaf area index after forage harvest            
 
 *SILAGE
 @CDE   LABEL           DESCRIPTION............................................  SYNONYMS
-TOFWT  Lavel Silage    Description Silage                                       .
-VGDMC  Lavel Silage    Description Silage                                       .
-TODMC  Lavel Silage    Description Silage                                       .
-ERFWT  Lavel Silage    Description Silage                                       .
-ERDMC  Lavel Silage    Description Silage                                       .
-SDDMC  Lavel Silage    Description Silage                                       .
-ERFRC  Lavel Silage    Description Silage                                       .
-SDFRC  Lavel Silage    Description Silage                                       .
-TOPWT  Lavel Silage    Description Silage                                       .
-PODWT  Lavel Silage    Description Silage                                       .
-SDWT   Lavel Silage    Description Silage                                       .
-MILKL  Lavel Silage    Description Silage                                       .
-STCON  Lavel Silage    Description Silage                                       .
-STPCT  Lavel Silage    Description Silage                                       .
-CPPCT  Lavel Silage    Description Silage                                       .
-OMDIG  Lavel Silage    Description Silage                                       .
-NEL    Lavel Silage    Description Silage                                       .
-UFL    Lavel Silage    Description Silage                                       .
-UFL2   Lavel Silage    Description Silage                                       .
-UFLHA  Lavel Silage    Description Silage                                       .
+TOFWT  Tot Fresh,kg/ha Total top fresh weigfht (kg FW/ha)                       .
+VGDMC  Veg DM conc, %  DM concentration, vegetative (%)                         .
+TODMC  Top DM conc, %  DM concentration, total top (%)                          .
+ERFWT  Ear Fresh,kg/ha Ear fresh weigfht (kg FW/ha)                             .
+ERDMC  Ear DM conc, %  DM concentration, ear (%)                                .
+SDDMC  Seed DM conc,%  DM concentration, grain (%)                              .
+ERFRC  Ear/top ratio   Ear harvest index (ear/top)                              .
+SDFRC  Seed/top ratio  Grain harvest index (grain or seed/top)                  .
+TOPWT  Tops wt kg/ha   Tops weight (kg [dm]/ha)                                 .
+PODWT  Ear wt. kg/ha   Ear (grain+chaff)(kg [dm]/ha)                            .
+SDWT   Seed wt. kg/ha  Seed or grain (kg [dm]/ha)                               .
+MILKL  Milk line, 0-1  Milk line, e.g. hard endosperm, 0 to 1                   .
+STCON  Starch, 0-1     Starch concentration, fraction, 0-1                      .
+STPCT  Starch conc,%   Starch or TNC conc of total plant, %                     .
+CPPCT  Crude prot,%    Crude protein of total plant, %                          .
+OMDIG  OM digest-pl,%  Organic matter digestibility, total plant, %             .
+NEL    Energylactati   Net energy for lactation,??                              .
+UFL    UFL, MC/kg      Feed units for milk, MgCal/kg,via OMDIG                  .
+UFL2   UFL2, MC/kg     Feed units for milk,MgCal/kg,via ear/top ratio,Braga     .
+UFLHA  UFLHA,MgCal/ha  Feed units for milk, MgCal/ha                            .
 
 *Greenhouse Gas Emissions
 CCEQC  CO2eq-CO2      CO2 emissions as CO2 equivalent (kg[CO2eq]/ha)            .
