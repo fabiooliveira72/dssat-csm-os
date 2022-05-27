@@ -78,9 +78,11 @@
 
 *FORAGE SILAGE
 
- VEGDMC STAVEG SLPVEG SLPGRN STAGRN CONDIG MILKZ0  IRDMC CVGDMC SLPMLK
-   0.18   0.20   0.11    0.7   0.24   0.24   160.   0.14   0.22    1.0
+ STAVEG SLPVEG SLPGRN STAGRN CONDIG MILKZ0  IRDMC CVGDMC SLPMLK
+   0.20   0.11    0.7   0.24   0.24   160.   0.14   0.22    1.0
 
+*FRESH WEIGHT
+     Y                      Switch for fresh weight option
 !At emergence and end of leaf growth: 
 !Optimum shoot P concentration (%) = 0.684 - 0.108X (Jones, 1983) 
 !At physiological maturity: 

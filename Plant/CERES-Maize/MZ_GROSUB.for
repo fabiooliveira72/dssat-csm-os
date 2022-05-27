@@ -645,6 +645,17 @@ C-GH 60     FORMAT(25X,F5.2,13X,F5.2,7X,F5.2)
         READ(C80,'(9X,F6.3)',IOSTAT=ERR) RWUEP1
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
       ENDIF
+      
+      ISWFWT = 'N'
+      SECTION = '*FRESH'
+      REWIND(LUNCRP)
+      CALL FIND(LUNCRP, SECTION, LNUM, FOUND)
+      IF (FOUND /= 0) THEN
+        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+        IF (INDEX(C80(1:10),'Y') > 0) THEN
+          ISWFWT = 'Y'
+        ENDIF
+      ENDIF
 
       CLOSE (LUNCRP)
 
@@ -848,7 +859,6 @@ C-GH 60     FORMAT(25X,F5.2,13X,F5.2,7X,F5.2)
      &      PStres1, PStres2, PUptake, FracRts)             !Output
 
 ! FO - Added CALL for MZ_FreshWt
-      ISWFWT = 'Y'
       CALL MZ_FreshWt (ISWITCH, ISWFWT, 
      &    CUMDTTEG, EARS, EARWT, ISTAGE, MDATE, SLPF, 
      &    STGDOY, SUMDTT, SWFAC, NSTRES, YRPLT,
@@ -2000,7 +2010,6 @@ C-GH 60     FORMAT(25X,F5.2,13X,F5.2,7X,F5.2)
 
 
 ! FO - Added CALL for MZ_FreshWt
-      ISWFWT = 'Y'
       CALL MZ_FreshWt (ISWITCH, ISWFWT, 
      &    CUMDTTEG, EARS, EARWT, ISTAGE, MDATE, SLPF, 
      &    STGDOY, SUMDTT, SWFAC, NSTRES, YRPLT,
@@ -2055,7 +2064,6 @@ C-GH 60     FORMAT(25X,F5.2,13X,F5.2,7X,F5.2)
      &      PStres1, PStres2, PUptake, FracRts)             !Output
 
 ! FO - Added CALL for MZ_FreshWt
-      ISWFWT = 'Y'
           CALL MZ_FreshWt (ISWITCH, ISWFWT, 
      &    CUMDTTEG, EARS, EARWT, ISTAGE, MDATE, SLPF, 
      &    STGDOY, SUMDTT, SWFAC, NSTRES, YRPLT,
@@ -2106,7 +2114,6 @@ C-GH 60     FORMAT(25X,F5.2,13X,F5.2,7X,F5.2)
      &      PStres1, PStres2, PUptake, FracRts)             !Output
 
 ! FO - Added CALL for MZ_FreshWt
-      ISWFWT = 'Y'
         CALL MZ_FreshWt (ISWITCH, ISWFWT, 
      &    CUMDTTEG, EARS, EARWT, ISTAGE, MDATE, SLPF, 
      &    STGDOY, SUMDTT, SWFAC, NSTRES, YRPLT,

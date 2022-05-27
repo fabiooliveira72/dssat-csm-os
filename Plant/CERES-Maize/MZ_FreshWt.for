@@ -74,7 +74,7 @@
       REAL        XFWYLDFCY
       REAL        IRDMC
       REAL        CVGDMC
-      REAL        STPCT, CPPCT, SLPMLK
+      REAL        STPCT, CPPCT, SLPMLK, COBDMC, SDFWT
       INTEGER     YRDOY
       INTEGER     LUNIO, LNUM, LUNCRP, FOUND, ISECT
 
@@ -88,7 +88,7 @@
 
       CALL GET (CONTROL)
       DYNAMIC = CONTROL%DYNAMIC
-      FILEIO  = CONTROL % FILEIO
+      FILEIO  = CONTROL % FILEIO 
 
 !----------------------------------------------------------------------
 !                     DYNAMIC = SEASINIT
@@ -101,6 +101,7 @@
         TOTDMC   = 0.0
         PODFWT   = 0.0
         EARDMC   = 0.0
+        COBDMC   = 0.0
         GRNDMC   = 0.0
         EARFRC   = 0.0
         SDFRC   = 0.0
@@ -117,6 +118,7 @@
         UFL2   = 0.0
         UFLHA   = 0.0
         WTNCAN   = 0.0
+        
 ! FO - FORAGE.OUT file
           CALL GETLUN(SGFile,  NOUTSG)
 
@@ -134,11 +136,11 @@
           WRITE (NOUTSG, 1002)
 
  1002 FORMAT ('@YEAR DOY   DAS   DAP',
-     &   '  TOFWT  VGDMC  TODMC  ERFWT  ERDMC  SDDMC  ERFRC  SDFRC',
-     &   '  TOPWT  PODWT   SDWT  MILKL  STCON  STPCT  CPPCT  OMDIG',
-     &   '    NEL    UFL   UFL2  UFLHA  WTNCA')
+     &   '  TOFWT  VGDMC  TODMC  ERFWT  ERDMC  SDFWT  SDDMC  ERFRC',  
+     &   '  SDFRC  TOPWT  PODWT   SDWT  MILKL  STCON  STPCT  CPPCT',  
+     &   '  OMDIG    NEL    UFL   UFL2  UFLHA  WTNCA')
 
-C READ AND PASS IN:  VEGDMC, SLPVEG, SLPGRN, MILKZ0, STAVEG, STAGRN, CONDIG
+C READ AND PASS IN: SLPVEG, SLPGRN, MILKZ0, STAVEG, STAGRN, CONDIG
 !-------------------------------------------------------
 !     Read input file name (ie. DSSAT45.INP) and path
 !-------------------------------------------------------
@@ -154,7 +156,6 @@ C READ AND PASS IN:  VEGDMC, SLPVEG, SLPGRN, MILKZ0, STAVEG, STAGRN, CONDIG
 !----------------------------------------------------------------
       FILECC =  TRIM(PATHSR) // FILES
       CALL GETLUN('FILEC', LUNCRP)
-      WRITE(*,*) FILECC
       OPEN (LUNCRP,FILE = FILECC, STATUS = 'OLD',IOSTAT=ERR)
       IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,0)
 
@@ -166,14 +167,17 @@ C READ AND PASS IN:  VEGDMC, SLPVEG, SLPGRN, MILKZ0, STAVEG, STAGRN, CONDIG
         !IGNORE HEADER Line
         CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
         CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
-        READ(C80,'(10(F7.0))',IOSTAT=ERR)
-     &     VEGDMC,STAVEG,SLPVEG,SLPGRN,STAGRN,CONDIG,MILKZ0,IRDMC,
+        READ(C80,'(9(F7.0))',IOSTAT=ERR)
+     &     STAVEG,SLPVEG,SLPGRN,STAGRN,CONDIG,MILKZ0,IRDMC,
      &     CVGDMC, SLPMLK
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
 
       ENDIF
 
       CLOSE(LUNCRP)
+      
+      !Initialize 
+      VEGDMC = CVGDMC
 !----------------------------------------------------------------
 
 C  SET TO ZERO FOR NEW VARIABLES COMPUTED HERE (NOT IN LIST BELOW, LOOK ABOVE FOR NEW REAL)
@@ -218,12 +222,13 @@ C  SET TO ZERO FOR NEW VARIABLES COMPUTED HERE (NOT IN LIST BELOW, LOOK ABOVE FO
 
 ! JIL 04/03/2006 Calculate ear fresh weight
               IF (CUMDTTEG .GT. 0.001) THEN
-                EARDMC = IRDMC + 0.0002 * CUMDTTEG ! Fraction (0.05-0.1)
-                PODFWT = PODWT / EARDMC           ! g/M2
+                COBDMC = IRDMC + 0.0002 * CUMDTTEG ! Fraction (0.05-0.1)
+                PODFWT = PODWT / COBDMC           ! g/M2
+                EARDMC = COBDMC
 ! KJB - NEW MATH:  VEGDMC = 0.18 (NEED THIS AS EXTERNAL CONSTANT)
 ! KJB -           TOTFWT = TOPWT / VEGDMC
 ! KJB - MAYBE INCREASE TOTDMC AS EARDMC STARTS TO INCREASE.  SEPARATE PART MATH
-                TOTFWT = (TOPWT-PODWT) / CVGDMC + PODWT/EARDMC
+                TOTFWT = (TOPWT-PODWT) / CVGDMC + PODWT/COBDMC
                 TOTDMC = TOPWT / TOTFWT
                 EARFRC = PODWT / TOPWT
                 SDFRC = 0.0
@@ -253,13 +258,14 @@ C  THIS COMES FROM BRAGA ET AL. 2008
 
           ELSEIF (ISTAGE .EQ. 4) THEN
 
-! JIL 04/03/2006 Calculate ear fresh weight
-            EARDMC = IRDMC + 0.05 + 0.0002*SUMDTT
-            PODFWT = PODWT / EARDMC           ! g/M2
+! JIL 04/03/2006 Calculate cob fresh weight (Ear - grain)
+            COBDMC = IRDMC + 0.05 + 0.0002*SUMDTT
+            PODFWT = PODWT / COBDMC           ! g/M2
+            EARDMC = COBDMC
 ! KJB -  NEW MATH:  VEGDMC = 0.18 (NEED THIS AS EXTERNAL CONSTANT)
 ! KJB -            TOTFWT = TOPWT / VEGDMC
 ! KJB - MAYBE INCREASE TOTDMC AS EARDMC STARTS TO INCREASE.  SEPARATE PART MATH
-            TOTFWT = (TOPWT-PODWT) / CVGDMC + PODWT/EARDMC
+            TOTFWT = (TOPWT-PODWT) / CVGDMC + PODWT/COBDMC
             TOTDMC = TOPWT / TOTFWT
             EARFRC = PODWT / TOPWT
             SDFRC = 0.0
@@ -288,8 +294,8 @@ C  THIS COMES FROM BRAGA ET AL. 2008
           ELSEIF (ISTAGE .EQ. 5) THEN
 
 ! JIL 04/03/2006 Calculate ear fresh weight
-            EARDMC = IRDMC + 0.05 + 0.0002*SUMDTT
-            PODFWT = PODWT / EARDMC           ! g/M2
+            COBDMC = IRDMC + 0.05 + 0.0002*SUMDTT
+            PODFWT = PODWT / COBDMC           ! g/M2
 ! KJB -           TOTFWT = TOPWT / VEGDMC
 ! KJB -  POSSIBLY NEED TO USE SDDMC AS A FUNCION OF MILKLN, AND NEW MATH FOR TOTFWT AND TOTDMC
             EARFRC = PODWT / TOPWT
@@ -304,10 +310,10 @@ C  THIS COMES FROM BRAGA ET AL. 2008
             VEGDMC = CVGDMC + SLPVEG * MILKLN
             GRNDMC = VEGDMC + SLPGRN * MILKLN
 ! KJB -  MAYBE INCREASE TOTDMC AS EARDMC STARTS TO INCREASE.  SEPARATE PART MATH
-            TOTFWT = (TOPWT-PODWT) / VEGDMC + (PODWT - SDWT)/EARDMC +
-     &                SDWT / GRNDMC
+            SDFWT  = SDWT / GRNDMC
+            EARFWT = (PODWT - SDWT) / COBDMC + SDFWT
+            TOTFWT = (TOPWT-PODWT) / VEGDMC + EARFWT
             TOTDMC = TOPWT / TOTFWT
-            EARFWT = (PODWT - SDWT) / EARDMC + SDWT / GRNDMC
             EARDMC = PODWT / EARFWT
 
             PODFWT = PODWT / EARDMC           ! g/M2
@@ -393,14 +399,15 @@ C  THIS COMES FROM BRAGA ET AL. 2008
  ! FO - Write output for Forage.OUT
            WRITE (NOUTSG,1111) YEAR, DOY, DAS, DAP,
      &            NINT(TOTFWT*10),VEGDMC*100.0,TOTDMC*100.0,
-     &            NINT(PODFWT*10.0),EARDMC*100.0, GRNDMC*100.0,
+     &            NINT(PODFWT*10.0),EARDMC*100.0,NINT(SDFWT*10.0), 
+     &            GRNDMC*100.0,
      &            EARFRC,SDFRC,NINT(TOPWT* 10.),
      &            NINT(PODWT*10.0),NINT(SDWT*10.0),
      &            MILKLN,STACON,STPCT,CPPCT,OMDIG,
      &            NEL,UFL,UFL2,NINT(UFLHA*10.0),WTNCAN*10.0
 
  1111 FORMAT(1X,I4,1X,I3.3,2(1X,I5),I7,2(F7.2),
-     &       I7,4(F7.2),3(I7),8(F7.2),I7,F7.1)
+     &       I7,F7.2,I7,3(F7.2),3(I7),8(F7.2),I7,F7.1)
 
         ENDIF
       ENDIF

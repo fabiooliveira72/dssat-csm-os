@@ -1353,10 +1353,11 @@ RLAIH  Resid. LAI      Residual leaf area index after forage harvest            
 
 *SILAGE
 @CDE   LABEL           DESCRIPTION............................................  SYNONYMS
-TOFWT  Tot Fresh,kg/ha Total top fresh weigfht (kg FW/ha)                       .
+TOFWT  Tot Fresh,kg/ha Total top fresh weight (kg FW/ha)                        .
 VGDMC  Veg DM conc, %  DM concentration, vegetative (%)                         .
 TODMC  Top DM conc, %  DM concentration, total top (%)                          .
-ERFWT  Ear Fresh,kg/ha Ear fresh weigfht (kg FW/ha)                             .
+ERFWT  Ear Fresh,kg/ha Ear fresh weight (kg FW/ha)                              .
+SDFWT  Seed Fre. kg/ha Seed Fresh weight (kg FW/ha)                             .
 ERDMC  Ear DM conc, %  DM concentration, ear (%)                                .
 SDDMC  Seed DM conc,%  DM concentration, grain (%)                              .
 ERFRC  Ear/top ratio   Ear harvest index (ear/top)                              .
@@ -1369,7 +1370,7 @@ STCON  Starch, 0-1     Starch concentration, fraction, 0-1                      
 STPCT  Starch conc,%   Starch or TNC conc of total plant, %                     .
 CPPCT  Crude prot,%    Crude protein of total plant, %                          .
 OMDIG  OM digest-pl,%  Organic matter digestibility, total plant, %             .
-NEL    Energylactati   Net energy for lactation,??                              .
+NEL    Energy lac.     Net energy for lactation,??                              .
 UFL    UFL, MC/kg      Feed units for milk, MgCal/kg,via OMDIG                  .
 UFL2   UFL2, MC/kg     Feed units for milk,MgCal/kg,via ear/top ratio,Braga     .
 UFLHA  UFLHA,MgCal/ha  Feed units for milk, MgCal/ha                            .
