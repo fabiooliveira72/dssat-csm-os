@@ -1373,6 +1373,7 @@ NEL    Energylactati   Net energy for lactation,??                              
 UFL    UFL, MC/kg      Feed units for milk, MgCal/kg,via OMDIG                  .
 UFL2   UFL2, MC/kg     Feed units for milk,MgCal/kg,via ear/top ratio,Braga     .
 UFLHA  UFLHA,MgCal/ha  Feed units for milk, MgCal/ha                            .
+WTNCA  Total N kg/ha   Tops Nitrogen at harvest (kg/ha)                         .
 
 *Greenhouse Gas Emissions
 CCEQC  CO2eq-CO2      CO2 emissions as CO2 equivalent (kg[CO2eq]/ha)            .

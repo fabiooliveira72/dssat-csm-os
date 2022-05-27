@@ -19,7 +19,8 @@
      &    STGDOY, SUMDTT, SWFAC, NSTRES, YRPLT,
      &    WTNCAN, WTNSD, WTNVEG, STOVWT, TOPWT,
      &    PODWT, SDWT, SKERWT, SHELPC, P5,RELDTTEG,
-     &    TOTFWT)
+     &    TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN, 
+     &    STPCT, OMDIG, CPPCT, UFL, UFLHA)
 !----------------------------------------------------------------------
       USE ModuleDefs
       USE ModuleData
