@@ -25,8 +25,9 @@ C  02/09/2007 GH  Add path for FileA
      &    TOPWT, TURFAC,WTNCAN, WTNUP, XGNP, XLAI, XN,    !Input
      &    YIELD, YREMRG, YRPLT,                           !Input
      &    BWAH, SDWTAH,                                   !Output
-     &    TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN,  !Input
-     &    STPCT, OMDIG, CPPCT, UFL, UFLHA)                !Input
+     &    TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC, !Output
+     &    GRNDMC,MILKLN,                                  !Output
+     &    STPCT, OMDIG, CPPCT, UFL, UFLHA)                !Output
 
 !-----------------------------------------------------------------------
       USE ModuleDefs     !Definitions of constructed variable types, 
@@ -53,8 +54,9 @@ C  02/09/2007 GH  Add path for FileA
       INTEGER TRT_ROT
       INTEGER STGDOY(20)
       
-      REAL TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN    
-      REAL STPCT, OMDIG, CPPCT, UFL, UFLHA  
+      REAL TOTFWT, PODFWT, TOTDMC, EARDMC
+      REAL EARFRC, COBDMC, GRNDMC,MILKLN
+      REAL STPCT, OMDIG, CPPCT, UFL, UFLHA
       
       REAL AGEFAC, APTNUP, BWAH, BWAM, CANNAA, CANWAA
       REAL GNUP, GPP, GPSM, HI, StovSenes
@@ -97,7 +99,7 @@ C  02/09/2007 GH  Add path for FileA
       StovSenes = SENESCE % ResWt(0)
 
 !-----------------------------------------------------------------------
-      ACOUNT = 33  !Number of FILEA headings.
+      ACOUNT = 35  !Number of FILEA headings.
 !     Headings in FILEA for Measured data
       DATA OLAB /
      &    'ADAT  ',     !1  DFLR 
@@ -131,15 +133,18 @@ C  02/09/2007 GH  Add path for FileA
      &    'TOFWT ',     !23 TOTFWT
      &    'ERFWT ',     !24 PODFWT
      &    'TODMC ',     !25 TOTDMC
-     &    'ERDMC ',     !26 EARDMC
-     &    'SDDMC ',     !27 GRNDMC
-     &    'MILKL ',     !28 MILKLN
-     &    'STPCT ',     !29 STPCT
-     &    'OMDIG ',     !30 OMDIG
-     &    'CPPCT ',     !31 CPPCT
-     &    'UFL   ',     !32 UFL
-     &    'UFLHA ',     !33 UFLHA
-     &    7*'      '/  
+     &    'COBMC ',     !26 COBDMC
+     &    'ERDMC ',     !27 EARDMC
+     &    'ERFRC ',     !28 ERFRC
+     &    'SDDMC ',     !29 GRNDMC
+     &    'MILKL ',     !30 MILKLN
+     &    'STPCT ',     !31 STPCT
+     &    'OMDIG ',     !32 OMDIG
+     &    'CPPCT ',     !33 CPPCT
+     &    'UFL   ',     !34 UFL
+     &    'UFLHA ',     !35 UFLHA
+     &    5*'      '/
+ 
  
 !-----------------------------------------------------------------------
       DATA STNAME /   !Stage
@@ -431,7 +436,8 @@ C  02/09/2007 GH  Add path for FileA
       WRITE(Simulated(4),'(I8)') DNR7;  WRITE(Measured(4),'(I8)') DMAT    !MDAT
       WRITE(Simulated(5),'(I8)') NINT(YIELD)
                                         WRITE(Measured(5),'(A8)') X(5)    !HWAM
-      WRITE(Simulated(6),'(I8)') -99 ;  WRITE(Measured(6),'(I8)') -99     !PWAM
+      WRITE(Simulated(6),'(I8)') NINT(PODWT*10.0)
+                                        WRITE(Measured(6),'(A8)') X(6)    !PWAM
       WRITE(Simulated(7),'(I8)') NINT(GPSM)
                                         WRITE(Measured(7),'(A8)') X(7)    !H#AM
       WRITE(Simulated(8),'(F8.4)') SKERWT
@@ -467,22 +473,26 @@ C  02/09/2007 GH  Add path for FileA
                                         WRITE(Measured(24),'(A8)') X(24)  !PODFWT                                   
       WRITE(Simulated(25),'(F8.2)') TOTDMC*100.0
                                         WRITE(Measured(25),'(A8)') X(25)  !TOTDMC
-      WRITE(Simulated(26),'(F8.2)') EARDMC*100.0
-                                        WRITE(Measured(26),'(A8)') X(26)  !EARDMC
-      WRITE(Simulated(27),'(F8.2)') GRNDMC*100.0
-                                        WRITE(Measured(27),'(A8)') X(27)  !GRNDMC
-      WRITE(Simulated(28),'(F8.2)') MILKLN
-                                        WRITE(Measured(28),'(A8)') X(28)  !MILKLN
-      WRITE(Simulated(29),'(F8.2)') STPCT
-                                        WRITE(Measured(29),'(A8)') X(29)  !STPCT
-      WRITE(Simulated(30),'(F8.2)') OMDIG
-                                        WRITE(Measured(30),'(A8)') X(30)  !OMDIG                                        
-      WRITE(Simulated(31),'(F8.2)') CPPCT
-                                        WRITE(Measured(31),'(A8)') X(31)  !CPPCT                                        
-      WRITE(Simulated(32),'(F8.2)') UFL
-                                        WRITE(Measured(32),'(A8)') X(32)  !UFL                                        
-      WRITE(Simulated(33),'(I8)') NINT(UFLHA*10.0)
-                                        WRITE(Measured(33),'(A8)') X(33)  !UFLHA                                     
+      WRITE(Simulated(26),'(F8.2)') COBDMC*100.0
+                                        WRITE(Measured(26),'(A8)') X(26)  !COBDMC
+      WRITE(Simulated(27),'(F8.2)') EARDMC*100.0
+                                        WRITE(Measured(27),'(A8)') X(27)  !EARDMC
+      WRITE(Simulated(28),'(F8.2)') EARFRC
+                                        WRITE(Measured(28),'(A8)') X(28)  !EARFRC
+      WRITE(Simulated(29),'(F8.2)') GRNDMC*100.0
+                                        WRITE(Measured(29),'(A8)') X(29)  !GRNDMC
+      WRITE(Simulated(30),'(F8.2)') MILKLN
+                                        WRITE(Measured(30),'(A8)') X(30)  !MILKLN
+      WRITE(Simulated(31),'(F8.2)') STPCT
+                                        WRITE(Measured(31),'(A8)') X(31)  !STPCT
+      WRITE(Simulated(32),'(F8.2)') OMDIG
+                                        WRITE(Measured(32),'(A8)') X(32)  !OMDIG
+      WRITE(Simulated(33),'(F8.2)') CPPCT
+                                        WRITE(Measured(33),'(A8)') X(33)  !CPPCT
+      WRITE(Simulated(34),'(F8.2)') UFL
+                                        WRITE(Measured(34),'(A8)') X(34)  !UFL
+      WRITE(Simulated(35),'(I8)') NINT(UFLHA*10.0)
+                                        WRITE(Measured(35),'(A8)') X(35)  !UFLHA
       ENDIF
 
 !-------------------------------------------------------------------

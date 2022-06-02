@@ -45,8 +45,9 @@ C======================================================================
       SAVE
 
 !----------------------------------------------------------------------
-      REAL        TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN    
-      REAL        STPCT, OMDIG, CPPCT, UFL, UFLHA  
+      REAL        TOTFWT, PODFWT, TOTDMC, EARDMC
+      REAL        EARFRC, COBDMC, GRNDMC,MILKLN
+      REAL        STPCT, OMDIG, CPPCT, UFL, UFLHA
       
       REAL            AGEFAC    
       REAL            AMTRH(TS)
@@ -356,7 +357,8 @@ C----------------------------------------------------------------------
      &      UNO3, VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST,  !Output
      &      WTNUP, WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD,      !Output
      &      KUptake, KSTRES,                                  !Output
-     &      TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN,    !Output
+     &      TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,   !Output
+     &      GRNDMC,MILKLN,                                    !Output
      &      STPCT, OMDIG, CPPCT, UFL, UFLHA)                  !Output
           CASE ('MZIXM')  !IXIM Maize
           CALL MZ_IX_GROSUB (DYNAMIC, ISWITCH, 
@@ -432,8 +434,9 @@ C----------------------------------------------------------------------
      &    TOPWT, TURFAC,WTNCAN, WTNUP, XGNP, XLAI, XN,    !Input
      &    YIELD, YREMRG, YRPLT,                           !Input
      &    BWAH, SDWTAH,                                   !Output
-     &    TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN,  !Input
-     &    STPCT, OMDIG, CPPCT, UFL, UFLHA)                !Input
+     &    TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC, !Output
+     &    GRNDMC,MILKLN,                                  !Output
+     &    STPCT, OMDIG, CPPCT, UFL, UFLHA)                !Output
 
           CALL PEST(CONTROL, ISWITCH, 
      &    AREALF, CLW, CSW, LAGSD, LNGPEG, NR2, CARBO,    !Input
@@ -513,7 +516,8 @@ C-----------------------------------------------------------------------
      &      UNO3, VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST,  !Output
      &      WTNUP, WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD,      !Output
      &      KUptake, KSTRES,                                  !Output
-     &      TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN,    !Output
+     &      TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,   !Output
+     &      GRNDMC,MILKLN,                                    !Output
      &      STPCT, OMDIG, CPPCT, UFL, UFLHA)                  !Output
           CASE ('MZIXM')  !IXIM Maize
           CALL MZ_IX_GROSUB (DYNAMIC, ISWITCH, 
@@ -586,8 +590,9 @@ C-----------------------------------------------------------------------
      &    TOPWT, TURFAC,WTNCAN, WTNUP, XGNP, XLAI, XN,    !Input
      &    YIELD, YREMRG, YRPLT,                           !Input
      &    BWAH, SDWTAH,                                   !Output
-     &    TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN,  !Input
-     &    STPCT, OMDIG, CPPCT, UFL, UFLHA)                !Input
+     &    TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC, !Output
+     &    GRNDMC,MILKLN,                                  !Output
+     &    STPCT, OMDIG, CPPCT, UFL, UFLHA)                !Output
 
 C----------------------------------------------------------------------
 C----------------------------------------------------------------------
@@ -681,7 +686,8 @@ C----------------------------------------------------------------------
      &      UNO3, VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST,  !Output
      &      WTNUP, WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD,      !Output
      &      KUptake, KSTRES,                                  !Output
-     &      TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN,    !Output
+     &      TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,   !Output
+     &      GRNDMC,MILKLN,                                    !Output
      &      STPCT, OMDIG, CPPCT, UFL, UFLHA)                  !Output
 
           CASE ('MZIXM')  !IXIM Maize
@@ -784,7 +790,8 @@ C----------------------------------------------------------------------
      &      UNO3, VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST,  !Output
      &      WTNUP, WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD,      !Output
      &      KUptake, KSTRES,                                  !Output
-     &      TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN,    !Output
+     &      TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,   !Output
+     &      GRNDMC,MILKLN,                                    !Output
      &      STPCT, OMDIG, CPPCT, UFL, UFLHA)                  !Output
           CASE ('MZIXM')  !IXIM Maize
           CALL MZ_IX_GROSUB (DYNAMIC, ISWITCH, 
@@ -851,8 +858,9 @@ C----------------------------------------------------------------------
      &    TOPWT, TURFAC,WTNCAN, WTNUP, XGNP, XLAI, XN,    !Input
      &    YIELD, YREMRG, YRPLT,                           !Input
      &    BWAH, SDWTAH,                                   !Output
-     &    TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN,  !Input
-     &    STPCT, OMDIG, CPPCT, UFL, UFLHA)                !Input
+     &    TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC, !Output
+     &    GRNDMC,MILKLN,                                  !Output
+     &    STPCT, OMDIG, CPPCT, UFL, UFLHA)                !Output
 
       IF (ISWDIS.EQ.'Y') THEN
         CALL PEST(CONTROL, ISWITCH, 
@@ -896,7 +904,8 @@ C----------------------------------------------------------------------
      &      UNO3, VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST,  !Output
      &      WTNUP, WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD,      !Output
      &      KUptake, KSTRES,                                  !Output
-     &      TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN,    !Output
+     &      TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,   !Output
+     &      GRNDMC,MILKLN,                                    !Output
      &      STPCT, OMDIG, CPPCT, UFL, UFLHA)                  !Output
           CASE ('MZIXM')  !IXIM Maize
           CALL MZ_IX_GROSUB (DYNAMIC, ISWITCH, 
@@ -962,8 +971,9 @@ C----------------------------------------------------------------------
      &    TOPWT, TURFAC,WTNCAN, WTNUP, XGNP, XLAI, XN,    !Input
      &    YIELD, YREMRG, YRPLT,                           !Input
      &    BWAH, SDWTAH,                                   !Output
-     &    TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN,  !Input
-     &    STPCT, OMDIG, CPPCT, UFL, UFLHA)                !Input
+     &    TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC, !Output
+     &    GRNDMC,MILKLN,                                  !Output
+     &    STPCT, OMDIG, CPPCT, UFL, UFLHA)                !Output
 
         CALL HRes_Ceres(CONTROL,
      &    CROP, DLAYR, GRNWT, HARVFRAC, NLAYR,            !Input

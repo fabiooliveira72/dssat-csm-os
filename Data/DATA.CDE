@@ -1356,6 +1356,7 @@ RLAIH  Resid. LAI      Residual leaf area index after forage harvest            
 TOFWT  Tot Fresh,kg/ha Total top fresh weight (kg FW/ha)                        .
 VGDMC  Veg DM conc, %  DM concentration, vegetative (%)                         .
 TODMC  Top DM conc, %  DM concentration, total top (%)                          .
+COBMC  Seed DM conc,%  DM concentration, cob (%)                                .
 ERFWT  Ear Fresh,kg/ha Ear fresh weight (kg FW/ha)                              .
 SDFWT  Seed Fre. kg/ha Seed Fresh weight (kg FW/ha)                             .
 ERDMC  Ear DM conc, %  DM concentration, ear (%)                                .

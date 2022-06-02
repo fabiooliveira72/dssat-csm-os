@@ -19,7 +19,8 @@
      &    STGDOY, SUMDTT, SWFAC, NSTRES, YRPLT,
      &    WTNCAN, WTNSD, WTNVEG, STOVWT, TOPWT,
      &    PODWT, SDWT, SKERWT, SHELPC, P5,RELDTTEG,
-     &    TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN, 
+     &    TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,
+     &    GRNDMC,MILKLN,
      &    STPCT, OMDIG, CPPCT, UFL, UFLHA)
 !----------------------------------------------------------------------
       USE ModuleDefs
@@ -75,6 +76,7 @@
       REAL        IRDMC
       REAL        CVGDMC
       REAL        STPCT, CPPCT, SLPMLK, COBDMC, SDFWT
+      REAL        SLPCOB, COBDMCIS4
       INTEGER     YRDOY
       INTEGER     LUNIO, LNUM, LUNCRP, FOUND, ISECT
 
@@ -136,9 +138,9 @@
           WRITE (NOUTSG, 1002)
 
  1002 FORMAT ('@YEAR DOY   DAS   DAP',
-     &   '  TOFWT  VGDMC  TODMC  ERFWT  ERDMC  SDFWT  SDDMC  ERFRC',  
-     &   '  SDFRC  TOPWT  PODWT   SDWT  MILKL  STCON  STPCT  CPPCT',  
-     &   '  OMDIG    NEL    UFL   UFL2  UFLHA  WTNCA')
+     &   '  TOFWT  VGDMC  TODMC  ERFWT  ERDMC  SDFWT  COBMC  SDDMC',
+     &   '  ERFRC  SDFRC  TOPWT  PODWT   SDWT  MILKL  STCON  STPCT',
+     &   '  CPPCT  OMDIG    NEL    UFL   UFL2  UFLHA  WTNCA')
 
 C READ AND PASS IN: SLPVEG, SLPGRN, MILKZ0, STAVEG, STAGRN, CONDIG
 !-------------------------------------------------------
@@ -260,6 +262,7 @@ C  THIS COMES FROM BRAGA ET AL. 2008
 
 ! JIL 04/03/2006 Calculate cob fresh weight (Ear - grain)
             COBDMC = IRDMC + 0.05 + 0.0002*SUMDTT
+            COBDMCIS4 = COBDMC
             PODFWT = PODWT / COBDMC           ! g/M2
             EARDMC = COBDMC
 ! KJB -  NEW MATH:  VEGDMC = 0.18 (NEED THIS AS EXTERNAL CONSTANT)
@@ -294,25 +297,29 @@ C  THIS COMES FROM BRAGA ET AL. 2008
           ELSEIF (ISTAGE .EQ. 5) THEN
 
 ! JIL 04/03/2006 Calculate ear fresh weight
-            COBDMC = IRDMC + 0.05 + 0.0002*SUMDTT
-            PODFWT = PODWT / COBDMC           ! g/M2
+! KJB/FO - Removed this equation and calculated using
+!      a dummy COBDMCIS4 as a function of MILKLN
+!            COBDMC = IRDMC + 0.05 + 0.0002*SUMDTT
+!            COBDMC = IRDMC + 0.05 + SLPCOB * 0.0005 * SUMDTT
+!            PODFWT = PODWT / COBDMC           ! g/M2
 ! KJB -           TOTFWT = TOPWT / VEGDMC
-! KJB -  POSSIBLY NEED TO USE SDDMC AS A FUNCION OF MILKLN, AND NEW MATH FOR TOTFWT AND TOTDMC
             EARFRC = PODWT / TOPWT
             SDFRC = SDWT / TOPWT
 ! KJB -           MILKLN = FUNCTION OF P5 PROGRESS (0 TO 1.00 CAN WE CREATE IT, 0 STARTS LATER THAN ONSET ISTAGE 5, ENDS PRIOR TO END ISTAGE 5)
 ! KJB -           NEED VALUE FOR SUMDTT, OR FRACTION OF DISTANCE OF P5
-! FO - Commented:            MILKLN = IF (SUMDTT .GE. MILKZ0) THEN MILKLN = (SUMDTT - MILKZ0) /P5
             IF (SUMDTT .GE. MILKZ0) THEN
               MILKLN = SLPMLK * (SUMDTT - MILKZ0) / P5
+            ELSE
+              MILKLN = 0.0
             ENDIF
 ! KJB - COMMENTED OUT VEGDMC IS BAD
             VEGDMC = CVGDMC + SLPVEG * MILKLN
+            COBDMC = COBDMCIS4 + SLPCOB * MILKLN
             GRNDMC = VEGDMC + SLPGRN * MILKLN
 ! KJB -  MAYBE INCREASE TOTDMC AS EARDMC STARTS TO INCREASE.  SEPARATE PART MATH
             SDFWT  = SDWT / GRNDMC
             EARFWT = (PODWT - SDWT) / COBDMC + SDFWT
-            TOTFWT = (TOPWT-PODWT) / VEGDMC + EARFWT
+            TOTFWT = (TOPWT - PODWT) / VEGDMC + EARFWT
             TOTDMC = TOPWT / TOTFWT
             EARDMC = PODWT / EARFWT
 
@@ -399,15 +406,15 @@ C  THIS COMES FROM BRAGA ET AL. 2008
  ! FO - Write output for Forage.OUT
            WRITE (NOUTSG,1111) YEAR, DOY, DAS, DAP,
      &            NINT(TOTFWT*10),VEGDMC*100.0,TOTDMC*100.0,
-     &            NINT(PODFWT*10.0),EARDMC*100.0,NINT(SDFWT*10.0), 
-     &            GRNDMC*100.0,
+     &            NINT(PODFWT*10.0),EARDMC*100.0,NINT(SDFWT*10.0),
+     &            COBDMC*100.0,GRNDMC*100.0,
      &            EARFRC,SDFRC,NINT(TOPWT* 10.),
      &            NINT(PODWT*10.0),NINT(SDWT*10.0),
      &            MILKLN,STACON,STPCT,CPPCT,OMDIG,
      &            NEL,UFL,UFL2,NINT(UFLHA*10.0),WTNCAN*10.0
 
  1111 FORMAT(1X,I4,1X,I3.3,2(1X,I5),I7,2(F7.2),
-     &       I7,F7.2,I7,3(F7.2),3(I7),8(F7.2),I7,F7.1)
+     &       I7,F7.2,I7,4(F7.2),3(I7),8(F7.2),I7,F7.1)
 
         ENDIF
       ENDIF

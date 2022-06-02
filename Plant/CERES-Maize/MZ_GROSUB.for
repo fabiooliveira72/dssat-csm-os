@@ -59,7 +59,8 @@
      &      UNO3, VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST,  !Output
      &      WTNUP, WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD,      !Output
      &      KUptake, KSTRES,                                  !Output
-     &      TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN,    !Output
+     &      TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,   !Output
+     &      GRNDMC,MILKLN,                                    !Output
      &      STPCT, OMDIG, CPPCT, UFL, UFLHA)                  !Output
      
       USE ModuleDefs
@@ -69,8 +70,9 @@
 !----------------------------------------------------------------------
 !                         Variable Declaration
 !----------------------------------------------------------------------
-      REAL        TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN    
-      REAL        STPCT, OMDIG, CPPCT, UFL, UFLHA             
+      REAL        TOTFWT, PODFWT, TOTDMC, EARDMC
+      REAL        EARFRC, COBDMC, GRNDMC,MILKLN
+      REAL        STPCT, OMDIG, CPPCT, UFL, UFLHA           
       
       REAL        AGEFAC            
       REAL        APTNUP      
@@ -864,7 +866,8 @@ C-GH 60     FORMAT(25X,F5.2,13X,F5.2,7X,F5.2)
      &    STGDOY, SUMDTT, SWFAC, NSTRES, YRPLT,
      &    WTNCAN, WTNSD, WTNVEG, STOVWT, TOPWT, 
      &    PODWT, SDWT, SKERWT, SHELPC, P5,RELDTTEG,
-     &    TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN, 
+     &    TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,
+     &    GRNDMC,MILKLN,
      &    STPCT, OMDIG, CPPCT, UFL, UFLHA)
 !-----------------------------------------------------------------------  
 !-----------------------------------------------------------------------
@@ -2015,7 +2018,8 @@ C-GH 60     FORMAT(25X,F5.2,13X,F5.2,7X,F5.2)
      &    STGDOY, SUMDTT, SWFAC, NSTRES, YRPLT,
      &    WTNCAN, WTNSD, WTNVEG, STOVWT, TOPWT, 
      &    PODWT, SDWT, SKERWT, SHELPC, P5,RELDTTEG,
-     &    TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN, 
+     &    TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,
+     &    GRNDMC,MILKLN,
      &    STPCT, OMDIG, CPPCT, UFL, UFLHA)
 
 !----------------------------------------------------------------------
@@ -2069,7 +2073,8 @@ C-GH 60     FORMAT(25X,F5.2,13X,F5.2,7X,F5.2)
      &    STGDOY, SUMDTT, SWFAC, NSTRES, YRPLT,
      &    WTNCAN, WTNSD, WTNVEG, STOVWT, TOPWT, 
      &    PODWT, SDWT, SKERWT, SHELPC, P5,RELDTTEG,
-     &    TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN, 
+     &    TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,
+     &    GRNDMC,MILKLN,
      &    STPCT, OMDIG, CPPCT, UFL, UFLHA)
 
 !----------------------------------------------------------------------
@@ -2119,7 +2124,8 @@ C-GH 60     FORMAT(25X,F5.2,13X,F5.2,7X,F5.2)
      &    STGDOY, SUMDTT, SWFAC, NSTRES, YRPLT,
      &    WTNCAN, WTNSD, WTNVEG, STOVWT, TOPWT, 
      &    PODWT, SDWT, SKERWT, SHELPC, P5,RELDTTEG,
-     &    TOTFWT, PODFWT, TOTDMC, EARDMC, GRNDMC,MILKLN, 
+     &    TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,
+     &    GRNDMC,MILKLN,
      &    STPCT, OMDIG, CPPCT, UFL, UFLHA)
 !       Senesced leaves do not fall to the ground and so are added to
 !         surface litter only at harvest.
