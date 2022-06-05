@@ -108,9 +108,6 @@
         GRNDMC   = 0.0
         EARFRC   = 0.0
         SDFRC   = 0.0
-        TOPWT   = 0.0
-        PODWT   = 0.0
-        SDWT   = 0.0
         MILKLN   = 0.0
         STACON   = 0.0
         STPCT   = 0.0
@@ -120,7 +117,6 @@
         UFL   = 0.0
         UFL2   = 0.0
         UFLHA   = 0.0
-        WTNCAN   = 0.0
         
 ! FO - FORAGE.OUT file
           CALL GETLUN(SGFile,  NOUTSG)
