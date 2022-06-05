@@ -104,6 +104,7 @@
         PODFWT   = 0.0
         EARDMC   = 0.0
         COBDMC   = 0.0
+        SDFWT    = 0.0
         GRNDMC   = 0.0
         EARFRC   = 0.0
         SDFRC   = 0.0
