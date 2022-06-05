@@ -154,6 +154,7 @@ C READ AND PASS IN: SLPVEG, SLPGRN, MILKZ0, STAVEG, STAGRN, CONDIG
       READ(LUNIO,50,IOSTAT=ERR) FILES, PATHSR; LNUM = 7
    50 FORMAT(//////,15X,A12,1X,A80)
       IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILEIO,LNUM)
+      CLOSE(LUNIO)
 !----------------------------------------------------------------
 !       Find and Read FORAGE SILAGE Section
 !----------------------------------------------------------------
