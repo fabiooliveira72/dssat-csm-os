@@ -45,7 +45,7 @@ C======================================================================
       SAVE
 
 !----------------------------------------------------------------------
-      REAL        TOTFWT, PODFWT, TOTDMC, EARDMC
+      REAL        TOTFWT, PODFWT, TOTDMC, EARDMC, SDFWT
       REAL        EARFRC, COBDMC, GRNDMC,MILKLN
       REAL        STPCT, OMDIG, CPPCT, UFL, UFLHA
       
@@ -358,7 +358,7 @@ C----------------------------------------------------------------------
      &      WTNUP, WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD,      !Output
      &      KUptake, KSTRES,                                  !Output
      &      TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,   !Output
-     &      GRNDMC,MILKLN,                                    !Output
+     &      GRNDMC,MILKLN, SDFWT,                             !Output
      &      STPCT, OMDIG, CPPCT, UFL, UFLHA)                  !Output
           CASE ('MZIXM')  !IXIM Maize
           CALL MZ_IX_GROSUB (DYNAMIC, ISWITCH, 
@@ -435,7 +435,7 @@ C----------------------------------------------------------------------
      &    YIELD, YREMRG, YRPLT,                           !Input
      &    BWAH, SDWTAH,                                   !Output
      &    TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC, !Output
-     &    GRNDMC,MILKLN,                                  !Output
+     &    GRNDMC,MILKLN, SDFWT,                           !Output
      &    STPCT, OMDIG, CPPCT, UFL, UFLHA)                !Output
 
           CALL PEST(CONTROL, ISWITCH, 
@@ -517,7 +517,7 @@ C-----------------------------------------------------------------------
      &      WTNUP, WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD,      !Output
      &      KUptake, KSTRES,                                  !Output
      &      TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,   !Output
-     &      GRNDMC,MILKLN,                                    !Output
+     &      GRNDMC, MILKLN, SDFWT,                            !Output
      &      STPCT, OMDIG, CPPCT, UFL, UFLHA)                  !Output
           CASE ('MZIXM')  !IXIM Maize
           CALL MZ_IX_GROSUB (DYNAMIC, ISWITCH, 
@@ -591,7 +591,7 @@ C-----------------------------------------------------------------------
      &    YIELD, YREMRG, YRPLT,                           !Input
      &    BWAH, SDWTAH,                                   !Output
      &    TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC, !Output
-     &    GRNDMC,MILKLN,                                  !Output
+     &    GRNDMC,MILKLN, SDFWT,                           !Output
      &    STPCT, OMDIG, CPPCT, UFL, UFLHA)                !Output
 
 C----------------------------------------------------------------------
@@ -687,7 +687,7 @@ C----------------------------------------------------------------------
      &      WTNUP, WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD,      !Output
      &      KUptake, KSTRES,                                  !Output
      &      TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,   !Output
-     &      GRNDMC,MILKLN,                                    !Output
+     &      GRNDMC,MILKLN, SDFWT,                             !Output
      &      STPCT, OMDIG, CPPCT, UFL, UFLHA)                  !Output
 
           CASE ('MZIXM')  !IXIM Maize
@@ -791,7 +791,7 @@ C----------------------------------------------------------------------
      &      WTNUP, WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD,      !Output
      &      KUptake, KSTRES,                                  !Output
      &      TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,   !Output
-     &      GRNDMC,MILKLN,                                    !Output
+     &      GRNDMC,MILKLN, SDFWT,                             !Output
      &      STPCT, OMDIG, CPPCT, UFL, UFLHA)                  !Output
           CASE ('MZIXM')  !IXIM Maize
           CALL MZ_IX_GROSUB (DYNAMIC, ISWITCH, 
@@ -859,7 +859,7 @@ C----------------------------------------------------------------------
      &    YIELD, YREMRG, YRPLT,                           !Input
      &    BWAH, SDWTAH,                                   !Output
      &    TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC, !Output
-     &    GRNDMC,MILKLN,                                  !Output
+     &    GRNDMC,MILKLN, SDFWT,                           !Output
      &    STPCT, OMDIG, CPPCT, UFL, UFLHA)                !Output
 
       IF (ISWDIS.EQ.'Y') THEN
@@ -905,7 +905,7 @@ C----------------------------------------------------------------------
      &      WTNUP, WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD,      !Output
      &      KUptake, KSTRES,                                  !Output
      &      TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,   !Output
-     &      GRNDMC,MILKLN,                                    !Output
+     &      GRNDMC,MILKLN, SDFWT,                             !Output
      &      STPCT, OMDIG, CPPCT, UFL, UFLHA)                  !Output
           CASE ('MZIXM')  !IXIM Maize
           CALL MZ_IX_GROSUB (DYNAMIC, ISWITCH, 
@@ -972,7 +972,7 @@ C----------------------------------------------------------------------
      &    YIELD, YREMRG, YRPLT,                           !Input
      &    BWAH, SDWTAH,                                   !Output
      &    TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC, !Output
-     &    GRNDMC,MILKLN,                                  !Output
+     &    GRNDMC,MILKLN, SDFWT,                           !Output
      &    STPCT, OMDIG, CPPCT, UFL, UFLHA)                !Output
 
         CALL HRes_Ceres(CONTROL,

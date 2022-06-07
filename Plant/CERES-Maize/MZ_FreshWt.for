@@ -20,7 +20,7 @@
      &    WTNCAN, WTNSD, WTNVEG, STOVWT, TOPWT,
      &    PODWT, SDWT, SKERWT, SHELPC, P5,RELDTTEG,
      &    TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,
-     &    GRNDMC,MILKLN,
+     &    GRNDMC,MILKLN, SDFWT,
      &    STPCT, OMDIG, CPPCT, UFL, UFLHA)
 !----------------------------------------------------------------------
       USE ModuleDefs
@@ -305,11 +305,11 @@ C  THIS COMES FROM BRAGA ET AL. 2008
             SDFRC = SDWT / TOPWT
 ! KJB -           MILKLN = FUNCTION OF P5 PROGRESS (0 TO 1.00 CAN WE CREATE IT, 0 STARTS LATER THAN ONSET ISTAGE 5, ENDS PRIOR TO END ISTAGE 5)
 ! KJB -           NEED VALUE FOR SUMDTT, OR FRACTION OF DISTANCE OF P5
-            IF (SUMDTT .GE. MILKZ0) THEN
+! KJB  - Check for P5 equal to SUMDTT for premature termination grain growth.
+            IF(SUMDTT .NE. P5 .AND. SUMDTT .GE. MILKZ0) THEN
               MILKLN = SLPMLK * (SUMDTT - MILKZ0) / P5
-            ELSE
-              MILKLN = 0.0
             ENDIF
+            
 ! KJB - COMMENTED OUT VEGDMC IS BAD
             VEGDMC = CVGDMC + SLPVEG * MILKLN
             COBDMC = COBDMCIS4 + SLPCOB * MILKLN
