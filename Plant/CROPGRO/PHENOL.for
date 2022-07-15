@@ -18,7 +18,7 @@ C-----------------------------------------------------------------------
 !                     CURV
 C=======================================================================
 
-      SUBROUTINE PHENOL(CONTROL, ISWITCH, 
+      SUBROUTINE PHENOL(CONTROL, ISWITCH, WEATHER,
      &    DAYL, NSTRES, PStres2, SOILPROP, ST,            !Input
      &    SW, SWFAC, TGRO, TMIN, TURFAC, XPOD, YRPLT,     !Input
      &    DRPP, DTX, DXR57, FRACDN, MDATE, NDLEAF,        !Output
@@ -37,7 +37,7 @@ C=======================================================================
       INTEGER NPHS
       PARAMETER (NPHS = 13)
 
-      CHARACTER*1 ISIMI, ISWWAT, PLME
+      CHARACTER*1 ISIMI, ISWWAT, PLME, GENNAR
       CHARACTER*2 CROP
       CHARACTER*3 CTMP(20), DLTYP(20)
 
@@ -72,10 +72,13 @@ C=======================================================================
       REAL PStres2
       REAL SeedFrac, VegFrac
 
+!     NAR-Module      
+      REAL MSNOD, RMSNOD
 !-----------------------------------------------------------------------
       TYPE (ControlType) CONTROL
       TYPE (SoilType) SOILPROP
       TYPE (SwitchType) ISWITCH
+      Type (WeatherType) WEATHER
 
 !     Transfer values from constructed data types into local variables.
       DAS     = CONTROL % DAS
@@ -91,7 +94,8 @@ C=======================================================================
 
       ISWWAT = ISWITCH % ISWWAT
       ISIMI  = ISWITCH % ISIMI
-
+      GENNAR = ISWITCH % GENNAR
+      
 !***********************************************************************
 !***********************************************************************
 !     Run Initialization - Called once per simulation
@@ -123,6 +127,15 @@ C       Number of days from flowering to harvest maturity
         MNFLHM = PHTHRS(8) + PHTHRS(10) + PHTHRS(11)
       ENDIF
 
+C-----------------------------------------------------------------------
+C    Driver Module NAR to predict node on the main stem
+C-----------------------------------------------------------------------
+      IF(GENNAR .EQ. 'Y') THEN
+        CALL NARMODULE(CONTROL, ISWITCH, WEATHER,         !Control
+     &               YRPLT,                               !Input
+     &               MSNOD, RMSNOD)                       !Output
+      ENDIF
+C-----------------------------------------------------------------------
 !***********************************************************************
 !***********************************************************************
 !     Seasonal initialization - run once per season
@@ -155,10 +168,20 @@ C       Number of days from flowering to harvest maturity
      &    RSTAGE, STGDOY, SeedFrac, VegFrac, YREMRG,      !Output
      &    YRNR1, YRNR2, YRNR3, YRNR5, YRNR7)              !Output
 
+C-----------------------------------------------------------------------
+C    Driver Module NAR to predict node on the main stem
+C-----------------------------------------------------------------------
+      IF(GENNAR .EQ. 'Y') THEN
+        CALL NARMODULE(CONTROL, ISWITCH, WEATHER,         !Control
+     &               YRPLT,                               !Input
+     &               MSNOD, RMSNOD)                       !Output
+      ENDIF
+C-----------------------------------------------------------------------
       CALL VSTAGES(
      &    DAS, DTX, EVMODC, MNEMV1, NDVST,                !Input
      &    NVEG0, NVEG1, PHZACC, PLME, TRIFOL,             !Input
      &    TURFAC, XPOD, YRDOY, YRPLT,                     !Input
+     &    GENNAR, MSNOD,RMSNOD,                           !Input
      &    RVSTGE, VSTAGE,                                 !Output
      &    SEASINIT)                                       !Control
 
@@ -287,12 +310,21 @@ C-----------------------------------------------------------------------
       TDUMX2 = TNTFC2 * FUDAY(10)
 
 C-----------------------------------------------------------------------
+C    Driver Module NAR to predict node on the main stem
+C-----------------------------------------------------------------------
+      IF(GENNAR .EQ. 'Y') THEN
+        CALL NARMODULE(CONTROL, ISWITCH, WEATHER,         !Control
+     &               YRPLT,                               !Input
+     &               MSNOD, RMSNOD)                       !Output
+      ENDIF
+C-----------------------------------------------------------------------
 C    Calculate rate of V-stage change for height and width determination
 C-----------------------------------------------------------------------
       CALL VSTAGES(
      &    DAS, DTX, EVMODC, MNEMV1, NDVST,                !Input
      &    NVEG0, NVEG1, PHZACC, PLME, TRIFOL,             !Input
      &    TURFAC, XPOD, YRDOY, YRPLT,                     !Input
+     &    GENNAR, MSNOD,RMSNOD,                           !Input
      &    RVSTGE, VSTAGE,                                 !Output
      &    RATE)                                           !Control
 
@@ -333,7 +365,14 @@ C-----------------------------------------------------------------------
       ELSE
         DXR57 = 0.0
       ENDIF
-
+C-----------------------------------------------------------------------
+C    Driver Module NAR to predict node on the main stem
+C-----------------------------------------------------------------------
+      IF(GENNAR .EQ. 'Y') THEN
+        CALL NARMODULE(CONTROL, ISWITCH, WEATHER,         !Control
+     &               YRPLT,                               !Input
+     &               MSNOD, RMSNOD)                       !Output
+      ENDIF
 !-----------------------------------------------------------------------
 !     Calculate V-stages
 !-----------------------------------------------------------------------
@@ -341,6 +380,7 @@ C-----------------------------------------------------------------------
      &    DAS, DTX, EVMODC, MNEMV1, NDVST,                !Input
      &    NVEG0, NVEG1, PHZACC, PLME, TRIFOL,             !Input
      &    TURFAC, XPOD, YRDOY, YRPLT,                     !Input
+     &    GENNAR, MSNOD,RMSNOD,                           !Input
      &    RVSTGE, VSTAGE,                                 !Output
      &    INTEGR)                                         !Control
 
@@ -373,6 +413,7 @@ C=======================================================================
      &    DAS, DTX, EVMODC, MNEMV1, NDVST,                !Input
      &    NVEG0, NVEG1, PHZACC, PLME, TRIFOL,             !Input
      &    TURFAC, XPOD, YRDOY, YRPLT,                     !Input
+     &    GENNAR, MSNOD, RMSNOD,                          !Input
      &    RVSTGE, VSTAGE,                                 !Output
      &    DYNAMIC)                                        !Control
 
@@ -383,7 +424,7 @@ C=======================================================================
       IMPLICIT NONE
       SAVE
 
-      CHARACTER*1 PLME
+      CHARACTER*1 PLME, GENNAR
       INTEGER DYNAMIC
       INTEGER DAS, NVEG0, NVEG1, NDVST
       INTEGER YRPLT, YRDOY
@@ -391,6 +432,7 @@ C=======================================================================
       REAL MNEMV1, TRIFOL, EVMODC, EVMOD, DTX
       REAL TURFAC, XPOD
       REAL PHZACC(20)
+      REAL MSNOD, RMSNOD
 
 !***********************************************************************
 !***********************************************************************
@@ -403,7 +445,7 @@ C=======================================================================
       VSTGED = 0.0
       VSTAGP = 0.0
       RVSTGE = 0.0
-
+      
 !***********************************************************************
 !***********************************************************************
 C     Daily Rate Calculations 
@@ -414,6 +456,20 @@ C     Daily Rate Calculations
 !-----------------------------------------------------------------------
       RVSTGE = 0.
 
+!-----------------------------------------------------------------------
+!      GBM-NAR V-Stage 
+!-----------------------------------------------------------------------
+      IF(GENNAR .EQ. 'Y') THEN
+        IF (DAS .GE. NVEG0 .AND. DAS .LE. NDVST + ANINT(VSTGED)) THEN
+          IF (DAS .GT. NDVST) THEN
+            RVSTGE = 0.0
+          ELSE
+            RVSTGE = RMSNOD
+          ENDIF
+        ENDIF
+      ENDIF
+!-----------------------------------------------------------------------
+      IF(GENNAR .EQ. 'N') THEN
       IF (DAS .GE. NVEG0 .AND. DAS .LE. NDVST + ANINT(VSTGED)) THEN
         IF (DAS .GT. NDVST .AND. VSTGED .GT. 0.001) THEN
           RVSTGE = 1. / VSTGED
@@ -421,7 +477,9 @@ C     Daily Rate Calculations
           RVSTGE = VSTAGE - VSTAGP
         ENDIF
       ENDIF
+      ENDIF
 
+!      WRITE(*,*) 'RATE:', YRDOY, DAS, RVSTGE, VSTAGE, NDVST
 !***********************************************************************
 !***********************************************************************
 !     Daily Integration 
@@ -449,6 +507,18 @@ C-----------------------------------------------------------------------
       ENDIF
 
 !-----------------------------------------------------------------------
+!      GBM-NAR V-Stage 
+!-----------------------------------------------------------------------
+      IF ( GENNAR .EQ. 'Y' .AND. DAS .GE. NVEG0 .AND. 
+     &                           DAS .LE. NDVST) THEN
+       IF (DAS .LT. NVEG1) THEN
+         VSTAGE  = PHZACC(2)/MNEMV1
+       ELSE
+         VSTAGE = MSNOD
+       ENDIF
+      ENDIF
+!-----------------------------------------------------------------------   
+      IF(GENNAR .EQ. 'N') THEN
       IF (DAS .GE. NVEG0 .AND. DAS .LE. NDVST) THEN
         IF (DAS .LT. NVEG1) THEN
           VSTAGE  = PHZACC(2)/MNEMV1
@@ -464,7 +534,9 @@ C-----------------------------------------------------------------------
           VSTAGE = VSTAGE + DTX * TRIFOL * EVMOD*TURFAC*(1.0-XPOD)
         ENDIF
       ENDIF
-
+      ENDIF
+      
+      WRITE(*,*) 'INTR:', YRDOY, DAS, RVSTGE, VSTAGE, NDVST
 !***********************************************************************
 !***********************************************************************
 !     End of DYNAMIC IF construct
@@ -477,7 +549,7 @@ C-----------------------------------------------------------------------
 !-----------------------------------------------------------------------
 !     PHENOLOGY VARIABLES LIST
 !-----------------------------------------------------------------------
-! ATEMP     Temperature of transplant environment (캜)
+! ATEMP     Temperature of transplant environment (째C)
 ! CLDVAR    Critical daylength above which development rate remains at min 
 !             value (prior to flowering) (hours)
 ! CLDVRR    Critical daylength above which development rate remains at min 
@@ -513,7 +585,7 @@ C-----------------------------------------------------------------------
 !             (NDLEAF) 
 ! FSW(I)    Water stress function (0.0 to 1.0) for phase I 
 ! FT(I)     Temperature function (0-1) for phase I 
-! FTHR      Used to calculate hourly air temperature (캜)
+! FTHR      Used to calculate hourly air temperature (째C)
 ! FUDAY(I)  Effect of daylength on development progress (0-1) for phase I 
 ! ISIMI      Start of simulation code
 !               E = On reported emergence day
@@ -550,7 +622,7 @@ C-----------------------------------------------------------------------
 ! NVEG1     1st day with 50% of plants w/ completely unrolled leaf at 
 !             unifoliate node (days)
 ! OPTBI     Temperature below which growth rate is slowed from emergence to 
-!             flowering (캜)
+!             flowering (째C)
 ! PHTHRS      Time that must accumulate (by phase) for the next
 !                 stage to occur (thermal or photo-thermal days)
 !                 under optimal temp. and daylength
@@ -579,7 +651,7 @@ C-----------------------------------------------------------------------
 ! SDEPTH    Planting depth (cm)
 ! SLOBI     Sensitivity of growth rate to minimum temperatures from 
 !             emergence to flowering 
-! ST(L)     Soil temperature in soil layer L (캜)
+! ST(L)     Soil temperature in soil layer L (째C)
 ! STGDOY(I) Day when stage I occurred (YYDDD)
 ! STNAME    Output headings for specified crops 
 ! SW(L)     Volumetric soil water content in layer L
@@ -595,13 +667,13 @@ C-----------------------------------------------------------------------
 ! TDUMX2    Photo-thermal time that occurs in a real day based on late 
 !             reproductive development temperature function
 !             (photo-thermal days / day)
-! TGRO(I)   Hourly air temperature (캜)
-! TGROAV    Average daily canopy temperature (캜)
+! TGRO(I)   Hourly air temperature (째C)
+! TGROAV    Average daily canopy temperature (째C)
 ! THVAR     Minimum relative rate of reproductive development under long 
 !             days and optimal temperature 
 ! TIMDIF    Integer function which calculates the number of days between 
 !             two Julian dates (da)
-! TMIN      Minimum daily temperature (캜)
+! TMIN      Minimum daily temperature (째C)
 ! TNTFAC    Thermal time that occurs in a single real day based on early 
 !             reproductive development temperature function
 !             (thermal days / day)
@@ -611,7 +683,7 @@ C-----------------------------------------------------------------------
 ! TRIFOL    Rate of appearance on leaves on mainstem. Maximum rate of 
 !             V-stage formation (leaves per thermal day)
 ! TSDEP     Average temperature in top 10 cm of soil. Used to modify 
-!             emergence rate of development. (캜)
+!             emergence rate of development. (째C)
 ! TSELC      Number of temperature curve (by phase)
 !                 1 = vegetative
 !                 2 = early reproductive

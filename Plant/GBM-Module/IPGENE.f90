@@ -30,7 +30,7 @@
       
       PARAMETER (ERRKEY = 'IPGENE')
       
-      REAL, DIMENSION(70) :: QTL   !Vector of genotype (INTEGER) markers / QTLs      
+      REAL, DIMENSION(15) :: QTL   !Vector of genotype (INTEGER) markers / QTLs      
             
 !----------------------------------------------------------------------- 
 !     Read in values from input file.
@@ -77,11 +77,11 @@
         ENDIF
         
         IF(.NOT. HEADER) THEN
-          READ(LUNGN,'(A6, 17x, 12F6.0)', IOSTAT=ERRNUM) &
-            GEN, QTL(1),QTL(2),QTL(3),QTL(4),QTL(5),QTL(6),QTL(7),QTL(8),QTL(9),QTL(10),QTL(11),QTL(12)
+          READ(LUNGN,'(A6, 17x, 11F6.0)', IOSTAT=ERRNUM) &
+            GEN, QTL(1),QTL(2),QTL(3),QTL(4),QTL(5),QTL(6),QTL(7),QTL(8),QTL(9),QTL(10),QTL(11)
           IF(INDEX('!',GEN) .GT. 0) THEN
-            READ(LUNGN,'(A6, 17x, 12F6.0)', IOSTAT=ERRNUM) &
-              GEN, QTL(1),QTL(2),QTL(3),QTL(4),QTL(5),QTL(6),QTL(7),QTL(8),QTL(9),QTL(10),QTL(11),QTL(12)
+            READ(LUNGN,'(A6, 17x, 11F6.0)', IOSTAT=ERRNUM) &
+              GEN, QTL(1),QTL(2),QTL(3),QTL(4),QTL(5),QTL(6),QTL(7),QTL(8),QTL(9),QTL(10),QTL(11)
             IF(ERRNUM .NE. 0) CALL ERROR(ERRKEY,ERRNUM,FILEGN,0)
           ENDIF
         ENDIF

@@ -241,7 +241,7 @@ C=======================================================================
       ENDIF
 
 !-----------------------------------------------------------------------
-      CALL PHENOL(CONTROL, ISWITCH, 
+      CALL PHENOL(CONTROL, ISWITCH, WEATHER,
      &    DAYL, NSTRES, PStres2, SOILPROP, ST,            !Input
      &    SW, SWFAC, TGRO, TMIN, TURFAC, XPOD, YRPLT,     !Input
      &    DRPP, DTX, DXR57, FRACDN, MDATE, NDLEAF,        !Output
@@ -461,7 +461,7 @@ C-----------------------------------------------------------------------
       ENDIF
 
 !-----------------------------------------------------------------------
-      CALL PHENOL(CONTROL, ISWITCH, 
+      CALL PHENOL(CONTROL, ISWITCH, WEATHER,
      &    DAYL, NSTRES, PStres2, SOILPROP, ST,            !Input
      &    SW, SWFAC, TGRO, TMIN, TURFAC, XPOD, YRPLT,     !Input
      &    DRPP, DTX, DXR57, FRACDN, MDATE, NDLEAF,        !Output
@@ -681,7 +681,7 @@ C-----------------------------------------------------------------------
 !     CALL vegetative and reproductive development subroutine
 !-----------------------------------------------------------------------
       IF (CROP .NE. 'FA') THEN
-        CALL PHENOL(CONTROL, ISWITCH, 
+        CALL PHENOL(CONTROL, ISWITCH, WEATHER,
      &    DAYL, NSTRES, PStres2, SOILPROP, ST,            !Input
      &    SW, SWFAC, TGRO, TMIN, TURFAC, XPOD, YRPLT,     !Input
      &    DRPP, DTX, DXR57, FRACDN, MDATE, NDLEAF,        !Output
@@ -728,7 +728,7 @@ C-----------------------------------------------------------------------
 !     Need to set NVEG0 before test for DAS = NVEG0, otherwise,
 !     initialization on day of emergence will never occur.
 !-----------------------------------------------------------------------
-      CALL PHENOL(CONTROL, ISWITCH, 
+      CALL PHENOL(CONTROL, ISWITCH, WEATHER,
      &    DAYL, NSTRES, PStres2, SOILPROP, ST,            !Input
      &    SW, SWFAC, TGRO, TMIN, TURFAC, XPOD, YRPLT,     !Input
      &    DRPP, DTX, DXR57, FRACDN, MDATE, NDLEAF,        !Output

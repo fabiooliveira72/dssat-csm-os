@@ -16,7 +16,7 @@
 
       CHARACTER* 6   GENID
       CHARACTER* 6, PARAMETER :: ERRKEY = 'OPGENE'
-      CHARACTER*12, PARAMETER :: OUTSENS = 'RFM-Sens.OUT'
+      CHARACTER*12, PARAMETER :: OUTSENS = 'GBM-NAR.OUT'
 
       LOGICAL FEXIST, FIRST
       
@@ -54,7 +54,7 @@
         ELSE
           OPEN (UNIT = GUNIT, FILE = OUTSENS, STATUS = 'NEW', IOSTAT = ERRNUM)
           WRITE(GUNIT,'("*RF MODULE SENSITIVITY OUTPUT",/)')
-          WRITE(GUNIT,'(/,a)') " Run  Cultivar      DayLi     Sradi      Tmax     Tmin      MSNODE        ADAP      Fdoy"  
+          WRITE(GUNIT,'(/,a)') " Run     RIL  DAYL  SRAD  TMAX  TMIN   DAP  RMSN MSNOD"  
           
           FIRST = .TRUE.
         ENDIF
@@ -63,9 +63,10 @@
 !***********************************************************************
 !     Daily output
 !***********************************************************************
-      ELSEIF (DYNAMIC .EQ. OUTPUT) THEN
+      ELSEIF (DYNAMIC .EQ. INTEGR) THEN
 !-----------------------------------------------------------------------    
-        WRITE(GUNIT,'(i4,2x,A6,3x,3f10.1,F10.2,2X,F10.5,I10,I10)') RUN,GENID,DAYL,SRAD,TMAX,TMIN,MSNOD,DAP,FDOY
+        WRITE(GUNIT,'(I4,2X,A6,4F6.0,I6,2F6.2)')  &
+             RUN,GENID,DAYL,SRAD,TMAX,TMIN,DAP,RMSNOD,MSNOD
 !***********************************************************************
 !***********************************************************************
 !     SEASEND

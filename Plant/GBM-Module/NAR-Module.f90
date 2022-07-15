@@ -5,9 +5,9 @@
 !======================================================================= 
 !------------------------------------------------------------------------      
 
-      SUBROUTINE RFMODULE(CONTROL, ISWITCH,                   &  !Control
-          WEATHER, YRPLT,                                     &  !Input
-          MSNOD, RMSNOD)                                         !Output
+      SUBROUTINE NARMODULE(CONTROL, ISWITCH, WEATHER,       &   !Control
+                    YRPLT,                                  &   !Input
+                    MSNOD, RMSNOD)                              !Output
          
 !-----------------------------------------------------------------------
       USE ModuleDefs
@@ -23,7 +23,7 @@
       
       REAL DAYL, SRAD, TMAX, TMIN
       REAL MSNOD, RMSNOD, NMAX
-      REAL, DIMENSION(70) :: QTL
+      REAL, DIMENSION(15) :: QTL
       
       TYPE (ControlType) CONTROL
       TYPE (SwitchType) ISWITCH
@@ -44,8 +44,7 @@
 !-----------------------------------------------------------------------
 !       Read Genetic input data
 !-----------------------------------------------------------------------      
-        CALL IPGENE(FILEIO, QTL, GENID)    
-        
+        CALL IPGENE(FILEIO, QTL, GENID)        
 !***********************************************************************        
 !***********************************************************************
 !     Seasonal initialization - run once per season
@@ -61,8 +60,6 @@
         SRAD    = 0.0
         TMAX    = 0.0
         TMIN    = 0.0
-        FDOY    = 0
-        GENID   = ''
         
 !------------------------------------------------------------------------                      
 !     Limit maximum rate for a genotype based on QTLs, (RFMAXi)
@@ -103,6 +100,7 @@
         
 !------------------------------------------------------------------------                                  
 !       The dynamic NAR model
+!       Calculate rate of V-stage change
 !------------------------------------------------------------------------                                  
         RMSNOD =  -0.4101894                        &
           + 0.0029931  * SRAD                       &
@@ -120,33 +118,27 @@
           - 0.0026936  * QTL(9)                     &
           - 0.0006309  * QTL(10)                    &
           + 0.0002642  * QTL(11)                    
-          
+
+          IF (RMSNOD <= 0.0) THEN
+            RMSNOD = 0.0
+          ENDIF        
 !***********************************************************************
 !***********************************************************************
 !     Daily integration
 !***********************************************************************
       ELSEIF (DYNAMIC .EQ. INTEGR) THEN      
 !------------------------------------------------------------------------
-        
-        IF (RMSNOD < 0.0) THEN
-          RMSNOD = 0.0
-        ENDIF
-        
         !IF (RMSNOD > NMAX) THEN
         !  RMSNOD = NMAX
         !ENDIF
         
         MSNOD = MSNOD + RMSNOD
-                        
-!***********************************************************************
-!***********************************************************************
-!     OUTPUT/SEASEND
-!***********************************************************************
-      ELSEIF (DYNAMIC .EQ. OUTPUT .OR. DYNAMIC .EQ. SEASEND) THEN
-!-----------------------------------------------------------------------
-          CALL OPNAR(CONTROL, ISWITCH, &
-              GENID,DAYL,SRAD,TMAX,TMIN,MSNOD,RMSNOD,DAP)
         
+        !WRITE(*,*) 'NARI:', YRDOY, DAS, RMSNOD, MSNOD
+        
+        CALL OPNAR(CONTROL, ISWITCH,                       &
+            GENID,DAYL,SRAD,TMAX,TMIN,MSNOD,RMSNOD,DAP)
+                    
 !***********************************************************************
 !***********************************************************************
 !     END OF DYNAMIC IF CONSTRUCT
