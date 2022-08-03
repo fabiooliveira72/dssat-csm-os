@@ -48,6 +48,9 @@ Dormancy.OUT       Forage daylength signal for stolon daily output
 PlantMob.OUT       Forage plant mobilization and refill of storage
 Storage.OUT        Forage storage organ characteristics daily output
 
+!Hourly output files:
+HRWeather.OUT   WH Hourly weather output file                          OUTHRW
+
 !Daily csv format files:
 plantgro.csv       Daily plant growth output file in CSV format
 plantn.csv         Daily plant nitrogen output file in CSV format
