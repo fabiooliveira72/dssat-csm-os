@@ -29,7 +29,8 @@ C=======================================================================
       REAL
      &  CLOUDS, CO2, DAYL, OZON7, PAR, RAIN, SRAD, 
      &  TAVG, TDAY, TDEW, TGROAV, TGRODY,
-     &  TMAX, TMIN, TWILEN, WINDSP, VPDF, vpd_transp
+     &  TMAX, TMIN, TWILEN, WINDSP, VPDF, vpd_transp,
+     &  PARHRMJ, RADHRMJ
      
 !     TS defined in ModuleDefs.for     
       REAL, DIMENSION(TS) :: AMTRH, AZZON, BETA, FRDIFP, FRDIFR, PARHR
@@ -122,10 +123,20 @@ C       Generate output for file Weather.OUT
               WDATE = YRDOY
             ENDIF          
            
-            DO H = 1,TS ! Loop through hourly weather data.                            
+            DO H = 1,TS ! Loop through hourly weather data.
+              
+              
+!             Convert units
+!             VAR = J/m2/sec -> MJ/m2/day  
+!              PARHRMJ = (24*60*60 * PARHR(H)) / 1000000  
+!              RADHRMJ = (24*60*60 * RADHR(H)) / 1000000  
+!             VAR = J/m2/sec -> MJ/m2/hr  
+              PARHRMJ = (3600 * PARHR(H)) / 1000000  
+              RADHRMJ = (3600 * RADHR(H)) / 1000000                
+                                          
               WRITE (LUN,300) YEAR, DOY, DAS, H,
      &              AMTRH(H), AZZON(H), BETA(H), FRDIFP(H), 
-     &              FRDIFR(H), PARHR(H), RADHR(H), RHUMHR(H), 
+     &              FRDIFR(H), PARHRMJ, RADHRMJ, RHUMHR(H), 
      &              TAIRHR(H), TGRO(H), WINDHR(H)
             ENDDO
 
