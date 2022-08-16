@@ -36,6 +36,7 @@ C  06/02/2005 GH  Fixed call to WTHMOD in Seasinit section
 C  02/13/2006 JIL Export AMTRH (R/R0) for leaf rolling calculation
 !  04/28/2008 CHP Added option to read CO2 from file 
 !  07/25/2014 CHP Added daily CO2 read from weather file (DCO2)
+!  08/15/2022 SC/FO Added Energy-Balance source code  
 C-----------------------------------------------------------------------
 C  Called by: Main
 c  Calls:     DAYLEN, ERROR, HMET, IPWTH, SOLAR, WGEN, WTHMDB, WTHMOD
@@ -51,7 +52,7 @@ C=======================================================================
       IMPLICIT NONE
       SAVE
 
-      CHARACTER*1  MEWTH, RNMODE
+      CHARACTER*1  MEWTH, RNMODE, MEEVP
       CHARACTER*6  ERRKEY
       CHARACTER*12 FILEW, FILEWC, FILEWG
       CHARACTER*78 MESSAGE(10)
@@ -70,7 +71,7 @@ C=======================================================================
      &  RAIN, REFHT, RHUM, S0N, SNDN, SNUP, SRAD, 
      &  TA, TAMP, TAV, TAVG, TDAY, TDEW, TGROAV, TGRODY,
      &  TMAX, TMIN, TWILEN, VAPR, WINDHT, WINDRUN, WINDSP,
-     &  XELEV, XLAT, XLONG
+     &  XELEV, XLAT, XLONG, ALX
       LOGICAL NOTDEW, NOWIND
       REAL CALC_TDEW
 
@@ -223,7 +224,7 @@ C         message to the WARNING.OUT file.
      &   ('Value of TAV, average annual soil temperature, is missing.')
   110 FORMAT('Value of TAMP, amplitude of soil temperature function,',
      &            ' is missing.')
-  120 FORMAT('A default value of', F5.1, '튏 is being used for this',
+  120 FORMAT('A default value of', F5.1, '째C is being used for this',
      &            ' simulation,')
   130 FORMAT('which may produce undesirable results.')
 
@@ -299,7 +300,10 @@ C     Calculate hourly weather data.
      &    TGROAV, TGRODY, WINDHR)                         !Output
 
 C     Compute daily normal temperature.
-      TA = TAV - SIGN(1.0,XLAT) * TAMP * COS((DOY-20.0)*RAD)
+! 08/15/2022 SC - Energy Balance Model
+C KJB    TA = TAV - SIGN(1.0,XLAT) * TAMP * COS((DOY-20.0)*RAD)
+        ALX= (FLOAT(DOY)-20)*0.0174
+        TA = TAV - SIGN(1.0,XLAT) * TAMP * COS(ALX)/2.
 
       CALL OpWeath(CONTROL, ISWITCH, 
      &    CLOUDS, CO2, DAYL, FYRDOY, OZON7, PAR, RAIN,    !Daily values
@@ -433,8 +437,11 @@ C     Calculate hourly weather data.
      &    TGROAV, TGRODY, WINDHR)                         !Output
 
 C     Compute daily normal temperature.
-      TA = TAV - SIGN(1.0,XLAT) * TAMP * COS((DOY-20.0)*RAD)
-
+! 08/15/2022 SC - Energy Balance Model
+C KJB    TA = TAV - SIGN(1.0,XLAT) * TAMP * COS((DOY-20.0)*RAD)
+        ALX= (FLOAT(DOY)-20)*0.0174
+        TA = TAV - SIGN(1.0,XLAT) * TAMP * COS(ALX)/2.
+        
 !     CALL OPSTRESS(CONTROL, WEATHER=WEATHER)
 
 !***********************************************************************
@@ -580,19 +587,19 @@ C-----------------------------------------------------------------------
 ! SNDN       Time of sunset (hr)
 ! SNUP       Time of sunrise (hr)
 ! SRAD       Solar radiation (MJ/m2-d)
-! TAIRHR(TS) Hourly air temperature (in some routines called TGRO) (캜)
+! TAIRHR(TS) Hourly air temperature (in some routines called TGRO) (째C)
 ! TAMP       Amplitude of temperature function used to calculate soil 
-!              temperatures (캜)
+!              temperatures (째C)
 ! TAV        Average annual soil temperature, used with TAMP to calculate 
-!              soil temperature. (캜)
-! TAVG       Average daily temperature (캜)
-! TDAY       Average temperature during daylight hours (캜)
-! TDEW       Dewpoint temperature (캜)
-! TGRO(I)    Hourly air temperature (캜)
-! TGROAV     Average daily canopy temperature (캜)
-! TGRODY     Average temperature during daylight hours (캜)
-! TMAX       Maximum daily temperature (캜)
-! TMIN       Minimum daily temperature (캜)
+!              soil temperature. (째C)
+! TAVG       Average daily temperature (째C)
+! TDAY       Average temperature during daylight hours (째C)
+! TDEW       Dewpoint temperature (째C)
+! TGRO(I)    Hourly air temperature (째C)
+! TGROAV     Average daily canopy temperature (째C)
+! TGRODY     Average temperature during daylight hours (째C)
+! TMAX       Maximum daily temperature (째C)
+! TMIN       Minimum daily temperature (째C)
 ! TS         Number of intermediate time steps per day (usually 24)
 !                    set = 240 on 9JAN17 by Bruce Kimball      
 ! WINDHR(TS) Hourly wind speed (m/s)
