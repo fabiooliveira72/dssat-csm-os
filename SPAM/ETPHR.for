@@ -17,26 +17,25 @@ C  Called from: ETPHOT
 C  Calls:       CANPET,CANOPG,HSOILT
 C=======================================================================
 
-      SUBROUTINE ETPHR(
-     &  CANHT, CEC, CEN, CLOUDS, CO2HR, DAYTIM,           !Input
-     &  DLAYR2, DULE, FNPGL, FNPGN, FRACSH, FRSHV,        !Input
-     &  KDIRBL, LAISH, LAISHV, LAISL, LAISLV, LLE,        !Input
-     &  LMXREF, LNREF, LWIDTH, MEEVP, MEPHO, NLAYR,       !Input
-     &  NSLOPE, PARSH, PARSUN, QEREF, RABS, RCUTIC,       !Input
-     &  REFHT, RHUMHR, RNITP, RWUH, SHCAP, SLAAD,         !Input
-     &  SLWREF, SLWSLO, STCOND, SWE, TAIRHR, TA,          !Input
-     &  TMIN, TYPPGL, TYPPGN, WINDHR, XLAI,               !Input
-     &  XLMAXT, YLMAXT,                                   !Input
-     &  AGEFAC, EHR, LFMXSH, LFMXSL, PCNLSH, PCNLSL,      !Output
-     &  PGHR, SLWSH, SLWSL, T0HR, TCAN, THR, TSHR,        !Output
-     &  TSURF,                                            !Output
-!     Added by BAK DEC2014
-     &  CONDSH, CONDSL, RA, RB, RSURF, RNET,              !Output
-     &  G, LH, LHEAT, RSSH, RSSL, RSSS, SH, SHEAT,        !Output
-!     Added by BAK on 10DEC15
-     &                RBSH, RBSL, RBSS,                   !Output
-     &  CCNEFF, CICAD, CMXSF, CQESF, PGPATH,              !Input
-     &  AGEQESL, CO2QESL, QEFFSL)                         !Output
+      SUBROUTINE ETPHR(CONTROL, H,
+     &      CANHT, CEC, CEN, CLOUDS, CO2HR, DAYTIM,       !Input
+     &      DLAYR2, DULE, FNPGL, FNPGN, FRACSH, FRSHV,    !Input
+     &      KDIRBL, LAISH, LAISHV, LAISL, LAISLV, LLE,    !Input
+     &      LMXREF, LNREF, LWIDTH, MEEVP, MEPHO, NLAYR,   !Input
+     &      NSLOPE, PARSH, PARSUN, QEREF, RABS, RCUTIC,   !Input
+     &      REFHT, RHUMHR, RNITP, RWUH, SHCAP, SLAAD,     !Input
+     &      SLWREF, SLWSLO, STCOND, SWE,SWTD, TAIRHR,     !Input
+     &      TA, TMIN, TYPPGL, TYPPGN, WINDHR, XLAI,       !Input
+     &      XLMAXT, YLMAXT, XSW,YSCOND,YSHCAP,            !Input
+     &      CCNEFF, CICAD, CMXSF, CQESF, PGPATH,DIFPR,    !Input
+     &      AGEFAC, EHR, LFMXSH, LFMXSL, PCNLSH, PCNLSL,  !Output
+     &      PGHR,PGSL,PGSH, SLWSH, SLWSL, T0HR, TCAN,     !Output  
+     &      TCAN1, THR, TSHR, TSURF, SWEH,                !Output
+     &      CONDSH, CONDSL, RA, RB, RSURF, Rnet,          !Output
+     &      G, LH, LHEAT, RSSH, RSSL, RSSS, SH, SHEAT,    !Output
+     &      RBSH, RBSL, RBSS,EMISAV,TK4CAN,TK4SKY,        !Output
+     &      AGEQESL, CO2QESL, QEFFSL,CISH,CISL,VPDSL,     !Output
+     &      VPDSH)                                        !Output
 
 !     ------------------------------------------------------------------
       USE ModuleDefs     !Definitions of constructed variable types, 
@@ -70,7 +69,15 @@ C=======================================================================
       REAL AGEQESL, CO2QESL, QEFFSL
 
       PARAMETER (ERRBND=0.01)
-
+      
+! 08/10/2022 SC/FO - Variables for EBL model
+      INTEGER H
+      REAL TABEX,SW2,YHC(3),YTC(3),XSW(NL,3),YSCOND(NL,3),DIFPR, UPRATE,SSH
+      REAL YSHCAP(NL,3),XC(3),TCAN1 ,VPSAT,PGSL,PGSH,CISH,CISL,VPDSL,VPDSH
+      REAL SWTD, SWEH, EMISAV, TK4CAN, TK4SKY
+      
+      TYPE (ControlType) CONTROL
+      
 C     Initialize.
 
       EMAXTC = ERRBND * 30.0

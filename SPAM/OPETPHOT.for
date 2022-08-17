@@ -10,21 +10,18 @@ C-----------------------------------------------------------------------
 C  Called from:   ETPHOT
 C  Calls:         None
 C=======================================================================
-      SUBROUTINE OpETPhot(CONTROL, ISWITCH, 
-     &   PCINPD, PG, PGNOON, PCINPN, SLWSLN, SLWSHN, 
-     &   PNLSLN, PNLSHN, LMXSLN, LMXSHN, TGRO, TGROAV,
-     &    Enoon, Tnoon, ETNOON, WINDN, TCANn, CSHnn, CSLnn,        !Output
-     &    LSHnn, LSLnn, ETnit, TEMnit, Enit, Tnit, WINnit,!Output
-     &    TCnit, TSRnit, TSRFN, CSHnit, CSLnit, LSHnit, LSLnit,
-     &    GN, LHN, LHEATN, RSSHN, RSSLN, RSSSN, SHN, SHEATN,
-     &    GMT, LHT, LHEATT, RSSHT, RSSLT, RSSST, SHT, SHEATT,
-C         previous five output lines added by Bruce Kimball DEC14
+      SUBROUTINE OpETPhot(CONTROL, ISWITCH,
+     &      PCINPD, PG, PGNOON, PCINPN, SLWSLN, SLWSHN,
+     &      PNLSLN, PNLSHN, LMXSLN, LMXSHN, TGRO, TGROAV,         
+     &      Enoon,Tnoon, ETNOON, WINDn,TCANn, CWSHn, CWSLn,
+     &      LSHnn, LSLnn, ETnit, TEMnit, Enit, Tnit, WINnit,
+     &      TCnit, TSRnit, TSRFN, CSHnit, CSLnit, LSHnit, LSLnit,
+     &      GN, LHN, LHEATN, RSSHN, RSSLN, RSSSN, SHN, SHEATN,
+     &      GMT, LHT, LHEATT, RSSHT, RSSLT, RSSST, SHT, SHEATT,
      &      TAnn,TAnit,TGROnn,TGROnit,TGRODY,
-C           previous line added by Bruce Kimall on 9MAR15
-     &   RBSHN,RBSLN,RBSSN,RBSHT,RBSLT,RBSST,
-C       preveious line added by BAK on 10DEC2015
-     &        AGEQESLN, CO2QESLN, QEFFSLN)
-
+     &      AGEQESLN, CO2QESLN, QEFFSLN,
+     &	    DAYG,DAYLH,DAYSH,DAYRN,RNn,
+     &      PARn,RADn, CISLn, CISHn,C2SHn,C2SLn)   !Output
 C-------------------------------------------------------------------
 C
 C  ETPHOT OUTPUT File
@@ -58,6 +55,11 @@ C           previous line added by Bruce Kimball on 9MAR15
       Real RBSHN,RBSLN,RBSSN,RBSHT,RBSLT,RBSST
 C       preveious line added by BAK on 10DEC2015
 
+! 08/10/2022 FO - Variables added for EBL model
+      REAL CWSHn, CWSLn
+      REAL DAYG,DAYLH,DAYSH,DAYRN,RNn
+      REAL PARn,RADn, CISLn, CISHn,C2SHn,C2SLn
+      
       real  AGEQESLN, CO2QESLN, QEFFSLN
 
 
