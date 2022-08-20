@@ -154,6 +154,7 @@ C         added by BAK on 10DEC2015
       model   = control % model
       YRDOY   = CONTROL % YRDOY
       RUN     = CONTROL % RUN
+      TRTNUM  = CONTROL % TRTNUM
 
       BD     = SOILPROP % BD
       DLAYR  = SOILPROP % DLAYR
@@ -300,19 +301,21 @@ C     MEEVP reset on exit from ETPHOT to maintain input settings.
      &      RWU,  TRWUP)                           !Output
      
           IF(DAS .EQ. 0 .AND. RUN .EQ. 1) THEN
-            OPEN(880,FILE='HOURLY_ENERGY.OUT',ACCESS='SEQUENTIAL', STATUS='UNKNOWN')
-            OPEN(881,FILE='HOURLY_HSOILT.OUT',ACCESS='SEQUENTIAL', STATUS='UNKNOWN')
+            OPEN(880,FILE='HOURLY_ENERGY.OUT',
+     &       ACCESS='SEQUENTIAL', STATUS='UNKNOWN')
+            OPEN(881,FILE='HOURLY_HSOILT.OUT',
+     &       ACCESS='SEQUENTIAL', STATUS='UNKNOWN')
             OPEN(882,FILE='DAILY_ROOTWU.OUT',STATUS='UNKNOWN')
             OPEN(883,FILE='An_Gs_CI.OUT',STATUS='UNKNOWN')
             
             WRITE (880, '(A)')
-     &        'TRTNUM YRDOY INT(HS) LAI LAISL LAISH RADHR RNET RNET1 RNET2 ',
-     &        'RNET3 EMISAV TKCAN TKSKY ',
-     &        'LH LHEAT1 LHEAT2 LHEAT3 SH SHEAT1 SHEAT2 SHEAT3 G ',
-     &        'TAIRHR TCAN TCAN1 TGRO TSURF1 TSURF2 TSURF3 TSHR1 TSHR2 ',
-     &        'WINDHR RWUH SWEH PG PGSL PGSH CiCa_SL CiCa_SH VPDSL VPDSH ',
-     &        'CONDSL CONDSH CONDTL CONDSHsm CONDSLsm RA RB1 RB2 RB3 RSSS ',
-     &        'RHUMHR'
+     & 'TRTNUM YRDOY INT(HS) LAI LAISL LAISH RADHR RNET RNET1 RNET2 ',
+     & 'RNET3 EMISAV TKCAN TKSKY ',
+     & 'LH LHEAT1 LHEAT2 LHEAT3 SH SHEAT1 SHEAT2 SHEAT3 G ',
+     & 'TAIRHR TCAN TCAN1 TGRO TSURF1 TSURF2 TSURF3 TSHR1 TSHR2 ',
+     & 'WINDHR RWUH SWEH PG PGSL PGSH CiCa_SL CiCa_SH VPDSL VPDSH ',
+     & 'CONDSL CONDSH CONDTL CONDSHsm CONDSLsm RA RB1 RB2 RB3 RSSS ',
+     & 'RHUMHR'
             
             WRITE (881, '(A)')
      &        'TRTNUM TIMED YRDOY H DLAYR0 DLAYR1 DLAYR2 ',
@@ -438,12 +441,13 @@ C       and sum for day (TS=24 for hourly).
         ENDDO
 
 ! 08/10/2022 FO - SC initialized PGSL and PGSH for EBL model
-        PGSL = 0.0
-        PGSH = 0.0
 
 !       Conpute index for mid-day time step added by Bruce Kimball on 9JAN17        
         TSV2 = INT(TS/2)
         DO H=1,TS
+
+          PGSL = 0.0
+          PGSH = 0.0
 
 C         Calculate real and solar time.
           HS = REAL(H) * TINCR
@@ -606,7 +610,7 @@ C         and mm/d).
      &          CONDSH*( 1/(18.02*(273/(273+TSURF(1,1))))),
      &          RA,RB(1),RB(2),RB(3),RSURF(3),RHUMHR(H)
             
-3010        FORMAT (I2,1X,I7,1X, I7, 50(1X, F10.3))
+3010      FORMAT (I2,';',I7,';', I7, 50(';', F10.3))
           ENDIF
 
           IF (DAYTIM) THEN
