@@ -64,7 +64,19 @@ C=======================================================================
       REAL EOS, EOP, WINF, MSALB, ET_ALB
       REAL XLAT, TAV, TAMP, SRFTEMP
       REAL EORATIO, KSEVAP, KTRANS
-
+      
+      REAL PGCACTUS, TEFF, TURFAC_Y, TECONS, TE
+      REAL WDEMAND, SWFAC, TURFAC
+      INTEGER LUNIO,LNUM,FOUND,PATHL,LUNCRP,YRDOY
+      INTEGER ISECT, ERRNUM
+      CHARACTER*1  BLANK
+      CHARACTER*6  SECTION
+      CHARACTER*12 FILEC
+      CHARACTER*30 FILEIO
+      CHARACTER*80 PATHCR,C80
+      CHARACTER*92 FILECC
+      PARAMETER (BLANK=' ')
+      
       REAL DLAYR(NL), DUL(NL), LL(NL), RLV(NL), RWU(NL),  
      &    SAT(NL), ST(NL), SW(NL), SW_AVAIL(NL), !SWAD(NL), 
      &    SWDELTS(NL), SWDELTU(NL), SWDELTX(NL), UPFLOW(NL)
@@ -99,6 +111,8 @@ C=======================================================================
 !     Transfer values from constructed data types into local variables.
       CROP    = CONTROL % CROP
       DYNAMIC = CONTROL % DYNAMIC
+      FILEIO  = CONTROL % FILEIO
+      YRDOY   = CONTROL % YRDOY
 
       DLAYR  = SOILPROP % DLAYR
       DUL    = SOILPROP % DUL
@@ -152,7 +166,47 @@ C=======================================================================
 !     Seasonal initialization - run once per season
 !***********************************************************************
       ELSEIF (DYNAMIC .EQ. SEASINIT) THEN
+!-----------------------------------------------------------------------       
+!       CACTUS CAM MODEL
+!       11/03/2022 FO,GH,KJB,TV
 !-----------------------------------------------------------------------
+      OPEN(LUNIO,FILE=FILEIO,STATUS='OLD',IOSTAT=ERRNUM)
+      IF (ERRNUM .NE. 0) CALL ERROR(ERRKEY,ERRNUM,FILEIO,0)
+      SECTION = '*FILES'
+      CALL FIND(LUNIO,SECTION,LNUM,FOUND)
+      IF (FOUND .EQ. 0) CALL ERROR(SECTION, 42, FILEIO,LNUM)
+      READ(LUNIO,'(////,15X,A,1X,A)',IOSTAT=ERRNUM) FILEC,PATHCR
+      LNUM = LNUM + 5
+      IF (ERRNUM .NE. 0) CALL ERROR(ERRKEY,ERRNUM,FILEIO,LNUM)
+      PATHL  = INDEX(PATHCR,BLANK)
+      IF (PATHL .LE. 1) THEN
+        FILECC = FILEC
+      ELSE
+        FILECC = PATHCR(1:(PATHL-1)) // FILEC
+      ENDIF
+      CLOSE(LUNIO)
+
+      ! Read File SPE
+      CALL GETLUN('FILEC', LUNCRP)
+      OPEN(LUNCRP,FILE=FILECC,STATUS='OLD',IOSTAT=ERRNUM)
+      IF (ERRNUM .NE. 0) CALL ERROR(ERRKEY,ERRNUM,FILECC,0)
+
+      SECTION = '!*EVAP'
+      CALL FIND(LUNCRP,SECTION,LNUM,FOUND)
+      CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+      CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+      READ(C80,'(2(F7.0))',IOSTAT=ERRNUM) TEFF,TECONS
+      IF (ERRNUM .NE. 0) CALL ERROR(ERRKEY,ERRNUM,FILECC,LNUM)
+      CLOSE(LUNCRP)
+      
+      ! Create temporary output file
+      OPEN (UNIT=7272, FILE='PGOUT_Cactus.OUT',
+     &      STATUS = 'REPLACE',IOSTAT=ERRNUM)
+      WRITE(7272,'(A)') 
+     &   '  YRDOY    TE WDMND PGCAC SWFAC TURFC'
+      
+            
+!     ---------------------------------------------------------        
       EF   = 0.0; CEF  = 0.0
       EM   = 0.0; CEM  = 0.0
       EO   = 0.0; CEO  = 0.0
@@ -164,7 +218,8 @@ C=======================================================================
       SWDELTX = 0.0
       TRWU = 0.0
       XHLAI = 0.0
-      ET0 = 0.0
+      ET0 = 0.0  
+      TURFAC = 1.0
 
 !     ---------------------------------------------------------
       IF (meevp .NE.'Z') THEN   !LPM 02dec14 to use the values from ETPHOT
@@ -437,6 +492,44 @@ C       and total potential water uptake rate.
           EVAP = ES  !CHP / BK 7/13/2017
         ENDIF
 
+!-----------------------------------------------------------------------        
+!       CACTUS CAM MODEL
+!       11/03/2022 FO,GH,KJB,TV
+!-----------------------------------------------------------------------
+        CALL GET('SPAM', 'PG', PGCACTUS)
+        
+        TURFAC_Y = TURFAC
+        
+        ! TE units are g[CO2]/kg[water]
+        TE = TEFF * (TECONS * (1.0 - (1.0 - TURFAC_Y)))
+        
+        ! WDEMAND should be mm/day
+        ! Water demand is going to be equal to PG/TE
+        ! Units will be g[CO2]/m2/day
+        ! Water vol. units need to be land area based
+        WDEMAND = PGCACTUS/TE
+        EOP = WDEMAND
+        
+        ! Calculate daily water stess factors (from SWFACS)
+        IF (EOP .GT. 0.0 .AND. ISWWAT .EQ. 'Y') THEN
+          IF ((EOP * 0.1) .GE. TRWUP) THEN
+            SWFAC = TRWUP / (EOP * 0.1)
+          ELSE
+            SWFAC = 1.0
+          ENDIF
+          IF((EOP * 0.1 * 1.5) .GE. TRWUP) THEN
+            TURFAC = TRWUP / (EOP * 0.1 * 1.5) 
+          ELSE
+            TURFAC = 1.0
+          ENDIF
+        ENDIF
+        
+        PGCACTUS = PGCACTUS * SWFAC
+        CALL PUT('SPAM', 'PG', PGCACTUS)
+        
+        
+        WRITE(7272,'(I7, 5(1X,F5.2))') 
+     &    YRDOY, TE, WDEMAND, PGCACTUS, SWFAC, TURFAC
 !-----------------------------------------------------------------------
 !       ACTUAL ROOT WATER EXTRACTION
 !-----------------------------------------------------------------------
@@ -629,7 +722,7 @@ C-----------------------------------------------------------------------
 ! CET         Cumulative evapotranspiration (mm)
 ! CLOUDS      Relative cloudiness factor (0-1) 
 ! CO2         Atmospheric carbon dioxide concentration
-!              (µmol[CO2] / mol[air])
+!              (Î¼mol[CO2] / mol[air])
 ! CONTROL     Composite variable containing variables related to control 
 !               and/or timing of simulation.    See Appendix A. 
 ! CROP        Crop identification code 
@@ -680,8 +773,8 @@ C-----------------------------------------------------------------------
 !               density, drained upper limit, lower limit, pH, saturation 
 !               water content.  Structure defined in ModuleDefs. 
 ! SRAD        Solar radiation (MJ/m2-d)
-! SRFTEMP     Temperature of soil surface litter (°C)
-! ST(L)       Soil temperature in soil layer L (°C)
+! SRFTEMP     Temperature of soil surface litter (Â°C)
+! ST(L)       Soil temperature in soil layer L (Â°C)
 ! SUMES1      Cumulative soil evaporation in stage 1 (mm)
 ! SUMES2      Cumulative soil evaporation in stage 2 (mm)
 ! SW(L)       Volumetric soil water content in layer L
@@ -697,14 +790,14 @@ C-----------------------------------------------------------------------
 !               layer L (cm3 [water] / cm3 [soil])
 ! T           Number of days into Stage 2 evaporation (WATBAL); or time 
 !               factor for hourly temperature calculations 
-! TA          Daily normal temperature (°C)
+! TA          Daily normal temperature (Â°C)
 ! TAMP        Amplitude of temperature function used to calculate soil 
-!               temperatures (°C)
+!               temperatures (Â°C)
 ! TAV         Average annual soil temperature, used with TAMP to calculate 
-!               soil temperature. (°C)
-! TAVG        Average daily temperature (°C)
-! TMAX        Maximum daily temperature (°C)
-! TMIN        Minimum daily temperature (°C)
+!               soil temperature. (Â°C)
+! TAVG        Average daily temperature (Â°C)
+! TMAX        Maximum daily temperature (Â°C)
+! TMIN        Minimum daily temperature (Â°C)
 ! TRWU        Actual daily root water uptake over soil profile (cm/d)
 ! TRWUP       Potential daily root water uptake over soil profile (cm/d)
 ! U           Evaporation limit (cm)
