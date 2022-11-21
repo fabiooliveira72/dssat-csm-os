@@ -501,7 +501,7 @@ C       and total potential water uptake rate.
         TURFAC_Y = TURFAC
         
         ! TE units are g[CO2]/kg[water]
-        TE = TEFF * (TECONS * (1.0 - (1.0 - TURFAC_Y)))
+        TE = TEFF * (1.0 + TECONS * (1.0 - TURFAC_Y))
         
         ! WDEMAND should be mm/day
         ! Water demand is going to be equal to PG/TE
