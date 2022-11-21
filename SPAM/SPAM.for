@@ -203,7 +203,7 @@ C=======================================================================
       OPEN (UNIT=7272, FILE='PGOUT_Cactus.OUT',
      &      STATUS = 'REPLACE',IOSTAT=ERRNUM)
       WRITE(7272,'(A)') 
-     &   '  YRDOY    TE WDMND PGCAC SWFAC TURFC'
+     &   '  YRDOY    TE WDMND PGCAC SWFAC TURFC    EP   EOP'
       
             
 !     ---------------------------------------------------------        
@@ -465,13 +465,13 @@ C       and total potential water uptake rate.
 !-----------------------------------------------------------------------
 !         ACTUAL TRANSPIRATION
 !-----------------------------------------------------------------------
-          IF (XHLAI .GT. 1.E-4 .AND. EOP .GT. 1.E-4) THEN
-            !These calcs replace the old SWFACS subroutine
-            !Stress factors now calculated as needed in PLANT routines.
-            EP = MIN(EOP, TRWUP*10.)
-          ELSE
-            EP = 0.0
-          ENDIF
+!          IF (XHLAI .GT. 1.E-4 .AND. EOP .GT. 1.E-4) THEN
+!            !These calcs replace the old SWFACS subroutine
+!            !Stress factors now calculated as needed in PLANT routines.
+!            EP = MIN(EOP, TRWUP*10.)
+!          ELSE
+!            EP = 0.0
+!          ENDIF
         ENDIF
       ENDIF
 
@@ -510,6 +510,14 @@ C       and total potential water uptake rate.
         WDEMAND = PGCACTUS/TE
         EOP = WDEMAND
         
+        IF (XHLAI .GT. 0.0 .AND. EOP .GT. 0.0) THEN
+          !These calcs replace the old SWFACS subroutine
+          !Stress factors now calculated as needed in PLANT routines.
+          EP = MIN(EOP, TRWUP*10.)
+        ELSE
+          EP = 0.0
+        ENDIF
+                
         ! Calculate daily water stess factors (from SWFACS)
         IF (EOP .GT. 0.0 .AND. ISWWAT .EQ. 'Y') THEN
           IF ((EOP * 0.1) .GE. TRWUP) THEN
@@ -526,10 +534,11 @@ C       and total potential water uptake rate.
         
         PGCACTUS = PGCACTUS * SWFAC
         CALL PUT('SPAM', 'PG', PGCACTUS)
+        CALL PUT('SPAM', 'EP', EP)
         
         
-        WRITE(7272,'(I7, 5(1X,F5.2))') 
-     &    YRDOY, TE, WDEMAND, PGCACTUS, SWFAC, TURFAC
+        WRITE(7272,'(I7, 7(1X,F5.2))') 
+     &    YRDOY, TE, WDEMAND, PGCACTUS, SWFAC, TURFAC, EP, EOP
 !-----------------------------------------------------------------------
 !       ACTUAL ROOT WATER EXTRACTION
 !-----------------------------------------------------------------------
