@@ -67,6 +67,7 @@ C=======================================================================
       
       REAL PGCACTUS, TEFF, TURFAC_Y, TECONS, TE
       REAL WDEMAND, SWFAC, TURFAC
+      REAL TURFAC_Y2,TURFAC_Y3,TURFAC_A
       INTEGER LUNIO,LNUM,FOUND,PATHL,LUNCRP,YRDOY
       INTEGER ISECT, ERRNUM
       CHARACTER*1  BLANK
@@ -203,7 +204,7 @@ C=======================================================================
       OPEN (UNIT=7272, FILE='PGOUT_Cactus.OUT',
      &      STATUS = 'REPLACE',IOSTAT=ERRNUM)
       WRITE(7272,'(A)') 
-     &   '  YRDOY    TE WDMND PGCAC SWFAC TURFC    EP   EOP'
+     &   '  YRDOY    TE WDMND PGCAC SWFAC TURFC    EP   EOP TURFA'
       
             
 !     ---------------------------------------------------------        
@@ -219,7 +220,10 @@ C=======================================================================
       TRWU = 0.0
       XHLAI = 0.0
       ET0 = 0.0  
-      TURFAC = 1.0
+      TURFAC    = 1.0
+      TURFAC_Y  = 1.0
+      TURFAC_Y2 = 1.0
+      TURFAC_Y3 = 1.0
 
 !     ---------------------------------------------------------
       IF (meevp .NE.'Z') THEN   !LPM 02dec14 to use the values from ETPHOT
@@ -498,10 +502,14 @@ C       and total potential water uptake rate.
 !-----------------------------------------------------------------------
         CALL GET('SPAM', 'PG', PGCACTUS)
         
-        TURFAC_Y = TURFAC
+        TURFAC_Y3 = TURFAC_Y2
+        TURFAC_Y2 = TURFAC_Y
+        TURFAC_Y  = TURFAC
+        
+        TURFAC_A = TURFAC_Y3/3.0 + TURFAC_Y2/3.0 + TURFAC_Y/3.0
         
         ! TE units are g[CO2]/kg[water]
-        TE = TEFF * (1.0 + TECONS * (1.0 - TURFAC_Y))
+        TE = TEFF * (1.0 + TECONS * (1.0 - TURFAC_A))
         
         ! WDEMAND should be mm/day
         ! Water demand is going to be equal to PG/TE
@@ -537,8 +545,8 @@ C       and total potential water uptake rate.
         CALL PUT('SPAM', 'EP', EP)
         
         
-        WRITE(7272,'(I7, 7(1X,F5.2))') 
-     &    YRDOY, TE, WDEMAND, PGCACTUS, SWFAC, TURFAC, EP, EOP
+        WRITE(7272,'(I7, 8(1X,F5.2))') 
+     &    YRDOY,TE,WDEMAND,PGCACTUS,SWFAC,TURFAC,EP,EOP,TURFAC_A
 !-----------------------------------------------------------------------
 !       ACTUAL ROOT WATER EXTRACTION
 !-----------------------------------------------------------------------
