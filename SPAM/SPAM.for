@@ -68,9 +68,11 @@ C=======================================================================
       REAL PGCACTUS, TEFF, TURFAC_Y, TECONS, TE
       REAL WDEMAND, SWFAC, TURFAC
       REAL TURFAC_Y2,TURFAC_Y3,TURFAC_A
+      REAL CAMFLGR
       INTEGER LUNIO,LNUM,FOUND,PATHL,LUNCRP,YRDOY
       INTEGER ISECT, ERRNUM
       CHARACTER*1  BLANK
+      CHARACTER*3  CAMFLG
       CHARACTER*6  SECTION
       CHARACTER*12 FILEC
       CHARACTER*30 FILEIO
@@ -196,9 +198,15 @@ C=======================================================================
       CALL FIND(LUNCRP,SECTION,LNUM,FOUND)
       CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
       CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
-      READ(C80,'(2(F7.0))',IOSTAT=ERRNUM) TEFF,TECONS
+      READ(C80,'(2(F6.0),3X,3A)',IOSTAT=ERRNUM) TEFF,TECONS,CAMFLG
       IF (ERRNUM .NE. 0) CALL ERROR(ERRKEY,ERRNUM,FILECC,LNUM)
       CLOSE(LUNCRP)
+      
+      IF(CAMFLG .EQ. 'CAM') THEN
+        CAMFLGR = 1.0
+      ELSE
+        CAMFLGR = 0.0
+      ENDIF
       
       ! Create temporary output file
       OPEN (UNIT=7272, FILE='PGOUT_Cactus.OUT',
@@ -220,6 +228,7 @@ C=======================================================================
       TRWU = 0.0
       XHLAI = 0.0
       ET0 = 0.0  
+      SWFAC     = 1.0
       TURFAC    = 1.0
       TURFAC_Y  = 1.0
       TURFAC_Y2 = 1.0
@@ -469,13 +478,13 @@ C       and total potential water uptake rate.
 !-----------------------------------------------------------------------
 !         ACTUAL TRANSPIRATION
 !-----------------------------------------------------------------------
-!          IF (XHLAI .GT. 1.E-4 .AND. EOP .GT. 1.E-4) THEN
-!            !These calcs replace the old SWFACS subroutine
-!            !Stress factors now calculated as needed in PLANT routines.
-!            EP = MIN(EOP, TRWUP*10.)
-!          ELSE
-!            EP = 0.0
-!          ENDIF
+          IF (XHLAI .GT. 1.E-4 .AND. EOP .GT. 1.E-4) THEN
+            !These calcs replace the old SWFACS subroutine
+            !Stress factors now calculated as needed in PLANT routines.
+            EP = MIN(EOP, TRWUP*10.)
+          ELSE
+            EP = 0.0
+          ENDIF
         ENDIF
       ENDIF
 
@@ -500,53 +509,57 @@ C       and total potential water uptake rate.
 !       CACTUS CAM MODEL
 !       11/03/2022 FO,GH,KJB,TV
 !-----------------------------------------------------------------------
-        CALL GET('SPAM', 'PG', PGCACTUS)
-        
-        TURFAC_Y3 = TURFAC_Y2
-        TURFAC_Y2 = TURFAC_Y
-        TURFAC_Y  = TURFAC
-        
-        TURFAC_A = TURFAC_Y3/3.0 + TURFAC_Y2/3.0 + TURFAC_Y/3.0
-        
-        ! TE units are g[CO2]/kg[water]
-        TE = TEFF * (1.0 + TECONS * (1.0 - TURFAC_A))
-        
-        ! WDEMAND should be mm/day
-        ! Water demand is going to be equal to PG/TE
-        ! Units will be g[CO2]/m2/day
-        ! Water vol. units need to be land area based
-        WDEMAND = PGCACTUS/TE
-        EOP = WDEMAND
-        
-        IF (XHLAI .GT. 0.0 .AND. EOP .GT. 0.0) THEN
-          !These calcs replace the old SWFACS subroutine
-          !Stress factors now calculated as needed in PLANT routines.
-          EP = MIN(EOP, TRWUP*10.)
-        ELSE
-          EP = 0.0
-        ENDIF
-                
-        ! Calculate daily water stess factors (from SWFACS)
-        IF (EOP .GT. 0.0 .AND. ISWWAT .EQ. 'Y') THEN
-          IF ((EOP * 0.1) .GE. TRWUP) THEN
-            SWFAC = TRWUP / (EOP * 0.1)
+        IF(CAMFLGR .EQ. 1.0) THEN
+          CALL GET('SPAM', 'PG', PGCACTUS)
+          
+          TURFAC_Y3 = TURFAC_Y2
+          TURFAC_Y2 = TURFAC_Y
+          TURFAC_Y  = TURFAC
+          
+          TURFAC_A = TURFAC_Y3/3.0 + TURFAC_Y2/3.0 + TURFAC_Y/3.0
+          
+          ! TE units are g[CO2]/kg[water]
+          TE = TEFF * (1.0 + TECONS * (1.0 - TURFAC_A))
+          
+          ! WDEMAND should be mm/day
+          ! Water demand is going to be equal to PG/TE
+          ! Units will be g[CO2]/m2/day
+          ! Water vol. units need to be land area based
+          WDEMAND = PGCACTUS/TE
+          EOP = WDEMAND
+          
+          IF (XHLAI .GT. 0.0 .AND. EOP .GT. 0.0) THEN
+            !These calcs replace the old SWFACS subroutine
+            !Stress factors now calculated as needed in PLANT routines.
+            EP = MIN(EOP, TRWUP*10.)
           ELSE
-            SWFAC = 1.0
+            EP = 0.0
           ENDIF
-          IF((EOP * 0.1 * 1.5) .GE. TRWUP) THEN
-            TURFAC = TRWUP / (EOP * 0.1 * 1.5) 
-          ELSE
-            TURFAC = 1.0
+          
+          ! Calculate daily water stess factors (from SWFACS)
+          IF (EOP .GT. 0.0 .AND. ISWWAT .EQ. 'Y') THEN
+            IF ((EOP * 0.1) .GE. TRWUP) THEN
+              SWFAC = TRWUP / (EOP * 0.1)
+            ELSE
+              SWFAC = 1.0
+            ENDIF
+            IF((EOP * 0.1 * 1.5) .GE. TRWUP) THEN
+              TURFAC = TRWUP / (EOP * 0.1 * 1.5) 
+            ELSE
+              TURFAC = 1.0
+            ENDIF
           ENDIF
-        ENDIF
-        
-        PGCACTUS = PGCACTUS * SWFAC
-        CALL PUT('SPAM', 'PG', PGCACTUS)
-        CALL PUT('SPAM', 'EP', EP)
-        
-        
-        WRITE(7272,'(I7, 8(1X,F5.2))') 
+          
+          PGCACTUS = PGCACTUS * SWFAC
+          CALL PUT('SPAM', 'PG', PGCACTUS)
+          CALL PUT('SPAM', 'EP', EP)
+          CALL PUT('SPAM', 'CAMFLGR',  1.0)
+          CALL PUT('SPAM', 'TURFAC',TURFAC)
+          CALL PUT('SPAM', 'SWFAC' ,SWFAC)
+          
+          WRITE(7272,'(I7, 8(1X,F5.2))') 
      &    YRDOY,TE,WDEMAND,PGCACTUS,SWFAC,TURFAC,EP,EOP,TURFAC_A
+        ENDIF
 !-----------------------------------------------------------------------
 !       ACTUAL ROOT WATER EXTRACTION
 !-----------------------------------------------------------------------
