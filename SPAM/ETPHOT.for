@@ -52,7 +52,7 @@ C========================================================================
 
       SUBROUTINE ETPHOT (CONTROL, ISWITCH,
      &    PORMIN, PSTRES1, RLV, RWUMX, SOILPROP, ST, SW,  !Input
-     &    WEATHER, XLAI,                                  !Input
+     &    WEATHER, XLAI,SWPGS,                            !Input
      &    EOP, EP, ES, RWU, TRWUP)                        !Output
 C     &    Enoon, Tnoon, WINDN, TCANn, CSHnn, CSLnn,        !Output
 C     &    LSHnn, LSLnn, ETnit, TEMnit, Enit, Tnit, WINnit,!Output
@@ -99,6 +99,8 @@ C-----------------------------------------------------------------------
       REAL PHTHRS10, PLTPOP
       REAL PORMIN, RWUMX
       REAL PALBW, SALBW, SRAD, DayRatio
+      
+      REAL CAMFLGR,SWPGS
 
       REAL CONDSH, CONDSL, RA, RB(3), RSURF(3), Rnet(3,1)
       REAL Enoon, Tnoon, WINDN, TCANn, CSHnn, CSLnn,
@@ -236,7 +238,7 @@ C     MEEVP reset on exit from ETPHOT to maintain input settings.
      &      CCNEFF, CICAD, cmxsf,cqesf,pgpath)            !Output
 
           CALL OpETPhot(CONTROL, ISWITCH,
-     &        PCINPD, PG, PGNOON, PCINPN, SLWSLN, SLWSHN,
+     &        PCINPD, PG, PGNOON*SWPGS, PCINPN, SLWSLN, SLWSHN,
      &        PNLSLN, PNLSHN, LMXSLN, LMXSHN, TGRO, TGROAV,
      &        Enoon,Tnoon, ETNOON, WINDn,TCANn, CSHnn, CSLnn,
      &    LSHnn, LSLnn, ETnit, TEMnit, Enit, Tnit, WINnit,
@@ -302,7 +304,7 @@ C            added by BAK on 10DEC2015
 
         IF (MEPHO .EQ. 'L') THEN
           CALL OpETPhot(CONTROL, ISWITCH,
-     &        PCINPD, PG, PGNOON, PCINPN, SLWSLN, SLWSHN,
+     &        PCINPD, PG, PGNOON*SWPGS, PCINPN, SLWSLN, SLWSHN,
      &        PNLSLN, PNLSHN, LMXSLN, LMXSHN, TGRO, TGROAV,
      &        Enoon,Tnoon,ETNOON, WINDn,TCANn, CSHnn, CSLnn,
      &    LSHnn, LSLnn, ETnit, TEMnit, Enit, Tnit, WINnit,
@@ -684,11 +686,15 @@ C          ES = MAX(MIN(EDAY,AWEV1),0.0)
 
 !*****************************************
 !         Calculate daily water stess factors (from SWFACS)
-          SWFAC = 1.0
-          IF (EOP .GT. 1.E-4 .AND. ISWWAT .EQ. 'Y') THEN
-            IF ((EOP * 0.1) .GE. TRWUP) THEN
-              SWFAC = TRWUP / (EOP * 0.1)
-            ENDIF
+          CALL GET('SPAM', 'CAMFLGR',  CAMFLGR)
+          
+          IF(CAMFLGR .EQ. 0.0) THEN 
+            SWFAC = 1.0
+            IF (EOP .GT. 1.E-4 .AND. ISWWAT .EQ. 'Y') THEN
+              IF ((EOP * 0.1) .GE. TRWUP) THEN
+                SWFAC = TRWUP / (EOP * 0.1)
+              ENDIF
+            ENDIF            
           ENDIF
 !*****************************************
 
@@ -718,7 +724,7 @@ C         Post-processing for some stress effects (duplicated in PHOTO).
           PG = PG * EXCESS
 
           CALL OpETPhot(CONTROL, ISWITCH,
-     &        PCINPD, PG, PGNOON, PCINPN, SLWSLN, SLWSHN,
+     &        PCINPD, PG, PGNOON*SWPGS, PCINPN, SLWSLN, SLWSHN,
      &        PNLSLN, PNLSHN, LMXSLN, LMXSHN, TGRO, TGROAV,
      &        Enoon,Tnoon,ETNOON, WINDn,TCANn, CSHnn, CSLnn,
      &    LSHnn, LSLnn, ETnit, TEMnit, Enit, Tnit, WINnit,
@@ -740,7 +746,7 @@ C       preveious line added by BAK on 10DEC2015
 !-----------------------------------------------------------------------
         IF (MEPHO .EQ. 'L') THEN
                 CALL OpETPhot(CONTROL, ISWITCH,
-     &        PCINPD, PG, PGNOON, PCINPN, SLWSLN, SLWSHN,
+     &        PCINPD, PG, PGNOON*SWPGS, PCINPN, SLWSLN, SLWSHN,
      &        PNLSLN, PNLSHN, LMXSLN, LMXSHN, TGRO, TGROAV,
      &        Enoon,Tnoon,ETNOON, WINDn,TCANn, CSHnn, CSLnn,
      &    LSHnn, LSLnn, ETnit, TEMnit, Enit, Tnit, WINnit,

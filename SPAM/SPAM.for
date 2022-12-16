@@ -154,7 +154,7 @@ C=======================================================================
       IF (MEPHO .EQ. 'L' .OR. MEEVP .EQ. 'Z') THEN
         CALL ETPHOT(CONTROL, ISWITCH,
      &    PORMIN, PSTRES1, RLV, RWUMX, SOILPROP, ST, SW,  !Input
-     &    WEATHER, XLAI,                                  !Input
+     &    WEATHER, XLAI,SWFAC,                            !Input
      &    EOP, EP, ES, RWU, TRWUP)                        !Output
       ENDIF
       
@@ -212,7 +212,8 @@ C=======================================================================
       OPEN (UNIT=7272, FILE='PGOUT_Cactus.OUT',
      &      STATUS = 'REPLACE',IOSTAT=ERRNUM)
       WRITE(7272,'(A)') 
-     &   '  YRDOY    TE WDMND PGCAC SWFAC TURFC    EP   EOP TURFA'
+     &   '  YRDOY    TE WDMND PGCAC    PG' //
+     &   ' SWFAC TURFC    EP   EOP TURFA'
       
             
 !     ---------------------------------------------------------        
@@ -285,7 +286,7 @@ C=======================================================================
         IF (MEPHO .EQ. 'L' .OR. MEEVP .EQ. 'Z') THEN
           CALL ETPHOT(CONTROL, ISWITCH,
      &    PORMIN, PSTRES1, RLV, RWUMX, SOILPROP, ST, SW,  !Input
-     &    WEATHER, XLAI,                                 !Input
+     &    WEATHER, XLAI,SWFAC,                            !Input
      &    EOP, EP, ES, RWU, TRWUP)                        !Output
         ENDIF
       ENDIF
@@ -500,7 +501,7 @@ C       and total potential water uptake rate.
           !   (MEPHO = 'L' and MEEVP = 'Z').
           CALL ETPHOT(CONTROL, ISWITCH,
      &    PORMIN, PSTRES1, RLV, RWUMX, SOILPROP, ST, SW,  !Input
-     &    WEATHER, XLAI,                                 !Input
+     &    WEATHER, XLAI,SWFAC,                            !Input
      &    EOP, EP, ES, RWU, TRWUP)                        !Output
           EVAP = ES  !CHP / BK 7/13/2017
         ENDIF
@@ -557,8 +558,9 @@ C       and total potential water uptake rate.
           CALL PUT('SPAM', 'TURFAC',TURFAC)
           CALL PUT('SPAM', 'SWFAC' ,SWFAC)
           
-          WRITE(7272,'(I7, 8(1X,F5.2))') 
-     &    YRDOY,TE,WDEMAND,PGCACTUS,SWFAC,TURFAC,EP,EOP,TURFAC_A
+          WRITE(7272,'(I7, 9(1X,F5.2))') 
+     &    YRDOY,TE,WDEMAND,PGCACTUS,PGCACTUS/SWFAC,
+     &    SWFAC,TURFAC,EP,EOP,TURFAC_A
         ENDIF
 !-----------------------------------------------------------------------
 !       ACTUAL ROOT WATER EXTRACTION
@@ -681,7 +683,7 @@ C-----------------------------------------------------------------------
       IF (CROP .NE. 'FA' .AND. MEPHO .EQ. 'L') THEN
         CALL ETPHOT(CONTROL, ISWITCH,
      &    PORMIN, PSTRES1, RLV, RWUMX, SOILPROP, ST, SW,  !Input
-     &    WEATHER, XLAI,                                 !Input
+     &    WEATHER, XLAI,SWFAC,                            !Input
      &    EOP, EP, ES, RWU, TRWUP)                        !Output
       ENDIF
 
@@ -715,7 +717,7 @@ C-----------------------------------------------------------------------
       IF (MEPHO .EQ. 'L') THEN
         CALL ETPHOT(CONTROL, ISWITCH,
      &    PORMIN, PSTRES1, RLV, RWUMX, SOILPROP, ST, SW,  !Input
-     &    WEATHER, XLAI,                                 !Input
+     &    WEATHER, XLAI,SWFAC,                            !Input
      &    EOP, EP, ES, RWU, TRWUP)                        !Output
       ENDIF
 
