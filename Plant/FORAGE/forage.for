@@ -2029,7 +2029,7 @@ C-----------------------------------------------------------------------
      &                RHOL,RHOS,PCNL,PCNST,SLA,RTWT,STRWT,!Input
      &                WTLF,STMWT,TOPWT,TOTWT,WCRLF,WCRST, !Input/Output
      &                WTNLF,WTNST,WNRLF,WNRST,WTNCAN,     !Input/Output
-     &                AREALF,XLAI,XHLAI,VSTAGE,vstagp,canht,     !Input/Output
+     &                AREALF,XLAI,XHLAI,VSTAGE,vstagp,canht,CANWH,     !Input/Output
      &                FHWAH,FHTOTN, FHLPH,fhpctn,FREQ,CUHT,MOWC,RSPLC,
      &                DWTCO, DWTLO, DWTSO, PWTCO, PWTLO, PWTSO,
      &                WTCO, WTLO, WTSO)

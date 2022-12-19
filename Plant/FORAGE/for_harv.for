@@ -22,7 +22,7 @@ C=======================================================================
      &                RHOL,RHOS,PCNL,PCNST,SLA,RTWT,STRWT,!Input
      &                WTLF,STMWT,TOPWT,TOTWT,WCRLF,WCRST, !Input/Output
      &                WTNLF,WTNST,WNRLF,WNRST,WTNCAN,     !Input/Output
-     &                AREALF,XLAI,XHLAI,VSTAGE,vstagp,canht,     !Input/Output
+     &                AREALF,XLAI,XHLAI,VSTAGE,vstagp,canht, CANWH,     !Input/Output
      &                fhtot,FHTOTN, fhpctlf,fhpctn,FREQ,CUHT,MOWC,RSPLC,
      &                DWTCO, DWTLO, DWTSO, PWTCO, PWTLO, PWTSO,
      &                WTCO, WTLO, WTSO)
@@ -41,14 +41,14 @@ C=======================================================================
       integer,dimension(8) :: date_time
       INTEGER LUNEXP,ERRNUM,LINEXP,LNHAR,LUNIO,PATHL
 
-      REAL,ALLOCATABLE,DIMENSION(:) :: MOW,RSPLF,MVS,rsht
+      REAL,ALLOCATABLE,DIMENSION(:) :: MOW,RSPLF,MVS,rsht,RWDH
       REAL FHLEAF,FHSTEM,FHVSTG
       REAL RHOL,RHOS,PCNL,PCNST,SLA
       REAL WTLF,STMWT,TOPWT,TOTWT,WCRLF,WCRST
       REAL WTNLF,WTNST,WNRLF,WNRST,WTNCAN,RTWT,STRWT
       REAL AREALF,XLAI,AREAH,XHLAI,VSTAGE
       REAL PROLFF,PROSTF,pliglf,pligst
-      real canht,fhcrlf,fhcrst,fhtotn,fhtot,fhlfn,fhstn
+      real canht,fhcrlf,fhcrst,fhtotn,fhtot,fhlfn,fhstn,CANWH
       real fhpcho,fhpctlf,fhpctn,fhplig
       real vstagp,MOWC,RSPLC,y,z,PELF,FMOW,RHMOW,CHMOW,FLFP,RHLFP,RSPLM
       REAL DWTCO, DWTLO, DWTSO, PWTCO, PWTLO, PWTSO
@@ -91,6 +91,10 @@ C=======================================================================
       run    = control % run
       ename  = control % ename
 
+C----------------------------------------------------------      
+C     Initialization
+C----------------------------------------------------------
+      RWDH = 0.0
 C----------------------------------------------------------      
 C     Open and read MOWFILE and PATH 
 C----------------------------------------------------------
@@ -228,6 +232,7 @@ C---------------------------------------------------------
         IF (MOWCOUNT.GT.0) THEN
           ALLOCATE(TRNO(MOWCOUNT),DATE(MOWCOUNT),MOW(MOWCOUNT))
           ALLOCATE(RSPLF(MOWCOUNT),MVS(MOWCOUNT),rsht(mowcount))
+          ALLOCATE(RWDH(MOWCOUNT))
         ELSE
 C         MOW file has no data for this treatment
           CALL ERROR(ERRKEY,2,MOWFILE,0)
@@ -246,8 +251,9 @@ C         MOW file has no data for this treatment
      &       .and.mow80(1:6)==trtchar
      &       .AND.ISECT.EQ.0)THEN
             I = I + 1
-            READ (MOW80,'(2I6,4F6.0)',IOSTAT=ISECT)
-     &                TRNO(I),DATE(I),MOW(I),RSPLF(I),MVS(I),rsht(i)
+            READ (MOW80,'(2I6,5F6.0)',IOSTAT=ISECT)
+     &                TRNO(I),DATE(I),MOW(I),RSPLF(I),MVS(I),rsht(i),
+     &                RWDH(I)
 C  FO - 05/07/2020 Add new Y4K subroutine call to convert YRDOY
             !CALL Y2K_DOY(DATE(I))
             CALL Y4K_DOY(DATE(I),MOWFILE,I,ERRKEY,1)
@@ -275,6 +281,10 @@ C  FO - 05/07/2020 Add new Y4K subroutine call to convert YRDOY
               FHVSTG=MAX(MVS(I),0.0)
               canht=max(rsht(i)/100,0.0)
 !             canht=max(rsht(i),0.0)     !enter rsht in cm
+              ! KJB/FO/TV - Only for Cactus
+              IF(RWDH(I) .GT. 0.0) THEN
+                CANWH = MAX(RWDH(I)/100,0.0)
+              ENDIF
 
 
               fhtot = fhleaf+fhstem
