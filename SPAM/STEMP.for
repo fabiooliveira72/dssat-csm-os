@@ -51,10 +51,10 @@ C-----------------------------------------------------------------------
 
       INTEGER DOY, DYNAMIC, I, L, NLAYR
       INTEGER RUN, YRDOY, YEAR
-      INTEGER ERRNUM, FOUND, LNUM, LUNIO
+      INTEGER LUNIO  !,ERRNUM, FOUND, LNUM 
 
       REAL ABD, ALBEDO, ATOT, B, CUMDPT 
-      REAL DP, FX, HDAY, ICWD, PESW, MSALB, SRAD, SRFTEMP 
+      REAL DP, FX, HDAY, PESW, MSALB, SRAD, SRFTEMP   !, ICWD 
       REAL TAMP, TAV, TAVG, TBD, TMAX, XLAT, WW
       REAL TDL, TLL, TSW
       REAL TMA(5)
