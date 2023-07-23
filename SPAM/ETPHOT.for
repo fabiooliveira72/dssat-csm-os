@@ -1053,7 +1053,8 @@ C     Initialize some parameters.
         BETN = 0.0
       ENDIF
 
-      NELAYR = 1
+!     2023-07-20 FO/SC Changed NELAYR because it simulates better
+      NELAYR = 2
       LWIDTH = 0.02
       RCUTIC = 5000.0
       DO I = 1,NLAYR

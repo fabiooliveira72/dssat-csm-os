@@ -1102,10 +1102,14 @@ C     Norman and Arkebauer, Gutschick, In: Boote and Loomis, 1991)
       B = (QEFF*PARLF) + LFMAX
       C = QEFF * PARLF * LFMAX
 !     CHP Added checks for floating underflow 1/16/03
-!      IF (LFMAX .GT. 0.0) THEN
-      IF (LFMAX .GT. 0.0 .AND. (QEFF*PARLF/LFMAX) .LT. 20.) THEN
+      IF (LFMAX .GT. 0.0) THEN
+        IF ((QEFF*PARLF/LFMAX) .LT. 20. .AND.
+     &      (QEFF*PARLF/LFMAX) .GT. -20.) THEN
 C       PGLF = (B - SQRT(B**2-4.*A*C)) / (2.*A)
-        PGLF = LFMAX * (1.0 - EXP(-QEFF*PARLF/LFMAX))
+          PGLF = LFMAX * (1.0 - EXP(-QEFF*PARLF/LFMAX))
+        ELSE
+          PGLF = MAX(LFMAX, 0.0)
+        ENDIF
       ELSE
         PGLF = MAX(LFMAX, 0.0)
       ENDIF
@@ -1325,6 +1329,7 @@ C  into matrices for ETSOLV.
 C-----------------------------------------------------------------------
 C  REVISION HISTORY
 C  12/12/90 NBP Written
+C  07/20/23  FO Added protections for div. by zero in LAISL and LAISH
 C------------------------------------------------------------------------
 C  Called from: CANPET
 C  Calls:       RESBLR
@@ -1362,19 +1367,23 @@ C     Calculate canopy and soil boundary layer resistances.
 
 C     Calculate leaf surface resistances.
 
+!     2023-07-20 FO Added protections for LAISL and LAISH to avoid
+!                   divisions by zero.
       IF (XLAI .GT. 0.0) THEN
-        IF (CONDSL .GT. 0.0) THEN
+        RSSL = 0.0
+        RSSH = 0.0
+        IF (CONDSL .GT. 0.0 .AND. LAISL .GT. 0.0) THEN
           !CSVC - RB(1) !Total boundary resistence is 'RSSL + RB(1)'
           RSSL = 1.0/(CONDSL*LAISL)
           RSSL = MAX(RSSL,1.0)
-        ELSE
+        ELSEIF (LAISL .GT. 0.0) THEN
           RSSL = MAX(RCUTIC / LAISL,1.)
         ENDIF
-        IF (CONDSH .GT. 0.0) THEN
-          !CSVC - RB(2) !Total boundary resistence is 'RSSL + RB(2)'
+        IF (CONDSH .GT. 0.0 .AND. LAISH .GT. 0.0) THEN
+          !CSVC - RB(2) !Total boundary resistance is 'RSSL + RB(2)'
           RSSH = 1.0/(CONDSH*LAISH)
           RSSH = MAX(RSSH,1.)
-        ELSE
+        ELSEIF (LAISL .GT. 0.0) THEN
           RSSH = MAX(RCUTIC/LAISL,1.)
         ENDIF
       ELSE
