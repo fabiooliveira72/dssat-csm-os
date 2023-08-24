@@ -16,7 +16,7 @@ C  Calls  : ERROR, FIND, IGNORE
 C=======================================================================
 
       SUBROUTINE INCOMP(DYNAMIC,
-     &    FILECC, FILEIO, FRLF, FRRT, FRSTM,              !Input
+     &    FILECC, FILEIO, FRLF, FRRT, FRSTM, CO2,         !Input
      &    AGRLF, AGRNOD, AGRRT, AGRSD1, AGRSD2, AGRSH1,   !Output
      &    AGRSH2, AGRSTM, AGRVG, AGRVG2, SDPROR)          !Output
 
@@ -25,7 +25,7 @@ C-----------------------------------------------------------------------
                          ! which contain control information, soil
                          ! parameters, hourly weather data.
       IMPLICIT NONE
-      EXTERNAL GETLUN, FIND, ERROR, IGNORE
+      EXTERNAL GETLUN, FIND, ERROR, IGNORE, TABEX
       SAVE
 
       CHARACTER*6 ERRKEY
@@ -36,8 +36,10 @@ C-----------------------------------------------------------------------
       CHARACTER*92 FILECC
 
       INTEGER LUNCRP, LUNIO
-      INTEGER DYNAMIC, ERR, FOUND, ISECT, LINC, LNUM
+      INTEGER DYNAMIC, ERR, FOUND, ISECT, LINC, LNUM, I
 
+      REAL,DIMENSION(7) :: CCO2,CPROLFI,CPCARLF,CPROSTI,CPCARST
+      
       REAL  AGRLF , AGRNOD, AGRRT , AGRSD1, AGRSD2, AGRSH1,
      &      AGRSH2, AGRSTM, AGRVG , AGRVG2,
      &      FRLF  , FRRT  , FRSTM,
@@ -48,7 +50,7 @@ C-----------------------------------------------------------------------
      &      POALF , POANO , POART , POASD , POASH , POAST ,
      &              PROLFI, PRORTI,                 PROSHI, PROSTI,
      &      RCH2O , RLIG  , RLIP  , RMIN  , RNO3C , ROA   ,
-     &      SDLIP,  SDPRO , SDPROR, SDPROS
+     &      SDLIP,  SDPRO , SDPROR, SDPROS, CO2, TABEX
 
 !***********************************************************************
 !***********************************************************************
@@ -152,6 +154,33 @@ C-----------------------------------------------------------------------
      &          PMINLF, PMINST, PMINRT, PMINSH, PMINSD, PMINNO
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
       ENDIF
+      
+      SECTION = '!*COMP'
+      CALL FIND(LUNCRP, SECTION, LINC, FOUND) ; LNUM = LNUM + LINC
+      IF (FOUND .EQ. 0) THEN
+        CALL ERROR(SECTION, 42, FILECC, LNUM)
+      ELSE
+        CCO2    = 0.0 
+        CPROLFI = 0.0
+        CPCARLF = 0.0
+        CPROSTI = 0.0
+        CPCARST = 0.0            
+        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+        READ(C80,'(7F6.0)',IOSTAT=ERR) (CCO2(I),I=1,7)
+        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+        READ(C80,'(7F6.0)',IOSTAT=ERR) (CPROLFI(I),I=1,7)
+        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+        READ(C80,'(7F6.0)',IOSTAT=ERR) (CPCARLF(I),I=1,7)
+        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+        READ(C80,'(7F6.0)',IOSTAT=ERR) (CPROSTI(I),I=1,7)
+        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+        CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+        READ(C80,'(7F6.0)',IOSTAT=ERR) (CPCARST(I),I=1,7)
+        IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+      ENDIF
 
       CLOSE (LUNCRP)
 
@@ -189,6 +218,13 @@ C-----------------------------------------------------------------------
 !     Seasonal initialization - run once per season
 !***********************************************************************
       ELSEIF (DYNAMIC .EQ. SEASINIT) THEN
+!-----------------------------------------------------------------------
+!     Carbon Dioxide effect on composition
+!-----------------------------------------------------------------------
+        PROLFI = TABEX(CPROLFI,CCO2,CO2,7)  
+        PCARLF = TABEX(CPCARLF,CCO2,CO2,7)  
+        PROSTI = TABEX(CPROSTI,CCO2,CO2,7)  
+        PCARST = TABEX(CPCARST,CCO2,CO2,7)  
 C-----------------------------------------------------------------------
 C     COMPUTE RESPIRATION COEFFICIENTS BASED ON PLANT COMPOSITION
 C-----------------------------------------------------------------------
