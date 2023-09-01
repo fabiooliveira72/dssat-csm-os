@@ -154,12 +154,14 @@ C-----------------------------------------------------------------------
      &          PMINLF, PMINST, PMINRT, PMINSH, PMINSD, PMINNO
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
       ENDIF
-      
+!-----------------------------------------------------------------------
+! CARBON DIOXIDE EFFECT ON COMPOSITION
+!-----------------------------------------------------------------------
       SECTION = '!*COMP'
       CALL FIND(LUNCRP, SECTION, LINC, FOUND) ; LNUM = LNUM + LINC
       IF (FOUND .EQ. 0) THEN
         CALL ERROR(SECTION, 42, FILECC, LNUM)
-      ELSE
+      ELSE        
         CCO2    = 0.0 
         CPROLFI = 0.0
         CPCARLF = 0.0
@@ -180,7 +182,7 @@ C-----------------------------------------------------------------------
         CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
         READ(C80,'(7F6.0)',IOSTAT=ERR) (CPCARST(I),I=1,7)
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
-      ENDIF
+      ENDIF 
 
       CLOSE (LUNCRP)
 
@@ -219,12 +221,12 @@ C-----------------------------------------------------------------------
 !***********************************************************************
       ELSEIF (DYNAMIC .EQ. SEASINIT) THEN
 !-----------------------------------------------------------------------
-!     Carbon Dioxide effect on composition
+! CARBON DIOXIDE EFFECT ON COMPOSITION
 !-----------------------------------------------------------------------
         PROLFI = TABEX(CPROLFI,CCO2,CO2,7)  
         PCARLF = TABEX(CPCARLF,CCO2,CO2,7)  
         PROSTI = TABEX(CPROSTI,CCO2,CO2,7)  
-        PCARST = TABEX(CPCARST,CCO2,CO2,7)  
+        PCARST = TABEX(CPCARST,CCO2,CO2,7) 
 C-----------------------------------------------------------------------
 C     COMPUTE RESPIRATION COEFFICIENTS BASED ON PLANT COMPOSITION
 C-----------------------------------------------------------------------

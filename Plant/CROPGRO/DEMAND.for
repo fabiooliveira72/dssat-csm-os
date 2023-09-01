@@ -22,7 +22,7 @@ C  Called by:  PLANT
 C  Calls:      SDCOMP, IPDMND
 C=======================================================================
 
-      SUBROUTINE DEMAND(DYNAMIC, CONTROL,
+      SUBROUTINE DEMAND(DYNAMIC, CONTROL, CO2,
      &  AGRLF, AGRRT, AGRSH2, AGRSTM, CROP, DRPP, DXR57,  !Input
      &  FILECC, FILEGC, FILEIO, FNINSH, FRACDN, LAGSD,    !Input
      &  LNGPEG, NDLEAF, NSTRES, PAR, PCNL, PCNRT, PCNST,  !Input
@@ -114,6 +114,9 @@ C=======================================================================
 !CHP - puncture variables, not functional
       REAL PUNCSD, PUNCTR, RPRPUN
 
+      REAL CO2
+      REAL,DIMENSION(7) :: CCO2,CPROLFI,CPROSTI
+
       TYPE (ControlType) CONTROL
 
 !***********************************************************************
@@ -137,7 +140,7 @@ C=======================================================================
      &  SRMAX, THRESH, TURSLA, TYPSDT, VSSINK, XFRMAX,    !Output
      &  XFRUIT, XLEAF, XSLATM, XTRFAC, XVGROW, XXFTEM,    !Output
      &  YLEAF, YSLATM, YSTEM, YTRFAC, YVREF, YXFTEM,      !Output
-     &  XFPHT, XFINT, NSLA)                               !Output
+     &  XFPHT, XFINT, NSLA, CCO2, CPROLFI, CPROSTI)       !Output
 
 !***********************************************************************
 !***********************************************************************
@@ -190,6 +193,11 @@ C=======================================================================
         FRRT = 1.0 - FRLF - FRSTM
 
       ENDIF
+!-----------------------------------------------------------------------
+!     CARBON DIOXIDE EFFECT ON COMPOSITION
+!-----------------------------------------------------------------------
+      PROLFI = TABEX(CPROLFI,CCO2,CO2,7)  
+      PROSTI = TABEX(CPROSTI,CCO2,CO2,7)  
 
 !***********************************************************************
 !***********************************************************************
@@ -708,7 +716,7 @@ C 24 changed to TS by Bruce Kimball on 3Jul17
      &  SRMAX, THRESH, TURSLA, TYPSDT, VSSINK, XFRMAX,    !Output
      &  XFRUIT, XLEAF, XSLATM, XTRFAC, XVGROW, XXFTEM,    !Output
      &  YLEAF, YSLATM, YSTEM, YTRFAC, YVREF, YXFTEM,      !Output
-     &  XFPHT, XFINT, NSLA)                               !Output
+     &  XFPHT, XFINT, NSLA, CCO2,CPROLFI,CPROSTI)         !Output
 
 !-----------------------------------------------------------------------
       IMPLICIT NONE
@@ -738,13 +746,14 @@ C 24 changed to TS by Bruce Kimball on 3Jul17
      &  SRMAX, TURSLA, VSSINK, XFRMAX, XFRUIT
         REAL LNGSH, THRESH, SDPRO, SDLIP, XFPHT, XFINT
         REAL NSLA
-
+      
         REAL FNSDT(4)
         REAL XVGROW(6), YVREF(6)
         REAL XSLATM(10), YSLATM(10), XTRFAC(10), YTRFAC(10),
      &                  XXFTEM(10), YXFTEM(10)
         REAL XLEAF(25), YLEAF(25), YSTEM(25)
-
+      
+        REAL,DIMENSION(7) :: CCO2,CPROLFI,CPROSTI
 !-----------------------------------------------------------------------
       CALL GETLUN('FILEIO', LUNIO)
       OPEN (LUNIO, FILE = FILEIO,STATUS = 'OLD',IOSTAT=ERR)
@@ -828,7 +837,28 @@ C 24 changed to TS by Bruce Kimball on 3Jul17
         READ(C80,'(24X,F6.0)',IOSTAT=ERR) PMINSD
         IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
       ENDIF
-
+!-----------------------------------------------------------------------
+! CARBON DIOXIDE EFFECT ON COMPOSITION
+!-----------------------------------------------------------------------
+        SECTION = '!*COMP'
+        CALL FIND(LUNCRP, SECTION, LINC, FOUND) ; LNUM = LNUM + LINC
+        IF (FOUND .EQ. 0) THEN
+          CALL ERROR(SECTION, 42, FILECC, LNUM)
+        ELSE
+          CCO2    = 0.0 
+          CPROLFI = 0.0
+          CPROSTI = 0.0        
+          CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+          READ(C80,'(7F6.0)',IOSTAT=ERR) (CCO2(I),I=1,7)
+          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+          CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+          READ(C80,'(7F6.0)',IOSTAT=ERR) (CPROLFI(I),I=1,7)
+          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+          CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+          CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+          READ(C80,'(7F6.0)',IOSTAT=ERR) (CPROSTI(I),I=1,7)
+          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+        ENDIF 
 !-----------------------------------------------------------------------
 !    Find and Read Seed Composition Section
 !-----------------------------------------------------------------------
