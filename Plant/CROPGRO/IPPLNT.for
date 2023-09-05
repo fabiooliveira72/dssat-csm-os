@@ -28,7 +28,8 @@ C=======================================================================
      &  PLIPSH, PLIGSD, PLIGSH, PMINSD, PMINSH, POASD,    !Output
      &  POASH, PORMIN, PROLFI, PRORTI, PROSHI, PROSTI,    !Output
      &  R30C2, RCH2O, RES30C, RFIXN, RLIG, RLIP, RMIN,    !Output
-     &  RNH4C, RNO3C, ROA, RPRO, RWUEP1, RWUMX, TTFIX)    !Output
+     &  RNH4C, RNO3C, ROA, RPRO, RWUEP1, RWUMX, TTFIX,    !Output
+     &  CCO2,CPROLFI,CPROSTI)                             !Output
 
 C-----------------------------------------------------------------------
 
@@ -54,7 +55,7 @@ C-----------------------------------------------------------------------
 !      CHARACTER*255 C255
 
       INTEGER LUNCRP, NOUTDO, LUNIO !LUNECO
-      INTEGER PATHL, FOUND, ERR, LINC, LNUM, ISECT
+      INTEGER PATHL, FOUND, ERR, LINC, LNUM, ISECT, I
 
       REAL
      &  CADPR1, CMOBMX, FRCNOD, FREEZ1, FREEZ2,
@@ -68,6 +69,8 @@ C-----------------------------------------------------------------------
       REAL EORATIO, KCAN, KEP, PORMIN, RWUMX, RWUEP1
       REAL KC_SLOPE !KCAN_ECO
 
+      REAL,DIMENSION(7) :: CCO2,CPROLFI,CPROSTI
+      
 !     The variable "CONTROL" is of constructed type "ControlType" as 
 !     defined in ModuleDefs.for, and contains the following variables.
 !     The components are copied into local variables for use here.
@@ -213,7 +216,28 @@ C-----------------------------------------------------------------------
           READ(CHAR,'(18X,2F6.0)',IOSTAT=ERR) PMINSH, PMINSD
           IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
         ENDIF
-
+C-----------------------------------------------------------------------
+C CARBON DIOXIDE EFFECT ON COMPOSITION
+C-----------------------------------------------------------------------
+        SECTION = '!*COMP'
+        CALL FIND(LUNCRP, SECTION, LINC, FOUND) ; LNUM = LNUM + LINC
+        IF (FOUND .EQ. 0) THEN
+          CALL ERROR(SECTION, 42, FILECC, LNUM)
+        ELSE
+          CCO2    = 0.0 
+          CPROLFI = 0.0
+          CPROSTI = 0.0        
+          CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
+          READ(CHAR,'(7F6.0)',IOSTAT=ERR) (CCO2(I),I=1,7)
+          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+          CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
+          READ(CHAR,'(7F6.0)',IOSTAT=ERR) (CPROLFI(I),I=1,7)
+          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+          CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
+          CALL IGNORE(LUNCRP,LNUM,ISECT,CHAR)
+          READ(CHAR,'(7F6.0)',IOSTAT=ERR) (CPROSTI(I),I=1,7)
+          IF (ERR .NE. 0) CALL ERROR(ERRKEY,ERR,FILECC,LNUM)
+        ENDIF 
 C-----------------------------------------------------------------------
 C READ CARBON AND NITROGEN MINING PARAMETERS
 C-----------------------------------------------------------------------

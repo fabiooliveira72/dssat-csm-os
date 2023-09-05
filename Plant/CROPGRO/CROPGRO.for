@@ -55,7 +55,7 @@ C=======================================================================
       EXTERNAL DEMAND, FREEZE, GROW, HRES_CGRO, INCOMP, IPPLNT, MOBIL,
      &  NFIX, NUPTAK, OPGROW, OPHARV, P_CGRO, PEST, PHENOL,
      &  PHOTO, PLANTNBAL, PODDET, PODS, RESPIR, ROOTS, SENES,
-     &  VEGGR
+     &  VEGGR, TABEX
       SAVE
 !-----------------------------------------------------------------------
       CHARACTER*1 DETACH, IDETO, ISWNIT, ISWSYM,
@@ -175,6 +175,8 @@ C=======================================================================
 !     K model (not yet implemented)
       REAL KSTRES
 
+      REAL,DIMENSION(7) :: CCO2,CPROLFI,CPROSTI
+      REAL TABEX
 !-----------------------------------------------------------------------
 !     Define constructed variable types based on definitions in
 !     ModuleDefs.for.
@@ -236,7 +238,8 @@ C=======================================================================
      &  PLIPSH, PLIGSD, PLIGSH, PMINSD, PMINSH, POASD,    !Output
      &  POASH, PORMIN, PROLFI, PRORTI, PROSHI, PROSTI,    !Output
      &  R30C2, RCH2O, RES30C, RFIXN, RLIG, RLIP, RMIN,    !Output
-     &  RNH4C, RNO3C, ROA, RPRO, RWUEP1, RWUMX, TTFIX)    !Output
+     &  RNH4C, RNO3C, ROA, RPRO, RWUEP1, RWUMX, TTFIX,    !Output
+     &  CCO2,CPROLFI,CPROSTI)                             !Output
 
       KTRANS = KEP
       KSEVAP = -99.   !Defaults to old method of light
@@ -275,7 +278,7 @@ C=======================================================================
 
 !-----------------------------------------------------------------------
       IF (CROP .NE. 'FA') THEN
-        CALL DEMAND(RUNINIT, CONTROL,
+        CALL DEMAND(RUNINIT, CONTROL, CO2,
      &  AGRLF, AGRRT, AGRSH2, AGRSTM, CROP, DRPP, DXR57,  !Input
      &  FILECC, FILEGC, FILEIO, FNINSH, FRACDN, LAGSD,    !Input
      &  LNGPEG, NDLEAF, NSTRES, PAR, PCNL, PCNRT, PCNST,  !Input
@@ -294,7 +297,7 @@ C=======================================================================
 C    Call plant COMPosition INitialization (for data input)
 C-----------------------------------------------------------------------
         CALL INCOMP(RUNINIT, 
-     &    FILECC, FILEIO, FRLF, FRRT, FRSTM,              !Input
+     &    FILECC, FILEIO, FRLF, FRRT, FRSTM, CO2,         !Input
      &    AGRLF, AGRNOD, AGRRT, AGRSD1, AGRSD2, AGRSH1,   !Output
      &    AGRSH2, AGRSTM, AGRVG, AGRVG2, SDPROR)          !Output
 
@@ -504,7 +507,7 @@ C     Initialize pest coupling point and damage variables
 !         to INCOMP and GROW (need to initialize values of F, FRLF,
 !         FRRT, and FRSTM for use in those routines)  chp 9/22/98
 !-----------------------------------------------------------------------
-      CALL DEMAND(SEASINIT, CONTROL,
+      CALL DEMAND(SEASINIT, CONTROL, CO2,
      &  AGRLF, AGRRT, AGRSH2, AGRSTM, CROP, DRPP, DXR57,  !Input
      &  FILECC, FILEGC, FILEIO, FNINSH, FRACDN, LAGSD,    !Input
      &  LNGPEG, NDLEAF, NSTRES, PAR, PCNL, PCNRT, PCNST,  !Input
@@ -526,7 +529,7 @@ C     Initialize pest coupling point and damage variables
 !-----------------------------------------------------------------------
       IF (CROP .NE. 'FA') THEN
         CALL INCOMP(SEASINIT, 
-     &    FILECC, FILEIO, FRLF, FRRT, FRSTM,              !Input
+     &    FILECC, FILEIO, FRLF, FRRT, FRSTM, CO2,         !Input
      &    AGRLF, AGRNOD, AGRRT, AGRSD1, AGRSD2, AGRSH1,   !Output
      &    AGRSH2, AGRSTM, AGRVG, AGRVG2, SDPROR)          !Output
       ENDIF
@@ -734,7 +737,12 @@ C-----------------------------------------------------------------------
      &    AGEFAC, PG)                                     !Output
         ENDIF
       ENDIF
-
+!-----------------------------------------------------------------------
+!     CARBON DIOXIDE EFFECT ON COMPOSITION
+!-----------------------------------------------------------------------
+      PROLFI = TABEX(CPROLFI,CCO2,CO2,7)  
+      PROSTI = TABEX(CPROSTI,CCO2,CO2,7) 
+      
 !***********************************************************************
 !***********************************************************************
 !     DAILY INTEGRATION 
@@ -801,7 +809,7 @@ C-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
 !       DYNAMIC = EMERG (not INTEGR) here
-        CALL DEMAND(EMERG, CONTROL, 
+        CALL DEMAND(EMERG, CONTROL, CO2,
      &  AGRLF, AGRRT, AGRSH2, AGRSTM, CROP, DRPP, DXR57,  !Input
      &  FILECC, FILEGC, FILEIO, FNINSH, FRACDN, LAGSD,    !Input
      &  LNGPEG, NDLEAF, NSTRES, PAR, PCNL, PCNRT, PCNST,  !Input
@@ -931,7 +939,7 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C    Call Subroutine to calculate Nitrogen and Carbon Demand for new growth
 C-----------------------------------------------------------------------
-      CALL DEMAND(INTEGR, CONTROL, 
+      CALL DEMAND(INTEGR, CONTROL, CO2,
      &  AGRLF, AGRRT, AGRSH2, AGRSTM, CROP, DRPP, DXR57,  !Input
      &  FILECC, FILEGC, FILEIO, FNINSH, FRACDN, LAGSD,    !Input
      &  LNGPEG, NDLEAF, NSTRES, PAR, PCNL, PCNRT, PCNST,  !Input
@@ -1431,7 +1439,7 @@ C-----------------------------------------------------------------------
 ! CNOD      C used in N-Fixation and nodule growth (including respiration 
 !             costs) today (g[CH2O] / m2 / d)
 ! CNODMN    Minimum C reserved for nodule growth (g[CH2O] / m2 / d)
-! CO2       Atmospheric carbon dioxide concentration (µmol[CO2] / mol[air])
+! CO2       Atmospheric carbon dioxide concentration (ï¿½mol[CO2] / mol[air])
 ! CONTROL   Composite variable containing variables related to control 
 !             and/or timing of simulation.    See Appendix A. 
 ! CROP      Crop identification code 
@@ -1488,8 +1496,8 @@ C-----------------------------------------------------------------------
 ! FRCNOD    Fraction of new root dry matter allocation that is diverted to 
 !             nodule growth 
 ! FREEZ1    Temperature below which plant loses all leaves, but development 
-!             continues (°C)
-! FREEZ2    Temperature below which plant growth stops completely. (°C)
+!             continues (ï¿½C)
+! FREEZ2    Temperature below which plant growth stops completely. (ï¿½C)
 ! FRLF      Fraction of vegetative tissue growth that goes to leaves on a 
 !             day (g[leaf] / g[veg])
 ! FRRT      Fraction of vegetative tissue growth that goes to roots on a 
@@ -1560,13 +1568,13 @@ C-----------------------------------------------------------------------
 ! NGRSD     Rate of N accumulation in new seeds (g[N] / m2 / d)
 ! NGRSH     Rate of N accumulation in new shells (g[N] / m2 / d)
 ! NGRST     Maximum N demand for stem growth (g[stem N] / m2[ground] / d)
-! NH4(L)    Ammonium N in soil layer L (µg[N] / g[soil])
+! NH4(L)    Ammonium N in soil layer L (ï¿½g[N] / g[soil])
 ! NLAYR     Actual number of soil layers 
 ! NMINEA    Actual Nitrogen mined from existing tissue (g[N] / m2 / d)
 ! NMINEP    Potential N mobilization from storage (g[N] / m2 / d)
 ! NMOBR     Stage-dependent potential N mining rate expressed as a fraction 
 !             of the maximum rate (NMOBMX) 
-! NO3(L)    Nitrate in soil layer L (µg[N] / g[soil])
+! NO3(L)    Nitrate in soil layer L (ï¿½g[N] / g[soil])
 ! NODGR     New nodule growth (g[nod] / m2 / d)
 ! NOUTDO    Logical unit for OVERVIEW.OUT file 
 ! NPLTD     Number of plants destroyed (#/m2/d)
@@ -1731,7 +1739,7 @@ C-----------------------------------------------------------------------
 ! SRDOT     Daily root senescence (g / m2 / d)
 ! SSDOT     Daily senescence of petioles (g / m2 / d)
 ! SSNDOT    Petiole senescence due to water stress (g/m2/day)
-! ST(L)     Soil temperature in soil layer L (°C)
+! ST(L)     Soil temperature in soil layer L (ï¿½C)
 ! STGDOY(I) Day when plant stage I occurred (YYYYDDD)
 ! STMWT     Dry mass of stem tissue, including C and N
 !            (g[stem] / m2[ground)
@@ -1740,17 +1748,17 @@ C-----------------------------------------------------------------------
 ! SWFAC     Effect of soil-water stress on photosynthesis, 1.0=no stress, 
 !             0.0=max stress 
 ! SWIDOT    Daily seed mass damage (g/m2/day)
-! TAVG      Average daily temperature (°C)
-! TDAY      Average temperature during daylight hours (°C)
+! TAVG      Average daily temperature (ï¿½C)
+! TDAY      Average temperature during daylight hours (ï¿½C)
 ! TDUMX     Photo-thermal time that occurs in a real day based on early 
 !             reproductive development temperature function
 !             (photo-thermal days / day)
 ! TDUMX2    Photo-thermal time that occurs in a real day based on late 
 !             reproductive development temperature function
 !             (photo-thermal days / day)
-! TGRO(I)   Hourly canopy temperature (°C)
-! TGROAV    Average daily canopy temperature (°C)
-! TMIN      Minimum daily temperature (°C)
+! TGRO(I)   Hourly canopy temperature (ï¿½C)
+! TGROAV    Average daily canopy temperature (ï¿½C)
+! TMIN      Minimum daily temperature (ï¿½C)
 ! TNLEAK    Total nitrogen leak (g[N] / m2 / d)
 ! TOPWT     Total weight of above-ground portion of crop, including pods
 !            (g[tissue] / m2)
