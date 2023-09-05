@@ -55,7 +55,7 @@ C=======================================================================
       EXTERNAL DEMAND, FREEZE, GROW, HRES_CGRO, INCOMP, IPPLNT, MOBIL,
      &  NFIX, NUPTAK, OPGROW, OPHARV, P_CGRO, PEST, PHENOL,
      &  PHOTO, PLANTNBAL, PODDET, PODS, RESPIR, ROOTS, SENES,
-     &  VEGGR
+     &  VEGGR, TABEX
       SAVE
 !-----------------------------------------------------------------------
       CHARACTER*1 DETACH, IDETO, ISWNIT, ISWSYM,
@@ -175,6 +175,8 @@ C=======================================================================
 !     K model (not yet implemented)
       REAL KSTRES
 
+      REAL,DIMENSION(7) :: CCO2,CPROLFI,CPROSTI
+      REAL TABEX
 !-----------------------------------------------------------------------
 !     Define constructed variable types based on definitions in
 !     ModuleDefs.for.
@@ -236,7 +238,8 @@ C=======================================================================
      &  PLIPSH, PLIGSD, PLIGSH, PMINSD, PMINSH, POASD,    !Output
      &  POASH, PORMIN, PROLFI, PRORTI, PROSHI, PROSTI,    !Output
      &  R30C2, RCH2O, RES30C, RFIXN, RLIG, RLIP, RMIN,    !Output
-     &  RNH4C, RNO3C, ROA, RPRO, RWUEP1, RWUMX, TTFIX)    !Output
+     &  RNH4C, RNO3C, ROA, RPRO, RWUEP1, RWUMX, TTFIX,    !Output
+     &  CCO2,CPROLFI,CPROSTI)                             !Output
 
       KTRANS = KEP
       KSEVAP = -99.   !Defaults to old method of light
@@ -734,7 +737,12 @@ C-----------------------------------------------------------------------
      &    AGEFAC, PG)                                     !Output
         ENDIF
       ENDIF
-
+!-----------------------------------------------------------------------
+!     CARBON DIOXIDE EFFECT ON COMPOSITION
+!-----------------------------------------------------------------------
+      PROLFI = TABEX(CPROLFI,CCO2,CO2,7)  
+      PROSTI = TABEX(CPROSTI,CCO2,CO2,7) 
+      
 !***********************************************************************
 !***********************************************************************
 !     DAILY INTEGRATION 
