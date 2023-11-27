@@ -46,6 +46,7 @@ C=======================================================================
       USE ModuleDefs
       USE ModuleData
       USE FloodModule
+      USE Soiltemperaturemod_SIRIUS
 
       IMPLICIT NONE
       EXTERNAL ETPHOT, STEMP_EPIC, STEMP, ROOTWU, SOILEV, TRANS
@@ -59,7 +60,7 @@ C=======================================================================
       CHARACTER*6, PARAMETER :: ERRKEY = "SPAM  "
 !      CHARACTER*78 MSG(2)
 
-      INTEGER DYNAMIC, L, NLAYR
+      INTEGER DYNAMIC, L, NLAYR, YRDOY, YEAR, DOY
 
       REAL CANHT, CO2, SRAD, TAVG,
      &    TMAX, TMIN, WINDSP, XHLAI, XLAI
@@ -89,6 +90,14 @@ C=======================================================================
 !     Hourly transpiration for MEEVP=H
       REAL, DIMENSION(TS)    :: ET0
 
+!     CSM_Reverse_ST_Modeling by FO
+!     Control variables for SIRIUS
+      REAL deepLayerT, deepLayerT_t1, lambda_, a,b,c
+      REAL maxTSoil, minTSoil
+      REAL heatFlux
+      REAL DAYLD
+      REAL, DIMENSION(24) :: hourlySoilT
+
 !-----------------------------------------------------------------------
 !     Define constructed variable types based on definitions in
 !     ModuleDefs.for.
@@ -102,6 +111,7 @@ C=======================================================================
 !     Transfer values from constructed data types into local variables.
       CROP    = CONTROL % CROP
       DYNAMIC = CONTROL % DYNAMIC
+      YRDOY   = CONTROL % YRDOY
 
       DLAYR  = SOILPROP % DLAYR
       DUL    = SOILPROP % DUL
@@ -131,6 +141,16 @@ C=======================================================================
       WINDSP = WEATHER % WINDSP
       XLAT   = WEATHER % XLAT
 
+      CALL YR_DOY(YRDOY, YEAR, DOY)
+!     CSM_Reverse_ST_Modeling by FO
+!     Control variables for SIRIUS
+      lambda_ = 2.454
+      hourlySoilT = 0.0
+      a = 0.0
+      b = 0.0
+      c = 0.0
+      heatFlux = 0.0
+      DAYLD = WEATHER % DAYL
 !***********************************************************************
 !***********************************************************************
 !     Run Initialization - Called once per simulation
@@ -156,6 +176,10 @@ C=======================================================================
 !***********************************************************************
       ELSEIF (DYNAMIC .EQ. SEASINIT) THEN
 !-----------------------------------------------------------------------
+!     CSM_Reverse_ST_Modeling by FO
+      deepLayerT = TAV
+      deepLayerT_t1 = deepLayerT
+
       EF   = 0.0; CEF  = 0.0
       EM   = 0.0; CEM  = 0.0
       EO   = 0.0; CEO  = 0.0
@@ -176,6 +200,11 @@ C=======================================================================
           CALL STEMP_EPIC(CONTROL, ISWITCH,
      &      SOILPROP, SW, TAVG, TMAX, TMIN, TAV, WEATHER,    !Input
      &      SRFTEMP, ST)                                     !Output
+        CASE ('S')  !SIRIUS Quality soil temperature
+            ! NO SEASON INITIALIZATION FOR SIRIUS QUALITY
+            SRFTEMP = -99.0
+            ST = -99.0
+            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
         CASE DEFAULT  !DSSAT soil temperature
           CALL STEMP(CONTROL, ISWITCH,
      &      SOILPROP, SRAD, SW, TAVG, TMAX, XLAT, TAV, TAMP, !Input
@@ -255,9 +284,29 @@ C=======================================================================
           CALL STEMP_EPIC(CONTROL, ISWITCH,
      &      SOILPROP, SW, TAVG, TMAX, TMIN, TAV, WEATHER,   !Input
      &      SRFTEMP, ST)                                    !Output
+        CASE ('S')  !SIRIUS Quality soil temperature
+            !     CSM_Reverse_ST_Modeling by FO
+            WRITE(*,*) 'RUNNING SQ ST Model'
+            CALL model_soiltemperature(
+     &            deepLayerT,
+     &            lambda_, ! lambda_
+     &            heatFlux,
+     &            TAVG,  ! meanTAir
+     &            TMIN, ! minTAir
+     &            TMAX, ! maxTAir
+     &            a, ! a
+     &            b, ! b
+     &            c, ! c
+     &            DAYLD, ! dayLength
+     &            deepLayerT_t1, ! deepLayerT_t1
+     &            maxTSoil, ! maxTSoil
+     &            minTSoil, ! minTSoil
+     &            hourlySoilT) ! hourlySoilT
+                              
+            deepLayerT = deepLayerT_t1
         CASE DEFAULT
 !       7/21/2016 - DSSAT method is default, per GH
-!       CASE ('D')  !DSSAT soil temperature
+!        CASE ('D')  !DSSAT soil temperature
           CALL STEMP(CONTROL, ISWITCH,
      &      SOILPROP, SRAD, SW, TAVG, TMAX, XLAT, TAV, TAMP,!Input
      &      SRFTEMP, ST)                                    !Output
@@ -504,10 +553,16 @@ C-----------------------------------------------------------------------
             CALL STEMP_EPIC(CONTROL, ISWITCH,
      &        SOILPROP, SW, TAVG, TMAX, TMIN, TAV, WEATHER,   !Input
      &        SRFTEMP, ST)                                    !Output
+          CASE ('S')  !SIRIUS Quality soil temperature
+!     CSM_Reverse_ST_Modeling by FO
+            SRFTEMP = (maxTsoil + minTSoil)/2
+            ST = deepLayerT_t1
+            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
           CASE DEFAULT  !DSSAT soilt temperature
             CALL STEMP(CONTROL, ISWITCH,
      &        SOILPROP, SRAD, SW, TAVG, TMAX, XLAT, TAV, TAMP,!Input
      &        SRFTEMP, ST)                                    !Output
+
           END SELECT
       ENDIF
 
@@ -590,7 +645,7 @@ C-----------------------------------------------------------------------
 ! CET         Cumulative evapotranspiration (mm)
 ! CLOUDS      Relative cloudiness factor (0-1)
 ! CO2         Atmospheric carbon dioxide concentration
-!              (µmol[CO2] / mol[air])
+!              (ï¿½mol[CO2] / mol[air])
 ! CONTROL     Composite variable containing variables related to control
 !               and/or timing of simulation.    See Appendix A.
 ! CROP        Crop identification code
@@ -641,8 +696,8 @@ C-----------------------------------------------------------------------
 !               density, drained upper limit, lower limit, pH, saturation
 !               water content.  Structure defined in ModuleDefs.
 ! SRAD        Solar radiation (MJ/m2-d)
-! SRFTEMP     Temperature of soil surface litter (°C)
-! ST(L)       Soil temperature in soil layer L (°C)
+! SRFTEMP     Temperature of soil surface litter (ï¿½C)
+! ST(L)       Soil temperature in soil layer L (ï¿½C)
 ! SUMES1      Cumulative soil evaporation in stage 1 (mm)
 ! SUMES2      Cumulative soil evaporation in stage 2 (mm)
 ! SW(L)       Volumetric soil water content in layer L
@@ -658,14 +713,14 @@ C-----------------------------------------------------------------------
 !               layer L (cm3 [water] / cm3 [soil])
 ! T           Number of days into Stage 2 evaporation (WATBAL); or time
 !               factor for hourly temperature calculations
-! TA          Daily normal temperature (°C)
+! TA          Daily normal temperature (ï¿½C)
 ! TAMP        Amplitude of temperature function used to calculate soil
-!               temperatures (°C)
+!               temperatures (ï¿½C)
 ! TAV         Average annual soil temperature, used with TAMP to calculate
-!               soil temperature. (°C)
-! TAVG        Average daily temperature (°C)
-! TMAX        Maximum daily temperature (°C)
-! TMIN        Minimum daily temperature (°C)
+!               soil temperature. (ï¿½C)
+! TAVG        Average daily temperature (ï¿½C)
+! TMAX        Maximum daily temperature (ï¿½C)
+! TMIN        Minimum daily temperature (ï¿½C)
 ! TRWU        Actual daily root water uptake over soil profile (cm/d)
 ! TRWUP       Potential daily root water uptake over soil profile (cm/d)
 ! U           Evaporation limit (cm)

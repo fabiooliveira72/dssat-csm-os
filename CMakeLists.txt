@@ -113,6 +113,9 @@ ENDIF(WIN32)
 set(
     source_list
     	"${OSDefinitions}"
+        "SIRIUS_Quality/calculatehourlysoiltemperature.f90"
+        "SIRIUS_Quality/calculatesoiltemperature.f90"
+        "SIRIUS_Quality/SoilTemperatureComponent.f90"
         "Utilities/CSMVersion.for"
         "Utilities/ModuleDefs.for"
         "Utilities/DATES.for"
