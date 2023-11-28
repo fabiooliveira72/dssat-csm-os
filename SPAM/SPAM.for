@@ -91,6 +91,12 @@ C=======================================================================
       REAL, DIMENSION(TS)    :: ET0
 
 !     CSM_Reverse_ST_Modeling by FO
+!     C2ML DSSAT model variables
+      !CHARACTER ISWWAT
+      !INTEGER YR, DOY
+      REAL HDAY, CUMDPT, TDL, ATOT
+      REAL, DIMENSION(5)  :: TMA
+      REAL, DIMENSION(NL) :: DSMID
 !     Control variables for SIRIUS
       REAL deepLayerT, deepLayerT_t1, lambda_, a,b,c
       REAL maxTSoil, minTSoil
@@ -200,6 +206,26 @@ C=======================================================================
           CALL STEMP_EPIC(CONTROL, ISWITCH,
      &      SOILPROP, SW, TAVG, TMAX, TMIN, TAV, WEATHER,    !Input
      &      SRFTEMP, ST)                                     !Output
+        CASE ('A')
+            CALL init_stemp(NL, ISWWAT,                                    
+     &            SOILPROP % BD,                                      
+     &            SOILPROP % DLAYR,                    
+     &            SOILPROP % DS,                       
+     &            SOILPROP % DUL, SOILPROP % LL,                       
+     &            SOILPROP % NLAYR, SOILPROP % MSALB,                       
+     &            SRAD, SW, TAVG,           
+     &            TMAX, XLAT, TAV,          
+     &            TAMP,                                       
+     &            DOY,                                                 
+     &            CUMDPT,                                              
+     &            DSMID,                                               
+     &            TDL,                                                 
+     &            TMA,                                                 
+     &            ATOT,                                                
+     &            SRFTEMP, ST,   
+     &            HDAY)
+            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+
         CASE ('S')  !SIRIUS Quality soil temperature
             ! NO SEASON INITIALIZATION FOR SIRIUS QUALITY
             SRFTEMP = -99.0
@@ -284,9 +310,26 @@ C=======================================================================
           CALL STEMP_EPIC(CONTROL, ISWITCH,
      &      SOILPROP, SW, TAVG, TMAX, TMIN, TAV, WEATHER,   !Input
      &      SRFTEMP, ST)                                    !Output
+!     CSM_Reverse_ST_Modeling by FO
+        CASE ('A')
+            CALL model_stemp(NL, ISWWAT,
+     &            SOILPROP % BD,                                      
+     &            SOILPROP % DLAYR,                    
+     &            SOILPROP % DS,                       
+     &            SOILPROP % DUL, SOILPROP % LL,                       
+     &            SOILPROP % NLAYR, SOILPROP % MSALB,                       
+     &            SRAD, SW, TAVG,           
+     &            TMAX, XLAT, TAV,                                    
+     &            TAMP,                                       
+     &            CUMDPT,                                              
+     &            DSMID,                                               
+     &            TDL,                                                 
+     &            TMA,                                                 
+     &            ATOT,                                                
+     &            SRFTEMP, ST,   
+     &            DOY, HDAY)
         CASE ('S')  !SIRIUS Quality soil temperature
-            !     CSM_Reverse_ST_Modeling by FO
-            WRITE(*,*) 'RUNNING SQ ST Model'
+!     CSM_Reverse_ST_Modeling by FO
             CALL model_soiltemperature(
      &            deepLayerT,
      &            lambda_, ! lambda_
@@ -553,6 +596,10 @@ C-----------------------------------------------------------------------
             CALL STEMP_EPIC(CONTROL, ISWITCH,
      &        SOILPROP, SW, TAVG, TMAX, TMIN, TAV, WEATHER,   !Input
      &        SRFTEMP, ST)                                    !Output
+!     CSM_Reverse_ST_Modeling by FO
+          CASE ('A')
+            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+
           CASE ('S')  !SIRIUS Quality soil temperature
 !     CSM_Reverse_ST_Modeling by FO
             SRFTEMP = (maxTsoil + minTSoil)/2
