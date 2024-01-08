@@ -13,6 +13,7 @@
 !  01/13/2023 FO  Updated variables in output file FreshWt.OUT
 !  03/17/2023 FO  Major changes for Multi-Harvest
 !  07/27/2023 FO  Adding output for Harv. Fresh Pod weight.
+!  01/05/2024 FO  Updated MTFPW to be outputted as integer.
 !-----------------------------------------------------------------------
 !  Called from:  PODS
 !=======================================================================
@@ -442,7 +443,7 @@
      &      XMAGE, CHNUM,
      &      TOSHN,TOWSH*10.,MTDSH*10.,HSHELWT*10.,
      &      TOPOW*10.,HPODWT*10.,CHPDT*10.,CPODN*10,
-     &      NINT(TOFPW*10.),MTFPW*10.,MTDPW*10.,
+     &      NINT(TOFPW*10.),NINT(MTFPW*10.),MTDPW*10.,
      &      HFPOW*10.,CHFPW*10.,CMFNM,
      &      TOSDN,TOWSD*10.,MTDSD*10.,HSDWT*10.
           CASE ('GB')       ! Snap bean
@@ -454,7 +455,7 @@
      &      XMAGE, CHNUM,
      &      TOSHN,TOWSH*10.,MTDSH*10.,HSHELWT*10.,
      &      TOPOW*10.,HPODWT*10.,CHPDT*10.,CPODN*10,
-     &      NINT(TOFPW*10.),MTFPW*10.,MTDPW*10.,
+     &      NINT(TOFPW*10.),NINT(MTFPW*10.),MTDPW*10.,
      &      HFPOW*10.,CHFPW*10.,CMFNM,
      &      TOSDN,TOWSD*10.,MTDSD*10.,HSDWT*10.
          CASE ('PR')        ! Bell pepper
@@ -464,7 +465,7 @@
      &      XMAGE, CHNUM,
      &      TOSHN,TOWSH*10.,MTDSH*10.,HSHELWT*10.,
      &      TOPOW*10.,HPODWT*10.,CHPDT*10.,CPODN*10,
-     &      NINT(TOFPW*10.),MTFPW*10.,MTDPW*10.,
+     &      NINT(TOFPW*10.),NINT(MTFPW*10.),MTDPW*10.,
      &      HFPOW*10.,CHFPW*10.,CMFNM,
      &      TOSDN,TOWSD*10.,MTDSD*10.,HSDWT*10.
          CASE ('SR')        ! Strawberry
@@ -474,7 +475,7 @@
      &      XMAGE, CHNUM,
      &      TOSHN,TOWSH*10.,MTDSH*10.,HSHELWT*10.,
      &      TOPOW*10.,HPODWT*10.,CHPDT*10.,CPODN*10,
-     &      NINT(TOFPW*10.),MTFPW*10.,MTDPW*10.,
+     &      NINT(TOFPW*10.),NINT(MTFPW*10.),MTDPW*10.,
      &      HFPOW*10.,CHFPW*10.,CMFNM,
      &      TOSDN,TOWSD*10.,MTDSD*10.,HSDWT*10.
           CASE ('TM')       ! Tomato
@@ -484,7 +485,7 @@
      &      XMAGE, CHNUM,
      &      TOSHN,TOWSH*10.,MTDSH*10.,HSHELWT*10.,
      &      TOPOW*10.,HPODWT*10.,CHPDT*10.,CPODN*10,
-     &      NINT(TOFPW*10.),MTFPW*10.,MTDPW*10.,
+     &      NINT(TOFPW*10.),NINT(MTFPW*10.),MTDPW*10.,
      &      HFPOW*10.,CHFPW*10.,CMFNM,
      &      TOSDN,TOWSD*10.,MTDSD*10.,HSDWT*10.
           CASE DEFAULT
@@ -494,7 +495,7 @@
      &      XMAGE, CHNUM,
      &      TOSHN,TOWSH*10.,MTDSH*10.,HSHELWT*10.,
      &      TOPOW*10.,HPODWT*10.,CHPDT*10.,CPODN*10,
-     &      NINT(TOFPW*10.),MTFPW*10.,MTDPW*10.,
+     &      NINT(TOFPW*10.),NINT(MTFPW*10.),MTDPW*10.,
      &      HFPOW*10.,CHFPW*10.,CMFNM,
      &      TOSDN,TOWSD*10.,MTDSD*10.,HSDWT*10.
         END SELECT
@@ -504,7 +505,7 @@
      &    F8.1, I8,
      &    4(F8.1),
      &    3(F8.1),I8,
-     &    I8,4(F8.1),I8,
+     &    I8,I8,3(F8.1),I8,
      &    4(F8.1))
  2000   FORMAT(1X,I4,1X,I3.3,2(1X,I5),
      &    F8.1,F8.1,F8.1,F8.1,
@@ -512,7 +513,7 @@
      &    F8.1, I8,
      &    4(F8.1),
      &    3(F8.1),I8,
-     &    I8,4(F8.1),I8,
+     &    I8,I8,3(F8.1),I8,
      &    4(F8.1))
 
       ENDIF
