@@ -113,10 +113,30 @@ ENDIF(WIN32)
 set(
     source_list
     	"${OSDefinitions}"
-        "CROP2ML_Modules/DSSAT_ST/STEMP_C2ML.f90"
-        "CROP2ML_Modules/SIRIUS_Quality/calculatehourlysoiltemperature.f90"
-        "CROP2ML_Modules/SIRIUS_Quality/calculatesoiltemperature.f90"
-        "CROP2ML_Modules/SIRIUS_Quality/SoilTemperatureComponent.f90"
+        "CROP2ML_Modules/CROP2ML-BIOMA-PARTON/soiltemperatureparton.f90"
+        "CROP2ML_Modules/CROP2ML-BIOMA-PARTON/SurfacePartonSoilpartonComponent.f90"
+        "CROP2ML_Modules/CROP2ML-BIOMA-PARTON/surfacetemperatureparton.f90"
+
+        "CROP2ML_Modules/CROP2ML-BIOMA-SWAT/soiltemperatureswat.f90"
+        "CROP2ML_Modules/CROP2ML-BIOMA-SWAT/SurfaceSWATSoilSWATCComponent.f90"
+        "CROP2ML_Modules/CROP2ML-BIOMA-SWAT/surfacetemperatureswat.f90"
+
+        "CROP2ML_Modules/CROP2ML-DEPIC/stemp_DEPIC.f90"
+
+        "CROP2ML_Modules/CROP2ML-DSSAT/STEMP_C2ML.f90"
+
+        "CROP2ML_Modules/CROP2ML-SIRIUS/SoilTemperatureComponent.f90"
+        "CROP2ML_Modules/CROP2ML-SIRIUS/calculatesoiltemperature.f90"
+        "CROP2ML_Modules/CROP2ML-SIRIUS/calculatehourlysoiltemperature.f90"
+
+        "CROP2ML_Modules/CROP2ML-STICS/soil_tempComponent.f90"
+        "CROP2ML_Modules/CROP2ML-STICS/canopy_temp_avg.f90"
+        "CROP2ML_Modules/CROP2ML-STICS/layers_temp.f90"
+        "CROP2ML_Modules/CROP2ML-STICS/temp_amp.f90"
+        "CROP2ML_Modules/CROP2ML-STICS/temp_profile.f90"
+        "CROP2ML_Modules/CROP2ML-STICS/update.f90"
+
+
         "Utilities/CSMVersion.for"
         "Utilities/ModuleDefs.for"
         "Utilities/DATES.for"

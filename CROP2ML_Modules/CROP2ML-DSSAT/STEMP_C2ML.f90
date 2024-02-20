@@ -120,7 +120,6 @@
             call SOILT_DSSAT_C2ML(NL, ALBEDO, B, CUMDPT, DOY, DP, HDAY, NLAYR, PESW, SRAD,  &
                     TAMP, TAV, TAVG, TMAX, WW, DSMID, ATOT, TMA,SRFTEMP,ST)
         END DO
-
     END SUBROUTINE init_stemp
 
     SUBROUTINE model_stemp(NL, &
@@ -562,7 +561,7 @@
         DO K = 5 , 2 - 1+1, -1
             TMA(K - 1+1) = TMA(K - 1 - 1+1)
         END DO
-        TMA(1) = TAVG
+        TMA(1 - 1+1) = TAVG
         TMA(1 - 1+1) = INT(TMA((1 - 1)+1) * 10000.) / 10000.
         ATOT = ATOT + TMA(1 - 1+1)
         WC = MAX(0.01, PESW) / (WW * CUMDPT) * 10.0

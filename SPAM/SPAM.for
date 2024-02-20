@@ -46,7 +46,31 @@ C=======================================================================
       USE ModuleDefs
       USE ModuleData
       USE FloodModule
+!*********************************************************************** 
+!     CSM_Reverse_ST_Modeling by FO
+!     CROP2ML - DEFINE MODULES
+!***********************************************************************      
+!     BIOMA-Parton
+      USE Soiltemperatureswatmod
+      USE Surfacepartonsoilswatcmod
+!-----------------------------------------------------------------------
+!     BIOMA-SWAT
+      USE Soiltemperatureswatmod_SW
+      USE Surfaceswatsoilswatcmod_SW
+!-----------------------------------------------------------------------
+!     C2ML DSSAT-EPIC
+!-----------------------------------------------------------------------
+!     C2ML DSSAT
+!-----------------------------------------------------------------------
+!     SIRIUS-Quality
       USE Soiltemperaturemod_SIRIUS
+!-----------------------------------------------------------------------
+!     STICS      
+      USE Soil_tempmod
+!-----------------------------------------------------------------------
+!     CSM_Reverse_ST_Modeling by FO
+!     END
+!***********************************************************************
 
       IMPLICIT NONE
       EXTERNAL ETPHOT, STEMP_EPIC, STEMP, ROOTWU, SOILEV, TRANS
@@ -90,21 +114,53 @@ C=======================================================================
 !     Hourly transpiration for MEEVP=H
       REAL, DIMENSION(TS)    :: ET0
 
+!*********************************************************************** 
 !     CSM_Reverse_ST_Modeling by FO
-!     C2ML DSSAT model variables
-      !CHARACTER ISWWAT
-      !INTEGER YR, DOY
-      REAL HDAY, CUMDPT, TDL, ATOT
-      REAL, DIMENSION(5)  :: TMA
+!     CROP2ML - CONTROL VARIABLES
+!***********************************************************************
+!     BIOMA-Parton
+      REAL LagCoefficient, SoilProfileDepth
+      REAL SurfaceTemperatureMinimum
+      REAL SurfaceTemperatureMaximum
+      !REAL,DIMENSION(0:INPITF % NLAYR):: THICKNESS
+      REAL,DIMENSION(0:NL):: THICKNESS
+      INTEGER I
+      REAL BIOMAS
+!-----------------------------------------------------------------------
+!     BIOMA-SWAT
+      REAL HeatCapacity
+      REAL WaterEquivalentOfSnowPack
+!-----------------------------------------------------------------------      
+!     C2ML DSSAT-EPIC
+      INTEGER NDays
+      INTEGER, DIMENSION(30) :: WetDay
+      REAL CUMDPT, X2_PREV, TDL
       REAL, DIMENSION(NL) :: DSMID
-!     Control variables for SIRIUS
+      REAL, DIMENSION(5) :: TMA
+      REAL SNOW, MULCHMASS, DEPIR
+!-----------------------------------------------------------------------
+!     C2ML DSSAT
+      REAL HDAY, ATOT
+!-----------------------------------------------------------------------
+!     SIRIUS-Quality
       REAL deepLayerT, deepLayerT_t1, lambda_, a,b,c
       REAL maxTSoil, minTSoil
       REAL heatFlux
       REAL DAYLD
       REAL, DIMENSION(24) :: hourlySoilT
-
 !-----------------------------------------------------------------------
+!     STICS
+      REAL air_temp_day1, max_canopy_temp, min_canopy_temp
+      REAL prev_canopy_temp, temp_amp
+      REAL , ALLOCATABLE, DIMENSION(: ):: prev_temp_profile
+      REAL , ALLOCATABLE, DIMENSION(: ):: temp_profile
+      REAL , ALLOCATABLE, DIMENSION(: ):: layer_temp
+      INTEGER, DIMENSION(0:NL):: LTHICK
+!-----------------------------------------------------------------------
+!     CSM_Reverse_ST_Modeling by FO
+!     END
+!***********************************************************************
+
 !     Define constructed variable types based on definitions in
 !     ModuleDefs.for.
       TYPE (ControlType) CONTROL
@@ -148,15 +204,6 @@ C=======================================================================
       XLAT   = WEATHER % XLAT
 
       CALL YR_DOY(YRDOY, YEAR, DOY)
-!     CSM_Reverse_ST_Modeling by FO
-!     Control variables for SIRIUS
-      lambda_ = 2.454
-      hourlySoilT = 0.0
-      a = 0.0
-      b = 0.0
-      c = 0.0
-      heatFlux = 0.0
-      DAYLD = WEATHER % DAYL
 !***********************************************************************
 !***********************************************************************
 !     Run Initialization - Called once per simulation
@@ -182,9 +229,48 @@ C=======================================================================
 !***********************************************************************
       ELSEIF (DYNAMIC .EQ. SEASINIT) THEN
 !-----------------------------------------------------------------------
+!*********************************************************************** 
 !     CSM_Reverse_ST_Modeling by FO
+!     CROP2ML - INTERFACE INDIVIDUAL ATTRIBUTIONS
+!***********************************************************************
+!     BIOMA-Parton
+      !SoilProfileDepth = INPITF % SLDP / 100
+      SoilProfileDepth = SOILPROP % DS(NLAYR) / 100
+      !DO I = 0, INPITF % NLAYR
+      THICKNESS(I) = 0.0
+      DO I = 1, NLAYR
+            THICKNESS(I) = SOILPROP % DS(I) / 100
+      ENDDO
+      LagCoefficient = 0.8
+!-----------------------------------------------------------------------
+!     BIOMA-SWAT
+      !SoilProfileDepth = INPITF % SLDP / 100
+      SoilProfileDepth = SOILPROP % DS(NLAYR) / 100
+      !DO I = 0, INPITF % NLAYR
+      THICKNESS(I) = 0.0
+      DO I = 1, NLAYR
+            THICKNESS(I) = SOILPROP % DS(I) / 100
+      ENDDO
+      LagCoefficient = 0.8
+!-----------------------------------------------------------------------
+!     C2ML DSSAT-EPIC
+!-----------------------------------------------------------------------
+!     C2ML DSSAT
+!-----------------------------------------------------------------------
+!     SIRIUS-Quality
+      lambda_ = 2.454
+      hourlySoilT = 0.0
+      a = 0.0
+      b = 0.0
+      c = 0.0
+      heatFlux = 0.0
       deepLayerT = TAV
-      deepLayerT_t1 = deepLayerT
+!-----------------------------------------------------------------------
+!     STICS
+!-----------------------------------------------------------------------
+!     CSM_Reverse_ST_Modeling by FO
+!     END
+!***********************************************************************
 
       EF   = 0.0; CEF  = 0.0
       EM   = 0.0; CEM  = 0.0
@@ -202,35 +288,152 @@ C=======================================================================
 !     ---------------------------------------------------------
       IF (MEEVP .NE.'Z') THEN   !LPM 02dec14 use values from ETPHOT
         SELECT CASE (METMP)
-        CASE ('E')    !EPIC soil temperature routine
-          CALL STEMP_EPIC(CONTROL, ISWITCH,
-     &      SOILPROP, SW, TAVG, TMAX, TMIN, TAV, WEATHER,    !Input
-     &      SRFTEMP, ST)                                     !Output
-        CASE ('A')
+!*********************************************************************** 
+!     CSM_Reverse_ST_Modeling by FO
+!     CROP2ML - CONTROL VARIABLES
+!***********************************************************************
+        CASE('F') ! BIOMA-Parton
+            CALL init_soiltemperatureswat(
+!     &            INPITF % SWLD, ! VolumetricWaterContent
+     &            SW, ! VolumetricWaterContent
+!     &            THICKNESS(1:INPITF % NLAYR), ! LayerThickness
+     &            THICKNESS(1:NLAYR), ! LayerThickness
+     &            LagCoefficient, 
+!     &            INPITF % TAV, ! AirTemperatureAnnualAverage
+     &            WEATHER % TAV, ! AirTemperatureAnnualAverage
+!     &            INPITF % SLBDM, ! BulkDensity 
+     &            SOILPROP % BD, ! BulkDensity 
+     &            SoilProfileDepth, 
+!     &            OUTITF % TSLD(1:INPITF % NLAYR))! SoilTemperatureByLayers
+     &            ST(1:NLAYR))! SoilTemperatureByLayers
+
+             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+!-----------------------------------------------------------------------
+        CASE('G') ! BIOMA-SWAT
+            CALL init_soiltemperatureswat_SW(
+!     &            INPITF % SWLD, ! VolumetricWaterContent
+     &            SW, ! VolumetricWaterContent
+!     &            THICKNESS(1:INPITF % NLAYR), ! LayerThickness
+     &            THICKNESS(1:NLAYR), ! LayerThickness
+     &            LagCoefficient, 
+!     &            INPITF % TAV, ! AirTemperatureAnnualAverage
+     &            WEATHER % TAV, ! AirTemperatureAnnualAverage
+!     &            INPITF % SLBDM, ! BulkDensity 
+     &            SOILPROP % BD, ! BulkDensity 
+     &            SoilProfileDepth, 
+!     &            OUTITF % TSLD(1:INPITF % NLAYR))! SoilTemperatureByLayers
+     &            ST(1:NLAYR))! SoilTemperatureByLayers
+
+             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+!-----------------------------------------------------------------------
+        CASE('H') ! C2ML DSSAT-EPIC
+            CALL GET('PLANT','BIOMAS',BIOMAS)      !kg/ha
+            CALL GET('ORGC' ,'MULCHMASS',MULCHMASS)   !kg/ha
+            CALL GET('WATER','SNOW',SNOW)       !mm
+            CALL GET('MGMT','DEPIR',DEPIR)      !mm
+
+            CALL init_stemp_epic(NL, ISWWAT, 
+!     &            INPITF % SLBDM, INPITF % THICK(1:INPITF % NLAYR), 
+     &            SOILPROP % BD, SOILPROP % DLAYR,
+!     &            INPITF % SLLB(1:INPITF % NLAYR), INPITF % SLDUL, 
+     &            SOILPROP % DS, SOILPROP % DUL,
+!     &            INPITF % SLLL, INPITF % NLAYR, 
+     &            SOILPROP % LL, NLAYR, 
+!     &            INPITF % TAMP, 
+     &            WEATHER % TAMP, 
+!     &            INPITF % RAIN, INPITF % SWLD, INPITF % T2M, 
+     &            WEATHER % RAIN, SW, WEATHER % TAVG, 
+!     &            INPITF % TMAX, INPITF % TMIN, INPITF % TAV, 
+     &            WEATHER % TMAX, WEATHER % TMIN, WEATHER % TAV, 
+!     &            INPITF % IRVAL, 
+     &            DEPIR, 
+!     &            INPITF % CWAD, 
+     &            BIOMAS, 
+!     &            INPITF % MLTHK, 
+     &            MULCHMASS, 
+!     &            INPITF % SNOW, 
+     &            SNOW, 
+     &            CUMDPT, 
+     &            DSMID, 
+     &            TDL,
+     &            TMA, 
+     &            NDays, 
+     &            WetDay, 
+     &            X2_PREV, 
+!     &            OUTITF % TSLD(0), OUTITF % TSLD(1:INPITF % NLAYR))
+     &            SRFTEMP, ST)
+            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+!-----------------------------------------------------------------------
+        CASE ('I') ! C2ML DSSAT
             CALL init_stemp(NL, ISWWAT,                                    
-     &            SOILPROP % BD,                                      
-     &            SOILPROP % DLAYR,                    
-     &            SOILPROP % DS,                       
-     &            SOILPROP % DUL, SOILPROP % LL,                       
-     &            SOILPROP % NLAYR, SOILPROP % MSALB,                       
-     &            SRAD, SW, TAVG,           
-     &            TMAX, XLAT, TAV,          
-     &            TAMP,                                       
+!     &            INPITF % SLBDM,                                      
+     &            SOILPROP % BD,
+!     &            INPITF % THICK(1:INPITF % NLAYR),                    
+     &            SOILPROP % DLAYR,
+!     &            INPITF % SLLB(1:INPITF % NLAYR),                       
+     &            SOILPROP % DS,     
+!     &            INPITF % SLDUL, INPITF % SLLL,  
+     &            SOILPROP % DUL, SOILPROP % LL,      
+!     &            INPITF % NLAYR, INPITF % SALB,                       
+     &            SOILPROP % NLAYR, SOILPROP % MSALB, 
+!     &            INPITF % SRAD, INPITF % SWLD, INPITF % T2M, 
+     &            SRAD, SW, TAVG,          
+!     &            INPITF % TMAX, INPITF % XLAT, INPITF % TAV,    
+     &            TMAX, XLAT, TAV,             
+!     &            INPITF % TAMP, 
+     &            TAMP,     
      &            DOY,                                                 
      &            CUMDPT,                                              
      &            DSMID,                                               
      &            TDL,                                                 
      &            TMA,                                                 
      &            ATOT,                                                
-     &            SRFTEMP, ST,   
+!     &            OUTITF % TSLD(0), OUTITF % TSLD(1:INPITF % NLAYR),   
+     &            SRFTEMP, ST,
      &            HDAY)
-            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
 
-        CASE ('S')  !SIRIUS Quality soil temperature
-            ! NO SEASON INITIALIZATION FOR SIRIUS QUALITY
-            SRFTEMP = -99.0
-            ST = -99.0
+             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+!-----------------------------------------------------------------------
+        CASE ('J') ! SIRIUS-Quality
+
+            CALL init_calculatesoiltemperature(
+!     &            INPITF % T2M, ! meanTAir 
+     &            WEATHER % TAVG, ! meanTAir 
+!     &            INPITF % TMIN, ! minTAir
+     &            WEATHER % TMIN, ! minTAir
+     &            lambda_, 
+!     &            INPITF % TAV, ! meanAnnualAirTemp
+     &            WEATHER % TAV, ! meanAnnualAirTemp
+!     &            INPITF % TMAX, ! maxTAir
+     &            WEATHER % TMAX, ! maxTAir
+     &            deepLayerT)
+
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+!-----------------------------------------------------------------------
+        CASE ('K') ! STICS
+!            LTHICK = INT(INPITF % THICK)
+            LTHICK(1:NLAYR) = INT(SOILPROP % DLAYR)
+
+            CALL init_temp_profile(
+!     &            INPITF % TMIN, !min_air_temp
+     &            WEATHER % TMIN, !min_air_temp
+!     &            INPITF % T2M, !air_temp_day1
+     &            WEATHER % TAVG, !air_temp_day1
+!     &            LTHICK(1:INPITF % NLAYR), !layer_thick 
+     &            LTHICK(1:NLAYR), !layer_thick 
+     &            temp_amp, 
+     &            prev_temp_profile, 
+     &            prev_canopy_temp)
+
+            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+!-----------------------------------------------------------------------
+!     CSM_Reverse_ST_Modeling by FO
+!     END
+!***********************************************************************
+        CASE ('E')    !EPIC soil temperature routine
+          CALL STEMP_EPIC(CONTROL, ISWITCH,
+     &      SOILPROP, SW, TAVG, TMAX, TMIN, TAV, WEATHER,    !Input
+     &      SRFTEMP, ST)                                     !Output
         CASE DEFAULT  !DSSAT soil temperature
           CALL STEMP(CONTROL, ISWITCH,
      &      SOILPROP, SRAD, SW, TAVG, TMAX, XLAT, TAV, TAMP, !Input
@@ -306,47 +509,208 @@ C=======================================================================
 !     ---------------------------------------------------------
       IF (MEEVP .NE.'Z') THEN  !LPM 02dec14 use values from ETPHOT
         SELECT CASE (METMP)
-        CASE ('E')    !EPIC soil temperature routine
-          CALL STEMP_EPIC(CONTROL, ISWITCH,
-     &      SOILPROP, SW, TAVG, TMAX, TMIN, TAV, WEATHER,   !Input
-     &      SRFTEMP, ST)                                    !Output
+!*********************************************************************** 
 !     CSM_Reverse_ST_Modeling by FO
-        CASE ('A')
+!     CROP2ML - RATE CALCULATIONS
+!***********************************************************************
+        CASE('F') ! BIOMA-Parton
+            CALL GET('PLANT','BIOMAS',BIOMAS)      !kg/ha
+
+            CALL model_surfacepartonsoilswatc(
+!     &            INPITF % DAYLD, ! DayLength
+     &            WEATHER % DAYL, ! DayLength
+!     &            INPITF % SRAD, ! GlobalSolarRadiation
+     &            WEATHER % SRAD, ! GlobalSolarRadiation
+!     &            INPITF % CWAD, ! AboveGroundBiomass
+     &            BIOMAS, ! AboveGroundBiomass
+!     &            INPITF % TMIN, ! AirTemperatureMinimum
+     &            WEATHER % TMIN, ! AirTemperatureMinimum
+!     &            INPITF % TMAX, ! AirTemperatureMaximum
+     &            WEATHER % TMAX, ! AirTemperatureMaximum
+!     &            THICKNESS(1:INPITF % NLAYR), ! LayerThickness
+     &            THICKNESS(1:NLAYR), ! LayerThickness
+!     &            INPITF % SLBDM, ! BulkDensity
+     &            SOILPROP % BD, ! BulkDensity 
+     &            SoilProfileDepth, 
+!     &            INPITF % TAV, ! AirTemperatureAnnualAverage
+     &            WEATHER % TAV, ! AirTemperatureAnnualAverage
+!     &            INPITF % SWLD, ! VolumetricWaterContent, 
+     &            SW, ! VolumetricWaterContent, 
+     &            LagCoefficient, 
+!     &            OUTITF % TSLN(0), ! SurfaceTemperatureMinimum
+     &            SurfaceTemperatureMinimum,
+!     &            OUTITF % TSLX(0), ! SurfaceTemperatureMaximum
+     &            SurfaceTemperatureMaximum,
+!     &            OUTITF % TSLD(0), ! SurfaceSoilTemperature
+     &            SRFTEMP, ! SurfaceSoilTemperature
+!     &            OUTITF % TSLD(1:INPITF % NLAYR))! SoilTemperatureByLayers
+     &            ST(1:NLAYR))! SoilTemperatureByLayers
+!-----------------------------------------------------------------------     
+        CASE('G') ! BIOMA-SWAT
+            CALL GET('PLANT','BIOMAS',BIOMAS)      !kg/ha
+            CALL GET('WATER','SNOW', WaterEquivalentOfSnowPack)       !mm
+
+            CALL model_surfaceswatsoilswatc_SW(
+!     &            INPITF % TMAX, ! AirTemperatureMaximum
+     &            WEATHER % TMAX, ! AirTemperatureMaximum
+!     &            INPITF % TMIN, ! AirTemperatureMinimum
+     &            WEATHER % TMIN, ! AirTemperatureMinimum
+!     &            INPITF % SRAD, ! GlobalSolarRadiation
+     &            WEATHER % SRAD, ! GlobalSolarRadiation
+!     &            INPITF % CWAD, ! AboveGroundBiomass
+     &            BIOMAS, ! AboveGroundBiomass
+!     &            INPITF % SNOW, ! WaterEquivalentOfSnowPack 
+     &            WaterEquivalentOfSnowPack,
+!     &            INPITF % SALB, ! Albedo
+     &            SOILPROP % MSALB, ! Albedo
+!     &            INPITF % SLBDM, ! BulkDensity
+     &            SOILPROP % BD, ! BulkDensity 
+!     &            INPITF % TAV, ! AirTemperatureAnnualAverage
+     &            WEATHER % TAV, ! AirTemperatureAnnualAverage
+!     &            INPITF % SWLD, ! VolumetricWaterContent, 
+     &            SW, ! VolumetricWaterContent, 
+     &            SoilProfileDepth, 
+     &            LagCoefficient, 
+!     &            THICKNESS(1:INPITF % NLAYR), ! LayerThickness
+     &            THICKNESS(1:NLAYR), ! LayerThickness
+!     &            OUTITF % TSLD(0), ! SurfaceSoilTemperature
+     &            SRFTEMP, ! SurfaceSoilTemperature
+!     &            OUTITF % TSLD(1:INPITF % NLAYR))! SoilTemperatureByLayers
+     &            ST(1:NLAYR))! SoilTemperatureByLayers
+!-----------------------------------------------------------------------
+        CASE('H') ! C2ML DSSAT-EPIC
+            CALL GET('PLANT','BIOMAS',BIOMAS)      !kg/ha
+            CALL GET('ORGC' ,'MULCHMASS',MULCHMASS)   !kg/ha
+            CALL GET('WATER','SNOW',SNOW)       !mm
+            CALL GET('MGMT','DEPIR',DEPIR)      !mm
+
+            CALL model_stemp_epic(NL, ISWWAT, 
+!     &            INPITF % SLBDM, INPITF % THICK(1:INPITF % NLAYR), 
+     &            SOILPROP % BD, SOILPROP % DLAYR,
+!     &            INPITF % SLLB(1:INPITF % NLAYR), INPITF % SLDUL, 
+     &            SOILPROP % DS, SOILPROP % DUL,
+!     &            INPITF % SLLL, INPITF % NLAYR, 
+     &            SOILPROP % LL, NLAYR, 
+!     &            INPITF % TAMP, 
+     &            WEATHER % TAMP, 
+!     &            INPITF % RAIN, INPITF % SWLD, INPITF % T2M, 
+     &            WEATHER % RAIN, SW, WEATHER % TAVG, 
+!     &            INPITF % TMAX, INPITF % TMIN, INPITF % TAV, 
+     &            WEATHER % TMAX, WEATHER % TMIN, WEATHER % TAV, 
+     &            CUMDPT, 
+     &            DSMID,
+     &            TDL, 
+     &            TMA, 
+     &            NDays, 
+     &            WetDay, 
+     &            X2_PREV, 
+!     &            OUTITF % TSLD(0), OUTITF % TSLD(1:INPITF % NLAYR), 
+     &            SRFTEMP, ST,
+!     &            INPITF % IRVAL, 
+     &            DEPIR, 
+!     &            INPITF % CWAD, 
+     &            BIOMAS, 
+!     &            INPITF % MLTHK, 
+     &            MULCHMASS, 
+!     &            INPITF % SNOW, 
+     &            SNOW)
+!-----------------------------------------------------------------------
+        CASE ('I') ! C2ML DSSAT
             CALL model_stemp(NL, ISWWAT,
-     &            SOILPROP % BD,                                      
+!     &            INPITF % SLBDM,  
+     &            SOILPROP % BD,    
+!     &            INPITF % THICK(1:INPITF % NLAYR),                    
      &            SOILPROP % DLAYR,                    
+!     &            INPITF % SLLB(1:INPITF % NLAYR),                       
      &            SOILPROP % DS,                       
+!     &            INPITF % SLDUL, INPITF % SLLL,                       
      &            SOILPROP % DUL, SOILPROP % LL,                       
+!     &            INPITF % NLAYR, INPITF % SALB,                       
      &            SOILPROP % NLAYR, SOILPROP % MSALB,                       
+!     &            INPITF % SRAD, INPITF % SWLD, INPITF % T2M,           
      &            SRAD, SW, TAVG,           
+!     &            INPITF % TMAX, INPITF % XLAT, INPITF % TAV,          
      &            TMAX, XLAT, TAV,                                    
+!     &            INPITF % TAMP,                                                                        
      &            TAMP,                                       
      &            CUMDPT,                                              
      &            DSMID,                                               
      &            TDL,                                                 
      &            TMA,                                                 
-     &            ATOT,                                                
+     &            ATOT,      
+!     &            OUTITF % TSLD(0), OUTITF % TSLD(1:INPITF % NLAYR),                                             
      &            SRFTEMP, ST,   
      &            DOY, HDAY)
-        CASE ('S')  !SIRIUS Quality soil temperature
-!     CSM_Reverse_ST_Modeling by FO
+!-----------------------------------------------------------------------
+        CASE ('J') ! SIRIUS-Quality
+
             CALL model_soiltemperature(
-     &            deepLayerT,
-     &            lambda_, ! lambda_
+!     &            INPITF % T2M,  ! meanTAir
+     &            WEATHER % TAVG,  ! meanTAir
+!     &            INPITF % TMIN, ! minTAir
+     &            WEATHER % TMIN, ! minTAir
+     &            lambda_, 
+!     &            INPITF % TAV, ! meanAnnualAirTemp
+     &            WEATHER % TAV, ! meanAnnualAirTemp
+!     &            INPITF % G, ! heatFlux (g/m2/d)
      &            heatFlux,
-     &            TAVG,  ! meanTAir
-     &            TMIN, ! minTAir
-     &            TMAX, ! maxTAir
-     &            a, ! a
-     &            b, ! b
-     &            c, ! c
-     &            DAYLD, ! dayLength
-     &            deepLayerT_t1, ! deepLayerT_t1
-     &            maxTSoil, ! maxTSoil
-     &            minTSoil, ! minTSoil
-     &            hourlySoilT) ! hourlySoilT
-                              
-            deepLayerT = deepLayerT_t1
+!     &            INPITF % TMAX, ! maxTAir
+     &            WEATHER % TMAX, ! maxTAir
+     &            b, 
+     &            c, 
+     &            a, 
+!     &            INPITF % DAYLD, ! dayLength
+     &            WEATHER % DAYL, ! dayLength
+     &            minTSoil, 
+     &            deepLayerT, 
+     &            maxTSoil, 
+     &            hourlySoilT)
+
+!                  OUTITF % TSLD(0) = -99
+                  SRFTEMP = -99.0
+!                  OUTITF % TSLD(1) = (maxTsoil + minTSoil)/2
+                  ST(1) = (maxTsoil + minTSoil)/2
+!                  OUTITF % TSLD(2:INPITF % NLAYR) = deepLayerT
+                  ST(2:NLAYR) = deepLayerT
+!-----------------------------------------------------------------------
+        CASE ('K') ! STICS
+
+            CALL model_soil_temp(
+!     &            INPITF % TMIN, !min_temp
+     &            WEATHER % TMIN, !min_temp
+!     &            INPITF % TMAX, !max_temp
+     &            WEATHER % TMAX, !max_temp
+     &            prev_temp_profile,
+     &            prev_canopy_temp,
+!     &            INPITF % TMIN, !min_air_temp
+     &            WEATHER % TMIN, !min_air_temp
+!     &            INPITF % T2M, !air_temp_day1
+     &            WEATHER % TAVG, !air_temp_day1
+!     &            LTHICK(1:INPITF % NLAYR), !layer_thick
+     &            LTHICK(1:NLAYR), !layer_thick
+!     &            INPITF % TMIN, !min_canopy_temp
+     &            WEATHER % TMIN, !min_canopy_temp
+!     &            INPITF % TMAX,!max_canopy_temp
+     &            WEATHER % TMAX,!max_canopy_temp
+     &            temp_amp, !temp_amp 
+     &            temp_profile, 
+     &            layer_temp,
+!     &            OUTITF % TSLD(0)) !canopy_temp_avg
+     &            SRFTEMP) !canopy_temp_avg
+
+            prev_temp_profile = temp_profile
+!            prev_canopy_temp  = OUTITF % TSLD(0)
+            prev_canopy_temp  = SRFTEMP
+!            OUTITF % TSLD(1:INPITF%NLAYR) = layer_temp(1:INPITF%NLAYR)
+            ST = layer_temp(1:NLAYR)
+!-----------------------------------------------------------------------
+!     CSM_Reverse_ST_Modeling by FO
+!     END
+!***********************************************************************
+        CASE ('E')    !EPIC soil temperature routine
+          CALL STEMP_EPIC(CONTROL, ISWITCH,
+     &      SOILPROP, SW, TAVG, TMAX, TMIN, TAV, WEATHER,   !Input
+     &      SRFTEMP, ST)                                    !Output
         CASE DEFAULT
 !       7/21/2016 - DSSAT method is default, per GH
 !        CASE ('D')  !DSSAT soil temperature
@@ -592,19 +956,35 @@ C-----------------------------------------------------------------------
 !     ---------------------------------------------------------
       IF (MEEVP .NE.'Z') THEN  !LPM 02dec14 use values from ETPHOT
           SELECT CASE (METMP)
+!*********************************************************************** 
+!     CSM_Reverse_ST_Modeling by FO
+!     CROP2ML - DAILY OUTPUT
+!***********************************************************************
+          CASE('F') ! BIOMA-Parton
+            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+!-----------------------------------------------------------------------
+          CASE('G') ! BIOMA-SWAT
+            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+!-----------------------------------------------------------------------
+          CASE('H') ! C2ML DSSAT-EPIC
+            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+!-----------------------------------------------------------------------
+          CASE('I') ! C2ML DSSAT
+            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+!-----------------------------------------------------------------------
+          CASE('J') ! SIRIUS-Quality
+            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+!-----------------------------------------------------------------------
+          CASE('K') ! STICS
+            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+!-----------------------------------------------------------------------
+!     CSM_Reverse_ST_Modeling by FO
+!     END
+!***********************************************************************
           CASE ('E')    !EPIC soil temperature routine
             CALL STEMP_EPIC(CONTROL, ISWITCH,
      &        SOILPROP, SW, TAVG, TMAX, TMIN, TAV, WEATHER,   !Input
      &        SRFTEMP, ST)                                    !Output
-!     CSM_Reverse_ST_Modeling by FO
-          CASE ('A')
-            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
-
-          CASE ('S')  !SIRIUS Quality soil temperature
-!     CSM_Reverse_ST_Modeling by FO
-            SRFTEMP = (maxTsoil + minTSoil)/2
-            ST = deepLayerT_t1
-            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
           CASE DEFAULT  !DSSAT soilt temperature
             CALL STEMP(CONTROL, ISWITCH,
      &        SOILPROP, SRAD, SW, TAVG, TMAX, XLAT, TAV, TAMP,!Input
