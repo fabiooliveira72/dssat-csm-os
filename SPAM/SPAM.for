@@ -412,7 +412,7 @@ C=======================================================================
 !-----------------------------------------------------------------------
         CASE ('K') ! STICS
 !            LTHICK = INT(INPITF % THICK)
-            LTHICK(1:NLAYR) = INT(SOILPROP % DLAYR)
+            LTHICK(1:NL) = INT(SOILPROP % DLAYR)
 
             CALL init_temp_profile(
 !     &            INPITF % TMIN, !min_air_temp
@@ -514,6 +514,7 @@ C=======================================================================
 !     CROP2ML - RATE CALCULATIONS
 !***********************************************************************
         CASE('F') ! BIOMA-Parton
+            WRITE(*,*) 'BIOMA-Parton running...'
             CALL GET('PLANT','BIOMAS',BIOMAS)      !kg/ha
 
             CALL model_surfacepartonsoilswatc(
@@ -547,6 +548,7 @@ C=======================================================================
      &            ST(1:NLAYR))! SoilTemperatureByLayers
 !-----------------------------------------------------------------------     
         CASE('G') ! BIOMA-SWAT
+            WRITE(*,*) 'BIOMA-SWAT running...'
             CALL GET('PLANT','BIOMAS',BIOMAS)      !kg/ha
             CALL GET('WATER','SNOW', WaterEquivalentOfSnowPack)       !mm
 
@@ -579,6 +581,7 @@ C=======================================================================
      &            ST(1:NLAYR))! SoilTemperatureByLayers
 !-----------------------------------------------------------------------
         CASE('H') ! C2ML DSSAT-EPIC
+            WRITE(*,*) 'C2ML DSSAT-EPIC running...'
             CALL GET('PLANT','BIOMAS',BIOMAS)      !kg/ha
             CALL GET('ORGC' ,'MULCHMASS',MULCHMASS)   !kg/ha
             CALL GET('WATER','SNOW',SNOW)       !mm
@@ -616,6 +619,7 @@ C=======================================================================
      &            SNOW)
 !-----------------------------------------------------------------------
         CASE ('I') ! C2ML DSSAT
+            WRITE(*,*) 'C2ML DSSAT running...'
             CALL model_stemp(NL, ISWWAT,
 !     &            INPITF % SLBDM,  
      &            SOILPROP % BD,    
@@ -643,7 +647,7 @@ C=======================================================================
      &            DOY, HDAY)
 !-----------------------------------------------------------------------
         CASE ('J') ! SIRIUS-Quality
-
+          WRITE(*,*) 'SIRIUS-Quality running...'
             CALL model_soiltemperature(
 !     &            INPITF % T2M,  ! meanTAir
      &            WEATHER % TAVG,  ! meanTAir
@@ -674,7 +678,7 @@ C=======================================================================
                   ST(2:NLAYR) = deepLayerT
 !-----------------------------------------------------------------------
         CASE ('K') ! STICS
-
+            WRITE(*,*) 'STICS running...'
             CALL model_soil_temp(
 !     &            INPITF % TMIN, !min_temp
      &            WEATHER % TMIN, !min_temp
@@ -702,7 +706,7 @@ C=======================================================================
 !            prev_canopy_temp  = OUTITF % TSLD(0)
             prev_canopy_temp  = SRFTEMP
 !            OUTITF % TSLD(1:INPITF%NLAYR) = layer_temp(1:INPITF%NLAYR)
-            ST = layer_temp(1:NLAYR)
+            ST(1:NLAYR) = layer_temp(1:NLAYR)
 !-----------------------------------------------------------------------
 !     CSM_Reverse_ST_Modeling by FO
 !     END
