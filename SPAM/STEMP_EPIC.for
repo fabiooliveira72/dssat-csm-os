@@ -377,13 +377,11 @@ C=======================================================================
 !       Eqn 6
 !       T(L)=PARM(15)*T(L)+XLG1*(F*X1+X3)
         ST(L)=LAG*ST(L)+(1.-LAG)*(F*X1+X3)
-!       FO: Get sum of ST for all layers
-        STAVG = STAVG + ST(L)
       END DO
       
-!     FO: Compute Hourly Soil Temperature based on ST
-      STAVG = STAVG / NLAYR
-      HST   = STAVG
+!     FO: Compute Hourly Soil Temperature based on first layer only
+!     for Aflatoxin.
+      HST = ST(1)
 
       X2_PREV = X2_AVG
 

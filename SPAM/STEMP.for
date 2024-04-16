@@ -365,19 +365,15 @@ C=======================================================================
       TA = TAV + TAMP * COS(ALX) / 2.0
       DT = ATOT / 5.0 - TA
       
-      STAVG = 0.0
-      
       DO L = 1, NLAYR
         ZD    = -DSMID(L) / DD
         ST(L) = TAV + (TAMP / 2.0 * COS(ALX + ZD) + DT) * EXP(ZD)
         ST(L) = NINT(ST(L) * 1000.) / 1000.   !debug vs release fix
-!       FO: Get sum of ST for all layers
-        STAVG = STAVG + ST(L)
       END DO
 
-!     FO: Compute Hourly Soil Temperature based on ST
-      STAVG = STAVG / NLAYR
-      HST   = STAVG 
+!     FO: Compute Hourly Soil Temperature based on first layer only
+!     for Aflatoxin.
+      HST = ST(1)
       
 !     Added: soil T for surface litter layer.
 !     NB: this should be done by adding array element 0 to ST(L). Now
