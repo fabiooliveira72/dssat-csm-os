@@ -20,6 +20,8 @@ C  08/12/2003 CHP Added I/O error checking and changed call to READA
 C  02/09/2007 GH  Add path for FileA
 !  08/28/2009 CHP added EDAT, EDAP 
 !  09/17/2019 CHP remove crop CT
+C  07/08/2022 GH  Add CU for Cucumber
+C  05/01/2023 GH  Add GY for Guar; SR for Strawberry
 C=======================================================================
 
       SUBROUTINE OPHARV(CONTROL, ISWITCH, 
@@ -37,6 +39,8 @@ C-----------------------------------------------------------------------
                          ! which contain control information, soil
                          ! parameters, hourly weather data.
       IMPLICIT NONE
+      EXTERNAL FIND, ERROR, STNAMES, OPVIEW, READA_Dates, 
+     &  CHANGE_DESC, GetDesc, SUMVALS, EvaluateDat, TIMDIF, READA_Y4K
       SAVE
 
       CHARACTER*1  RNMODE,IDETO,IPLTI, PLME
@@ -74,7 +78,7 @@ C-----------------------------------------------------------------------
 !     Arrays which contain Simulated and Measured data for printing
 !       in OVERVIEW.OUT and EVALUATE.OUT files (OPVIEW subroutine)
       CHARACTER*6, DIMENSION(EvaluateNum) :: OLAB, OLAP !OLAP in dap
-      CHARACTER*6 X(EvaluateNum)
+      CHARACTER*12 X(EvaluateNum)
       CHARACTER*8 Simulated(EvaluateNum), Measured(EvaluateNum)
       CHARACTER*50 DESCRIP(EvaluateNum)
 
@@ -131,7 +135,7 @@ C-----------------------------------------------------------------------
      & 'LAIX  ',  !17 !12 LAIMX          XLAM   Maximum LAI (m2/m2)
      & 'L#SM  ',  !18 !21 VSTAGE         XLFNO  Final Leaf # Main Stem
      & 'CHTA  ',  !19 !23 CANHT          XCNHT  Canopy Height (m)
-     & 'CNAA  ',  !20 !20                XCNAA  Biomass N at anth (kg/ha)
+     & 'CNAA  ',  !20 !20                XCNAA  Biomass N @ anth (kg/ha)
      & 'CNAM  ',  !21 !16 NINT(WTNCAN*10)XNTP   Biomass N (kg N/ha)
      & 'SNAM  ',  !22 !17 NINT(WTNST*10) XNST   Stalk N (kg N/ha)
      & 'GNAM  ',  !23 !15 NINT(WTNSD*10) XNGR   Seed N (kg N/ha)
@@ -221,8 +225,9 @@ C-----------------------------------------------------------------------
       PlantStres % ACTIVE = .FALSE.
       PlantStres % StageName = '                       '
       SELECT CASE (CROP)
-      CASE ('BG','BN','CH','CI','CN','CO','CP','FB','GB','PE',
-     &      'LT','PN','PP','PR','QU','SB','SF','SU','TM','VB')
+      CASE ('BC','BG','BN','CH','CI','CN','CO','CP','CU',
+     &      'FB','GB','GY','LT','PE','PN','PP','PR','QU',
+     &      'SB','SF','SR','SU','TM','VB')
         PlantStres % NSTAGES = 4
         PlantStres % StageName(1)  = 'Emergence -First Flower'
         PlantStres % StageName(2)  = 'First Flower-First Seed'
@@ -265,8 +270,9 @@ C-----------------------------------------------------------------------
 
 !     Set ACTIVE variable to indicate that current phase is active
       SELECT CASE (CROP)
-      CASE ('BG','BN','CH','CI','CN','CO','CP','FB','GB','LT',
-     &     'PE','PN','PP','PR','QU','SB','SF','SU','TM','VB')
+      CASE ('BC','BG','BN','CH','CI','CN','CO','CP','CU',
+     &      'FB','GB','GY','LT','PE','PN','PP','PR','QU',
+     &      'SB','SF','SR','SU','TM','VB')
         IF (YRDOY > STGDOY(1) .AND. YRDOY <= STGDOY(5)) THEN
           PlantStres % ACTIVE(1) = .TRUE.
         ENDIF
@@ -349,7 +355,8 @@ C-----------------------------------------------------------------------
          ELSE
            TRT_ROT = TRTNUM
          ENDIF
-         CALL READA (FILEA, PATHEX,OLAB, TRT_ROT, YRSIM, X)
+         !CALL READA (FILEA, PATHEX,OLAB, TRT_ROT, YRSIM, X)
+         CALL READA_Y4K(FILEA, PATHEX,OLAB, TRT_ROT, YRSIM, X)
 
 !     Convert from YRDOY format to DAP.  Change descriptions to match.
 !       Anthesis
@@ -463,38 +470,46 @@ C-----------------------------------------------------------------------
       WRITE(Simulated(5),' (I8)') DNR7;  WRITE(Measured(5),'(I8)') DMAT
       WRITE(Simulated(6),' (I8)') DNR8;  WRITE(Measured(6),'(I8)') DHRV
       WRITE(Simulated(7),' (I8)') NINT(SDWT*10);  
-                                         WRITE(Measured(7),'(A8)') X(7)
+                                  WRITE(Measured(7),'(A8)') TRIM(X(7))
       WRITE(Simulated(8),' (I8)') NINT(PODWT*10); 
-                                         WRITE(Measured(8),'(A8)') X(8)
+                                  WRITE(Measured(8),'(A8)') TRIM(X(8))
       WRITE(Simulated(9), '(I8)') NINT(CANWAA*10);
-                                         WRITE(Measured(9),'(A8)') X(9)
+                                  WRITE(Measured(9),'(A8)') TRIM(X(9))
       WRITE(Simulated(10),'(I8)') NINT(TOPWT*10); 
-                                         WRITE(Measured(10),'(A8)')X(10)
+                                  WRITE(Measured(10),'(A8)')TRIM(X(10))
 !     WRITE(Simulated(11),'(I8)') NINT(STMWT*10); 
 !                                        WRITE(Measured(11),'(A8)')X(11)
 ! KJB, LAH, CHP 12/16/2004  change BWAH to BWAM
       WRITE(Simulated(11),'(I8)') NINT(TOPWT-SDWT)*10; 
-                                         WRITE(Measured(11),'(A8)')X(11)
+                                  WRITE(Measured(11),'(A8)')TRIM(X(11))
       WRITE(Simulated(12),'(I8)') NINT(SEEDNO);   
-                                         WRITE(Measured(12),'(A8)')X(12)
-      WRITE(Simulated(13),'(F8.4)')PSDWT;WRITE(Measured(13),'(A8)')X(13)
-      WRITE(Simulated(14),'(F8.2)')PSPP; WRITE(Measured(14),'(A8)')X(14)
-      WRITE(Simulated(15),'(F8.3)')HI;   WRITE(Measured(15),'(A8)')X(15)
-      WRITE(Simulated(16),'(F8.2)')THRES;WRITE(Measured(16),'(A8)')X(16)
-      WRITE(Simulated(17),'(F8.2)')LAIMX;WRITE(Measured(17),'(A8)')X(17)
+                                  WRITE(Measured(12),'(A8)')TRIM(X(12))
+      WRITE(Simulated(13),'(F8.4)')PSDWT;
+                                  WRITE(Measured(13),'(A8)')TRIM(X(13))
+      WRITE(Simulated(14),'(F8.2)')PSPP; 
+                                  WRITE(Measured(14),'(A8)')TRIM(X(14))
+      WRITE(Simulated(15),'(F8.3)')HI;   
+                                  WRITE(Measured(15),'(A8)')TRIM(X(15))
+      WRITE(Simulated(16),'(F8.2)')THRES;
+                                  WRITE(Measured(16),'(A8)')TRIM(X(16))
+      WRITE(Simulated(17),'(F8.2)')LAIMX;
+                                  WRITE(Measured(17),'(A8)')TRIM(X(17))
       WRITE(Simulated(18),'(F8.2)')VSTAGE;
-                                         WRITE(Measured(18),'(A8)')X(18)
-      WRITE(Simulated(19),'(F8.2)')CANHT;WRITE(Measured(19),'(A8)')X(19)
+                                  WRITE(Measured(18),'(A8)')TRIM(X(18))
+      WRITE(Simulated(19),'(F8.2)')CANHT;
+                                  WRITE(Measured(19),'(A8)')TRIM(X(19))
       WRITE(Simulated(20),'(I8)') NINT(CANNAA*10);
-                                         WRITE(Measured(20),'(A8)')X(20)
+                                  WRITE(Measured(20),'(A8)')TRIM(X(20))
       WRITE(Simulated(21),'(I8)') NINT(WTNCAN*10);
-                                         WRITE(Measured(21),'(A8)')X(21)
+                                  WRITE(Measured(21),'(A8)')TRIM(X(21))
       WRITE(Simulated(22),'(I8)') NINT(WTNST*10); 
-                                         WRITE(Measured(22),'(A8)')X(22)
+                                  WRITE(Measured(22),'(A8)')TRIM(X(22))
       WRITE(Simulated(23),'(I8)') NINT(WTNSD*10); 
-                                         WRITE(Measured(23),'(A8)')X(23)
-      WRITE(Simulated(24),'(F8.2)')PCNSD;WRITE(Measured(24),'(A8)')X(24)
-      WRITE(Simulated(25),'(F8.2)')PCLSD;WRITE(Measured(25),'(A8)')X(25)
+                                  WRITE(Measured(23),'(A8)')TRIM(X(23))
+      WRITE(Simulated(24),'(F8.2)')PCNSD;
+                                  WRITE(Measured(24),'(A8)')TRIM(X(24))
+      WRITE(Simulated(25),'(F8.2)')PCLSD;
+                                  WRITE(Measured(25),'(A8)')TRIM(X(25))
       ENDIF  
 
       IF (CONTROL % ERRCODE > 0) THEN
@@ -535,7 +550,8 @@ C     Byproduct not harvested is incorporated
          PSPP  = 0.
       ENDIF
 
-      IF ((CROP .EQ. 'TM') .OR. (CROP .EQ. 'PR')) THEN
+      IF ((CROP .EQ. 'TM') .OR. (CROP .EQ. 'PR') .OR. 
+     &    (CROP .EQ. 'CU') .OR. (CROP .EQ. 'SR')) THEN
         HWAM = PODWT * 10.
         HWAH = PODWT * 10.
       ELSE
@@ -627,8 +643,8 @@ C-----------------------------------------------------------------------
       ENDDO
 
       SELECT CASE (CROP)
-      CASE ('BN','CH','CI','CN','CP','FB','GB','PE','PP',
-     &      'PR','SB','TM','VB','LT')
+      CASE ('BC','BN','CH','CI','CN','CP','CU','FB','GB','GY','PE',
+     &      'PP','PR','SB','SR','TM','VB','LT')
 !     For stage-dependant irrigation - send GSTAGE back to irrig routine
         STNAME(1) = 'Emergence '    !; GSTAGE(1) = "GS001"
         STNAME(2) = 'Unifoliate'

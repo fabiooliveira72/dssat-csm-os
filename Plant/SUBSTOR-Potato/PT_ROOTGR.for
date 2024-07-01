@@ -46,10 +46,9 @@ C=======================================================================
      &    CUMDEP, RLV, RTDEP)                             !Output
 
 !-----------------------------------------------------------------------
-      USE ModuleDefs     !Definitions of constructed variable types, 
-                         ! which contain control information, soil
-                         ! parameters, hourly weather data.
+      USE ModuleDefs
       IMPLICIT  NONE
+      EXTERNAL PT_IPROOT
       SAVE
 
       LOGICAL FIRST
@@ -74,18 +73,6 @@ C=======================================================================
       CALL PT_IPROOT(FILEIO,                    !Input
      &               RLWR, SDEPTH)              !Output
 
-!********* TEMPORARY CHP *********************************
-!     RLWR Sensitivity
-!      SELECT CASE(RUN)
-!        CASE(1); RLWR = 0.50
-!        CASE(2); RLWR = 0.75
-!        CASE(3); RLWR = 2.5
-!        CASE(4); RLWR = 5.0
-!        CASE(5); RLWR = 7.5
-!        CASE(6); RLWR = 10.0
-!      END SELECT
-!*********************************************************
-
       FIRST = .TRUE.
 
       DO L = 1, NL
@@ -104,16 +91,8 @@ C=======================================================================
 !-----------------------------------------------------------------------
 !     Initial root distribution:  
       IF (FIRST) THEN
-
-!********* TEMPORARY CHP *********************************
-!     RLWR Sensitivity
-!     Write to Overview.out file - can't do it when value is 
-!       set because file is not open yet.
-!      CALL GETLUN('OUTO',L)   !Get unit # for Overview.out
-!      WRITE(L,*) ' Sensitivity analysis. RLWR = ',RLWR  
-!*********************************************************
-
-        !RTDEPI = SDEPTH  
+!       After planting date, when Root growth rate >0, could be before Emergence date
+!       RTDEPI = SDEPTH  
         RTDEPI = MIN(20.0,DS(NLAYR))     !CHP per JWJ                 
         FIRST  = .FALSE.
 
@@ -125,12 +104,12 @@ C       DISTRIBUTE ROOT LENGTH EVENLY IN ALL LAYERS TO A DEPTH OF
 C       RTDEPTI (ROOT DEPTH AT EMERGENCE)
 C-------------------------------------------------------------------------
         CUMDEP = 0.
-
+!       RLINIT is in cm[root]/cm2[ground]
         DO L = 1,NLAYR
           DEP = MIN(RTDEPI - CUMDEP, DLAYR(L))
-   !       RLINIT = WTNEW * FRRT * PLTPOP * RFAC1 * DEP / ( RTDEP *
-   !    &       10000 )
-!         PLWR from *.spe is in ((cm/g)*1E-4)
+!         RLINIT = WTNEW * FRRT * PLTPOP * RFAC1 * DEP / ( RTDEP *
+!      &       10000 )
+!         RLWR cm[root]/g[root])
           RLINIT = GRORT * RLWR * PLTPOP
       !cm[root]      g     cm  # plants    1E-4*m2 
       !--------- = ---- * ---- * ---------*------
@@ -144,8 +123,7 @@ C-------------------------------------------------------------------------
 
 !***********************************************************************
       ELSE
-!     Daily root growth and distribution
-
+!       Daily root growth and distribution
         RLNEW  = GRORT * RLWR * PLTPOP  !CHP    
         TRLDF  = 0.0
         CUMDEP = 0.0
@@ -195,7 +173,7 @@ C-------------------------------------------------------------------------
 
       ENDIF
 
-       ! RLWR  Root length to weight ration, (cm/g)*1E-4 
+       ! RLWR  Root length to weight ratio, (1E4 cm/g)
 !        TotRootMass = (TRLV / RLWR) * 10.
 !                   cm[root]   g[root]   10000 cm2   10(kg/ha)
 !          kg/ha  = -------- * ------- * -------- * ---------
@@ -205,9 +183,7 @@ C-------------------------------------------------------------------------
        ! kg[root]       kg        g      # plants     kg/ha
        !----------- = --------+ ------ * --------*  --------
        ! ha             ha       plant      m2         g/m2
-!        Write(93,931) "1D,RLNEW,",RLnew, ",cm/cm2,CmRtMs,", CumRootMass,
-!     &              ",kg/ha,TotRtMs,",  TotRootMass, ",kg/ha"
- 931    format (A9,F7.3,A15,F8.3,A15, F8.3,A6)
+
 !***********************************************************************
 !***********************************************************************
 !     END OF DYNAMIC IF CONSTRUCT
@@ -237,6 +213,7 @@ C-----------------------------------------------------------------------
 !     ------------------------------------------------------------------
 
       IMPLICIT NONE
+      EXTERNAL GETLUN, FIND, ERROR, IGNORE
 
       INTEGER LUNIO, LUNCRP
       CHARACTER*1, PARAMETER :: BLANK = ' '
@@ -327,7 +304,7 @@ C=======================================================================
 ! RLINIT       Initial root density (cm[root]/cm2[ground])
 ! RLNEW        New root growth added to the total root system length (cm[root]/cm2[ground])
 ! RLV(L)       Root length density for soil layer L (cm[root] / cm3[soil]) 
-! RLWR         Root length to weight ration, (cm/g)*1E-4  
+! RLWR         Root length to weight ration, (10^4 cm[root]/g[root])  
 ! RNFAC        Zero to unity factor describing mineral N availability effect on
 !              root growth in Layer L
 ! RNLF         Intermediate factor used to calculate distribution of new root. !JZW this variable should be removed

@@ -76,6 +76,11 @@
     0.10          FracPMobil - max fraction of P which can be mobilized from leaf & stem / day
   0.0028          ROOTRAD - radius of cylinder around roots from which soil P can be extracted (m)
 
+!*EVAPOTRANSPIRATION
+  0.68   1.1       KEP, EORATIO
+  0.50  1.15       SSKC, SKCBmax ASCE short ref (12 cm grass)
+  0.50  0.96       TSKC, TKCBmax ASCE tall ref (50 cm alfalfa)
+  
 *FORAGE SILAGE
 
  STAVEG SLPVEG SLPCOB SLPGRN STAGRN CONDIG MILKZ0  IRDMC CVGDMC SLPMLK
@@ -83,6 +88,7 @@
 
 *FRESH WEIGHT
      Y                      Switch for fresh weight option
+  
 !At emergence and end of leaf growth: 
 !Optimum shoot P concentration (%) = 0.684 - 0.108X (Jones, 1983) 
 !At physiological maturity: 

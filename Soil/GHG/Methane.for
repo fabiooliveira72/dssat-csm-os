@@ -7,25 +7,11 @@ C  Revision history
 C
 C  1. Written     R.B.M. March 1998.
 ! 2021-06-30 CHP and US adapt for DSSAT-CSM v4.8
-C-----------------------------------------------------------------------
-C Inputs:
-C   DAP        : days after planting
-C   dlayr      : width of each soil layer (cm)
-C   flood      : depth of flood water (mm)
-C   SW         : soil water content (m3 water/m3 soil)
-C   RLV        : root length density (cm root/cm3 soil)
-C   BD         : bulk density of each soil layer (g soil cm-3 soil)
-C   Csubstrate : available CH2O for methanogenesis (kgCH2O/ha per soil layer.
-C   drain      : percolation rate (mm/d)
-C Output:
-C   CH4flux    : total CH4 emission (kgCH4 ha-1 d-1)
-
-! Still to do:
-!  - Soil Alternative Electron Acceptors input from soil file or otherwise
-!      estimated from soil properties. Currently hardwired at 26.5.
+! 2023-01-24 chp added SAEA to soil analysis in FileX
+! 2023-05-14 EHFMS changed the starting condition for methane production
 C=======================================================================
       SUBROUTINE MethaneDynamics(CONTROL, ISWITCH, SOILPROP,  !Input
-     &    FLOODWAT, SW, RLV, newCO2, DRAIN,                   !Input
+     &    FERTDATA, FLOODWAT, SW, RLV, newCO2, DRAIN,         !Input
      &    CH4_data)                                           !Output
 
       USE GHG_mod
@@ -33,11 +19,12 @@ C=======================================================================
       USE MethaneConstants
       USE MethaneVariables
       IMPLICIT NONE
+      EXTERNAL OpMethane, SteadyState, setup
       SAVE
 
       INTEGER n1,NLAYR,i,j, DYNAMIC
       REAL dlayr(NL),SW(NL),DLL(NL),RLV(NL),CSubstrate(NL),BD(NL),
-     &     Buffer(NL,2),afp(NL)
+     &     Buffer(NL,2),afp(NL), SAEA(NL), SAT(NL), DUL(NL)
       REAL, DIMENSION(0:NL) :: newCO2
       REAL drain,flood,x,CH4Emission,buffconc,rCO2,
      &     rCH4,TCH4Substrate,rbuff,afpmax,
@@ -56,22 +43,23 @@ C=======================================================================
       TYPE (SwitchType)  ISWITCH
       TYPE (SoilType)    SOILPROP
       TYPE (FloodWatType)FLOODWAT
+      TYPE (FertType)    FERTDATA
       TYPE (CH4_type)    CH4_data
-
 
 !-----------------------------------------------------------------------
       REAL, PARAMETER :: spd = 24.*3600.   ! seconds per day
 !     Reference height for the Arah model to be the top of the bund
       REAL, PARAMETER :: RefHeight = 100. ! mm
-!     Soil buffer regeneration rate after drainage
-      REAL, PARAMETER :: BufferRegenRate = 0.06 ! 1/d	  0.02
+      !1/d EHFMS changed, before was 0.06
+      REAL, PARAMETER :: BufferRegenRate = 0.070
+      !EHFMS created this parameter 
+      REAL, PARAMETER :: frac_afpmax = 0.30
       DYNAMIC = CONTROL % DYNAMIC
-
       DLAYR = SOILPROP % DLAYR
       DLL   = SOILPROP % LL
       BD    = SOILPROP % BD
       NLAYR = SOILPROP % NLAYR
-
+      
 C***********************************************************************
 C***********************************************************************
 C    Input and Initialization 
@@ -109,35 +97,25 @@ C-----------------------------------------------------------------------
         CH4Stored_Y   = 0.0
         CH4_data % CH4Stored = 0.0
 
-!     Convert the alternate electron acceptors in each layer from mol Ceq/m3 to kgC/ha
-!     Temporarily hard-wire Buffer(NL,1) to 26.5 until we read initial values from soil file.
+!     SAEA = Soil Alternative Electron Acceptors (mol Ceq/m3)
+!     SAEA = 26.5  
+      SAEA = SOILPROP % SAEA
+
       FloodCH4 = 0.0
       DO i=1,NLAYR
+!       Convert the alternate electron acceptors in each layer 
+!       from mol Ceq/m3 to kgC/ha
 !       Buffer(i,1) = Buffer(i,1) * 12.*(dlayr(i)/100.)*10. ! kg Ceq/ha
-!       Temporarily set SAEA (new soil input - Soil Alternative Electron Acceptors) values to 26.5
-!       Need to introduce new soil input parameter, or find a way to estimate from other inputs?
-        Buffer(i,1) = 26.5 * 12.*(dlayr(i)/100.)*10. ! kg Ceq/ha
+        Buffer(i,1) = SAEA(i) * 12.*(dlayr(i)/100.)*10. ! kg Ceq/ha
         Buffer(i,2) = 0.0
       ENDDO
 
-!     proportionality constant for root transmissivity and RLV	(0.00015 m air/(m root))
+!     proportionality constant for root transmissivity and RLV	
+!     (0.00015 m air/(m root))
 !     lamda_rho = lamdarho  ! 0.00015
       lamda_rho = 0.00015
 
       ENDIF
-
-! Sample soil profile used in MERES example from IRRI with SAEA values.
-!*IBRI910025  IRRI-UNDP   -99      50  
-!@SITE        COUNTRY          LAT     LONG SCS FAMILY
-! IRRI-UNDP   Philippines    14.18   121.25 Aquandic epiqualf
-!@ SCOM  SALB  SLU1  SLDR  SLRO  SLNF  SLPF  SMHB  SMPX  SMKE
-!   -99  0.13  12.0  0.60  67.0  1.00  1.00 IB001 IB001 IB001
-!@  SLB  SLMH  SLLL  SDUL  SSAT  SRGF  SSKS  SBDM  SLOC  SLCL  SLSI  SLCF  SLNI  SLHW  SLHB  SCEC  SAEA
-!    10   -99 0.280 0.397 0.412 1.000  -9.0  1.00  1.20  0.43  0.53  0.04  0.13   6.6   -99   -99  26.5
-!    20   -99 0.280 0.397 0.412 1.000  -9.0  1.00  1.20  0.43  0.53  0.04  0.13   6.6   -99   -99  26.5
-!    30   -99 0.280 0.397 0.412 0.200  -9.0  1.00  1.20  0.43  0.53  0.04  0.13   6.6   -99   -99  26.5
-!    40   -99 0.280 0.397 0.412 0.200  -9.0  1.00  1.20  0.43  0.53  0.04  0.13   6.6   -99   -99  26.5
-!    50   -99 0.280 0.397 0.412 0.100  -9.0  1.00  1.20  0.43  0.53  0.04  0.13   6.6   -99   -99  26.5
 
       CALL OpMethane(CONTROL, ISWITCH,  
      &  newCO2Tot, CO2emission, TCH4Substrate, StorageFlux, CH4Stored,  
@@ -162,8 +140,10 @@ C-----------------------------------------------------------------------
       CH4Ebullition  = 0.0
       CH4Diffusion   = 0.0
 
-!     Calculate total CO2 coming in from decomposition of organic matter, newCO2Tot
-!     Transfer newCO2 from soil organic matter modules to CSubstrate variable
+!     Calculate total CO2 coming in from decomposition 
+!     of organic matter, newCO2Tot
+!     Transfer newCO2 from soil organic matter modules 
+!     to CSubstrate variable
       CSubstrate = 0.0
       newCO2Tot = 0.0
       DO i = 1, SOILPROP % NLAYR
@@ -201,37 +181,42 @@ C-----------------------------------------------------------------------
         IF (FLOOD.GT.0.0) THEN 
           afp(i) = 0.0
         ELSE 
-          afp(i) = max(0.0,1.0 - BD(i)/2.65 - SW(i))
-        ENDIF
-        afpmax = 1.0 - BD(i)/2.65 - DLL(i)
+            afp(i) = max(0.0,1.0 - BD(i)/2.65 - SW(i))          
+      ENDIF
+         afpmax = 1.0 - BD(i)/2.65
+
+!       Update buffer from new fertilizer
+        Buffer(i,1) = Buffer(i,1) + FERTDATA % AddBuffer(i)
 
 !       calculate buffer concentration (molCeq/m3)
         buffconc = Buffer(i,1)/10./12./(dlayr(i)/100.)  
 
 !       calculate reoxidisation of buffer if soil is aerated
-        IF (afp(i).GT.0.0) THEN
-          rCH4 = 0.0              ! no CH4 production
-          rCO2 = CSubstrate(i)    ! aerobic respiration
-          rbuff = -MIN(BufferRegenRate*afp(i)/afpmax*Buffer(i,2),
-     &                     Buffer(i,2))
-        ELSE
-!         calculate methane production
-          if (buffconc.gt.0.0) then
-            rCH4 = 0.2 * (1.0 - buffconc/24.0)    ! mol C m3/d	 was 0.2
-            rCH4 = rCH4 * dlayr(i)/100.*12.*10.   ! kgC/ha/d
-          else  
-            rCH4 = CSubstrate(i) / 2.0            ! kgC/ha/d
-          endif
-          rCH4 = max(0.0,min(rCH4,CSubstrate(i)/2.0))
-          rCO2 = CSubstrate(i) - (2.0 * rCH4)
-          if (rCO2.gt.Buffer(i,1)) then
-            rCO2 = Buffer(i,1)
-            rCH4 = (CSubstrate(i) - rCO2)/2.0
-          endif
-          rbuff = rCO2  
-        ENDIF
-        Buffer(i,1) = Buffer(i,1) - rbuff       ! oxidised buffer pool
-        Buffer(i,2) = Buffer(i,2) + rbuff       ! reduced buffer pool
+!         IF (afp(i).GT.0.0) THEN !     
+! EHFMS: Methane Prod. under conditions of partially saturated soil
+      IF (afp(i).GT.frac_afpmax*afpmax) THEN 
+         rCH4 = 0.0              ! no CH4 production
+         rCO2 = CSubstrate(i)    ! aerobic respiration
+         rbuff = -MIN(BufferRegenRate * afp(i) / afpmax * Buffer(i,2),
+     &                Buffer(i,2))
+      ELSE
+      ! calculate methane production
+      IF (buffconc > 0.0) THEN
+         rCH4 = 0.3 * (1.0 - buffconc/24.0)    ! mol C m3/d  was 0.2
+         rCH4 = rCH4 * dlayr(i)/100. * 12. * 10.   ! kgC/ha/d
+      ELSE  
+        rCH4 = CSubstrate(i) / 2.0            ! kgC/ha/d
+      ENDIF
+       rCH4 = MAX(0.0, MIN(rCH4, CSubstrate(i)/2.0))
+       rCO2 = CSubstrate(i) - (2.0 * rCH4)
+      IF (rCO2 > Buffer(i,1)) THEN
+         rCO2 = Buffer(i,1)
+         rCH4 = (CSubstrate(i) - rCO2) / 2.0
+      ENDIF
+      rbuff = rCO2  
+      ENDIF
+      Buffer(i,1) = Buffer(i,1) - rbuff       ! oxidized buffer pool
+      Buffer(i,2) = Buffer(i,2) + rbuff       ! reduced buffer pool                       
 
 !       Total CH4 substrate (kgC/ha)
         TCH4Substrate = TCH4Substrate + rCH4  
@@ -257,7 +242,8 @@ C-----------------------------------------------------------------------
       Lz = drain * 1.e-3/spd    ! mm/d --> m3/m2/s
 
 !     Call the steady-state routine of the Arah model
-!     TSubstrate comes out of these routines, ~10% of TCH4Substrate for IRLB9701.RIX, trt 4
+!     TSubstrate comes out of these routines, 
+!     ~10% of TCH4Substrate for IRLB9701.RIX, trt 4
       CALL setup(NLAYR+n1)
       CALL SteadyState
 
@@ -276,7 +262,8 @@ C-----------------------------------------------------------------------
         LeachingFrac    = 0.0
       ENDIF
 
-!!     Limit leaching fraction + consumption fraction to no more than production
+!!     Limit leaching fraction + consumption fraction 
+!      to no more than production
 !      IF (ConsumptionFrac + LeachingFrac .GT. ProductionFrac) THEN
 !        ReductFact = ProductionFrac / (ConsumptionFrac + LeachingFrac)
 !        ConsumptionFrac = ConsumptionFrac * ReductFact
@@ -286,7 +273,8 @@ C-----------------------------------------------------------------------
       EmissionFrac = ProductionFrac - ConsumptionFrac - LeachingFrac
       DiffusionFrac = EmissionFrac - (PlantFrac + EbullitionFrac)
 
-!     Calculate actual flux rates (kgC/ha/d) based on CERES-Rice substrate calculations
+!     Calculate actual flux rates (kgC/ha/d) based on 
+!     CERES-Rice substrate calculations
       CH4Production  = TCH4Substrate * ProductionFrac
       CH4Consumption = TCH4Substrate * ConsumptionFrac
       CH4PlantFlux   = TCH4Substrate * PlantFrac
@@ -389,6 +377,7 @@ C  07/02/2021 CHP Written
 !-------------------------------------------------------------------
       USE ModuleDefs
       IMPLICIT NONE
+      EXTERNAL GETLUN, HEADER, SUMVALS, YR_DOY
       SAVE
 
       TYPE (ControlType) CONTROL
@@ -407,7 +396,7 @@ C  07/02/2021 CHP Written
      &  CumCH4Leaching, Cum_CH4_bal
 
 !     Arrays which contain data for printing in SUMMARY.OUT file
-      INTEGER, PARAMETER :: SUMNUM = 2
+      INTEGER, PARAMETER :: SUMNUM = 1  !CO2EM now from GHG module
       CHARACTER*5, DIMENSION(SUMNUM) :: LABEL
       REAL, DIMENSION(SUMNUM) :: VALUE
 
@@ -450,7 +439,8 @@ C  07/02/2021 CHP Written
         ELSE
           OPEN (UNIT = LUN, FILE = 'Methane.OUT', STATUS = 'NEW',
      &      IOSTAT = ERRNUM)
-          WRITE(LUN,'("*Methane Daily output file")')
+          WRITE(LUN,'("*Methane Daily output file",/,
+     &    "  All values are kg/ha")')
         ENDIF
 
         IF (RNMODE .NE. 'Q' .OR. RUN .EQ. 1) THEN
@@ -462,12 +452,32 @@ C  07/02/2021 CHP Written
             CALL HEADER(SEASINIT, LUN, RUN)
           ENDIF
 
-          write(LUN,'(5a)') 
+          write(LUN,'(A,//,5A,/,5A,/,5A,/,5A)') 
+     & "*** All values are kg[C]/ha. ***",
+
+     & "!              ",
+     & "   -------------------------------------------------- Daily ",
+     & "kg[C]/ha ---------------------------------------------------",
+     & "----------   ------------------  Cumul  kg[C]/ha -----------",
+     & "----------",
+
+     & "!              ",
+     & "       New   Emitted Substrate   Storage       CH4       CH4",
+     & "       CH4       CH4       CH4     Plant       CH4       CH4",
+     & "       CH4       New   Emitted       CH4       CH4       CH4",
+     & "       CH4",
+
+     & "!              ",
+     & "       CO2       CO2   for CH4      Flux    Stored  Produced",
+     & "  Consumed   Leached   Emitted      Flux     Ebull    Diffus",
+     & "   Balance       CO2       CO2   Emitted  Consumed   Leached",
+     & "   Balance",
+
      & "@YEAR DOY   DAS",
-     &  "     CO2TD     CO2ED    CH4SBD    CH4SFD    CH4STD    CH4PRD",
-     &  "    CH4COD    CH4LCD     CH4ED    CH4PLD    CH4EBD    CH4DID",
-     &  "    CH4BLD     CO2TC     CO2EC     CH4EC    CH4COC    CH4LCC",
-     &  "    CH4BLC" 
+     & "     CO2TD     CO2ED    CH4SBD    CH4SFD    CH4STD    CH4PRD",
+     & "    CH4COD    CH4LCD     CH4ED    CH4PLD    CH4EBD    CH4DID",
+     & "    CH4BLD     CO2TC     CO2EC     CH4EC    CH4COC    CH4LCC",
+     & "    CH4BLC" 
         ENDIF
       ENDIF
 
@@ -497,18 +507,17 @@ C  07/02/2021 CHP Written
 !***********************************************************************
       ELSE IF (DYNAMIC .EQ. SEASEND) THEN
 C-----------------------------------------------------------------------
-!      IF (INDEX('AD',IDETL) == 0) RETURN
-      !Close daily output files.
-      CLOSE (LUN)
-
 !     Store Summary.out labels and values in arrays to send to
 !     OPSUM routines for printing.  Integers are temporarily 
 !     saved as real numbers for placement in real array.
-      LABEL(1)  = 'CH4EC'; VALUE(1)  = CumCH4Emission  
-      LABEL(2)  = 'CO2EC'; VALUE(2)  = CumCO2emission
+      LABEL(1)  = 'CH4EM'; VALUE(1)  = CumCH4Emission  
+!     LABEL(2)  = 'CO2EM'; VALUE(2)  = CumCO2emission
 
 !     Send labels and values to OPSUM
       CALL SUMVALS (SUMNUM, LABEL, VALUE) 
+
+      !Close daily output files.
+      CLOSE (LUN)
 
 !***********************************************************************
 !***********************************************************************
@@ -519,23 +528,23 @@ C-----------------------------------------------------------------------
       RETURN
       END SUBROUTINE OpMethane
 C=======================================================================
-!Output Variable       Definition
-CO2TD  newCO2Tot       Daily CO2 from surface + soil OM decomp. (g[C]/ha)       .
-CO2ED  CO2emission     Daily CO2 emission (kg/ha)                               .
-CH4SBD TCH4Substrate   Daily portion of new CO2 proportioned to CH4 (kg[C]/ha)  .
-CH4SFD StorageFlux     Daily CH4 Storage flux (kg[C]/ha)                        .
-CH4STD CH4Stored       CH4 stored in soil and floodwater (kg[C]/ha)             .
-CH4PRD CH4Production   Daily CH4 Production (kg[C]/ha)                          .
-CH4COD CH4Consumption  Daily CH4 Consumption (kg[C]/ha)                         .
-CH4LCD CH4Leaching     Daily CH4 Leaching (kg[C]/ha)                            .
-CH4ED  CH4Emission     Daily CH4 Emission (kg[C]/ha)                            .
-CH4PLD CH4PlantFlux    Daily CH4 PlantFlux (kg[C]/ha)                           .
-CH4EBD CH4Ebullition   Daily CH4 Ebullition (kg[C]/ha)                          .
-CH4DID CH4Diffusion    Daily CH4 Diffusion (kg[C]/ha)                           .
-CH4BLD CH4_balance     Daily CH4 Balance (kg[C]/ha)                             .
-CO2TC  CumNewCO2       Cumul. CO2 from surface + soil OM decomp. (kg[C]/ha)     .
-CO2EC  Cum CO2 emitted Cumulative CO2 emissions from soil (kg[C]/ha)            .
-CH4EC  Cum CH4 emitted Cumulative methane emitted kg[C]/ha                      .
-CH4COC CumCH4Consumpt  Cumulative CH4 consumption (kg[C]/ha)                    .
-CH4LCC CumCH4Leaching  Cumulative CH4 leaching (kg[C]/ha)                       .
-CH4BLC Cum_CH4_bal     Cumulative CH4 balance (kg[C]/ha)                        .
+! Output Variable        Definition
+! CO2EC  Cum CO2 emitted Cumulative CO2 emissions from soil (kg[C]/ha)            .
+! CO2ED  CO2emission     Daily CO2 emission (kg/ha)                               .
+! CO2TC  CumNewCO2       Cumul. CO2 from surface + soil OM decomp. (kg[C]/ha)     .
+! CO2TD  SoilCO2(kg/ha)  Daily CO2 from surface + soil OM decomp. (kg[C]/ha)      .
+! CH4BLC Cum_CH4_bal     Cumulative CH4 balance (kg[C]/ha)                        .
+! CH4BLD CH4_balance     Daily CH4 Balance (kg[C]/ha)                             .
+! CH4COC CumCH4Consumpt  Cumulative CH4 consumption (kg[C]/ha)                    .
+! CH4COD CH4Consumption  Daily CH4 Consumption (kg[C]/ha)                         .
+! CH4DID CH4Diffusion    Daily CH4 Diffusion (kg[C]/ha)                           .
+! CH4EBD CH4Ebullition   Daily CH4 Ebullition (kg[C]/ha)                          .
+! CH4EC  Cum CH4 emitted Cumulative methane emitted kg[C]/ha                      .
+! CH4ED  CH4Emission     Daily CH4 Emission (kg[C]/ha)                            .
+! CH4LCC CumCH4Leaching  Cumulative CH4 leaching (kg[C]/ha)                       .
+! CH4LCD CH4Leaching     Daily CH4 Leaching (kg[C]/ha)                            .
+! CH4PLD CH4PlantFlux    Daily CH4 PlantFlux (kg[C]/ha)                           .
+! CH4PRD CH4Production   Daily CH4 Production (kg[C]/ha)                          .
+! CH4SBD TCH4Substrate   Daily portion of new CO2 proportioned to CH4 (kg[C]/ha)  .
+! CH4SFD StorageFlux     Daily CH4 Storage flux (kg[C]/ha)                        .
+! CH4STD CH4Stored       CH4 stored in soil and floodwater (kg[C]/ha)             .

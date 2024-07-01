@@ -26,6 +26,9 @@ C======================================================================
 !  07/13/2006 CHP Added P model
 !  09/11/2007 JIL Added IXIM model
 !  10/31/2007 CHP Added simple K model.
+!  04/14/2021 CHP Added CropStatus
+!  01/26/2023 CHP Reduce compile warnings: add EXTERNAL stmts, remove 
+!                 unused variables, shorten lines. 
 !----------------------------------------------------------------------
 !  Called : Alt_Plant
 !----------------------------------------------------------------------
@@ -35,6 +38,7 @@ C======================================================================
      &     EOP, HARVFRAC, NH4, NO3, SKi_Avail,            !Input
      &     SPi_AVAIL, SNOW,                               !Input
      &     SOILPROP, SW, TRWUP, WEATHER, YREND, YRPLT,    !Input
+     &     CropStatus,                                    !Output
      &     CANHT, HARVRES, KCAN, KEP, KUptake, MDATE,     !Output
      &     NSTRES, PORMIN, PUptake, RLV, RWUMX, SENESCE,  !Output
      &     STGDOY, FracRts, UNH4, UNO3, XLAI, XHLAI)      !Output
@@ -42,6 +46,9 @@ C======================================================================
       USE ModuleDefs
 
       IMPLICIT NONE
+      EXTERNAL GETLUN, MZ_PHENOL, MZ_IX_PHENOL, MZ_GROSUB, 
+     &  MZ_IX_GROSUB, SW_GROSUB, MZ_ROOTGR, MZ_OPGROW, MZ_OPNIT, 
+     &  MZ_OPHARV, PEST, HRes_Ceres
       SAVE
 
 !----------------------------------------------------------------------
@@ -59,10 +66,11 @@ C======================================================================
       REAL            CANWH   
       REAL            CARBO      
       INTEGER         CDAY   
-!      REAL            CNSD1    
-!      REAL            CNSD2    
+!     REAL            CNSD1    
+!     REAL            CNSD2    
       REAL            CO2      
-      CHARACTER*2     CROP   
+      CHARACTER*2     CROP
+      INTEGER         CropStatus   
       REAL            CUMDEP      
       REAL            CUMDTT    
       REAL            DAYL 
@@ -316,19 +324,19 @@ C----------------------------------------------------------------------
           !-------------------------------------------------------------
           IF(MODEL(1:5).EQ.'MZCER'.OR.MODEL(1:5).EQ.'SWCER') THEN
             CALL MZ_PHENOL(DYNAMIC,ISWWAT,FILEIO,IDETO,             !C
-     &      CUMDEP,DAYL,DLAYR,LEAFNO,LL,NLAYR,PLTPOP,SDEPTH,        !I
-     &      SI1,SI3,SNOW, SRAD,SUMP,SW,TMAX,TMIN, TWILEN,           !I
-     &      XN,YRDOY,YRSIM,                                         !I
-     &      CUMDTT,DTT,EARS,GPP,ISDATE, ISTAGE,MDATE,STGDOY,SUMDTT, !O
-     &      XNTI,TLNO,XSTAGE,YREMRG,RUE,KCAN,KEP, P3, TSEN, CDAY,   !O
-     &      SeedFrac, VegFrac)                                      !O
-	    ELSEIF(MODEL(1:5).EQ.'MZIXM')THEN
+     &    CUMDEP,DAYL,DLAYR,LEAFNO,LL,NLAYR,PLTPOP,SDEPTH,        !I
+     &    SNOW, SRAD,SUMP,SW,TMAX,TMIN, TWILEN,                   !I
+     &    XN,YRDOY,YRSIM,                                         !I
+     &    CUMDTT,DTT,EARS,GPP,ISDATE, ISTAGE,MDATE,STGDOY,SUMDTT, !O
+     &    XNTI,TLNO,XSTAGE,YREMRG,RUE,KCAN,KEP, P3, TSEN, CDAY,   !O
+     &    SeedFrac, VegFrac, CropStatus)                          !O
+          ELSEIF(MODEL(1:5).EQ.'MZIXM')THEN
             CALL MZ_IX_PHENOL(DYNAMIC,ISWWAT,FILEIO,IDETO,        !C
      &    CUMDEP,DAYL,DLAYR,LEAFNO,LL,NLAYR,PLTPOP,SDEPTH,        !I
      &    SNOW, SRAD,SW,TMAX,TMIN, TWILEN,XN,YRDOY,YRSIM,         !I
      &    CUMDTT,DTT,GPP,ISDATE, ISTAGE,MDATE,STGDOY,SUMDTT,      !O
      &    XNTI,TLNO,XSTAGE,YREMRG,RUE,KCAN,KEP, P3, TSEN, CDAY,   !O
-     &    PEAR,PSTM,GDDAE,SeedFrac,VegFrac,Z2STAGE)               !O
+     &    PEAR,PSTM,GDDAE,SeedFrac,VegFrac,Z2STAGE,CropStatus)    !O
 	    ENDIF
 
           !-------------------------------------------------------------
@@ -344,7 +352,7 @@ C----------------------------------------------------------------------
      &      SWIDOT, TLNO, TMAX, TMIN, TRWUP, TSEN, VegFrac,   !Input
      &      WLIDOT, WRIDOT, WSIDOT, XNTI, XSTAGE,             !Input
      &      YRDOY, YRPLT, SKi_Avail,                          !Input
-     &      EARS, GPP, MDATE,HARVFRAC,                        !I/O
+     &      EARS, GPP, MDATE,                                 !I/O
      &      AGEFAC, APTNUP, AREALF, CANHT, CANNAA, CANWAA,    !Output
      &      CANWH, CARBO, GNUP, GPSM, GRNWT, GRORT, HI, HIP,  !Output
      &      LEAFNO, NSTRES, PCNGRN, PCNL, PCNRT, PCNST,       !Output
@@ -356,7 +364,7 @@ C----------------------------------------------------------------------
      &      STOVN, STOVWT, SUMP, SWFAC, TOPWT, TURFAC, UNH4,  !Output
      &      UNO3, VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST,  !Output
      &      WTNUP, WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD,      !Output
-     &      KUptake, KSTRES,                                  !Output
+     &      KUptake, KSTRES, CropStatus,                      !Output
      &      TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,   !Output
      &      GRNDMC,MILKLN, SDFWT,                             !Output
      &      STPCT, OMDIG, CPPCT, UFL, UFLHA)                  !Output
@@ -380,7 +388,7 @@ C----------------------------------------------------------------------
      &      SI1, SI3, SKERWT, SLA, STMWTO, STOVER, STOVN,       !Output
      &      STOVWT, SUMP, SWFAC, TOPWT, TURFAC, UNH4, UNO3,     !Output
      &      VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST, WTNUP,   !Output
-     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD)               !Output
+     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD, CropStatus)   !Output
           CASE ('SWCER')  !Sweet corn  
           CALL SW_GROSUB (DYNAMIC, ISWITCH,                   !Input
      &      ASMDOT, CDAY, CO2, DLAYR, DS, DTT, EOP, FILEIO,   !Input
@@ -401,7 +409,7 @@ C----------------------------------------------------------------------
      &      SHELPC, SKERWT, SLA, STMWTO, STOVER, STOVN,       !Output
      &      STOVWT, SUMP, SWFAC, TOPWT, TURFAC, UNH4, UNO3,   !Output
      &      VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST, WTNUP, !Output
-     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD)             !Output
+     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD, CropStatus) !Output
           END SELECT
 
           !-------------------------------------------------------------
@@ -478,19 +486,19 @@ C-----------------------------------------------------------------------
 
           IF(MODEL(1:5).EQ.'MZCER'.OR.MODEL(1:5).EQ.'SWCER') THEN
             CALL MZ_PHENOL(DYNAMIC,ISWWAT,FILEIO,IDETO,             !C
-     &      CUMDEP,DAYL,DLAYR,LEAFNO,LL,NLAYR,PLTPOP,SDEPTH,        !I
-     &      SI1,SI3,SNOW, SRAD,SUMP,SW,TMAX,TMIN, TWILEN,           !I
-     &      XN,YRDOY,YRSIM,                                         !I
-     &      CUMDTT,DTT,EARS,GPP,ISDATE, ISTAGE,MDATE,STGDOY,SUMDTT, !O
-     &      XNTI,TLNO,XSTAGE,YREMRG,RUE,KCAN,KEP, P3, TSEN, CDAY,   !O
-     &      SeedFrac, VegFrac)                                      !O
+     &    CUMDEP,DAYL,DLAYR,LEAFNO,LL,NLAYR,PLTPOP,SDEPTH,        !I
+     &    SNOW, SRAD,SUMP,SW,TMAX,TMIN, TWILEN,                   !I
+     &    XN,YRDOY,YRSIM,                                         !I
+     &    CUMDTT,DTT,EARS,GPP,ISDATE, ISTAGE,MDATE,STGDOY,SUMDTT, !O
+     &    XNTI,TLNO,XSTAGE,YREMRG,RUE,KCAN,KEP, P3, TSEN, CDAY,   !O
+     &    SeedFrac, VegFrac, CropStatus)                          !O
 	    ELSEIF(MODEL(1:5).EQ.'MZIXM')THEN
             CALL MZ_IX_PHENOL(DYNAMIC,ISWWAT,FILEIO,IDETO,        !C
      &    CUMDEP,DAYL,DLAYR,LEAFNO,LL,NLAYR,PLTPOP,SDEPTH,        !I
      &    SNOW, SRAD,SW,TMAX,TMIN, TWILEN,XN,YRDOY,YRSIM,         !I
      &    CUMDTT,DTT,GPP,ISDATE, ISTAGE,MDATE,STGDOY,SUMDTT,      !O
      &    XNTI,TLNO,XSTAGE,YREMRG,RUE,KCAN,KEP, P3, TSEN, CDAY,   !O
-     &    PEAR,PSTM,GDDAE,SeedFrac,VegFrac,Z2STAGE)               !O
+     &    PEAR,PSTM,GDDAE,SeedFrac,VegFrac,Z2STAGE,CropStatus)    !O
 	    ENDIF
 
           SELECT CASE(MODEL(1:5))
@@ -503,7 +511,7 @@ C-----------------------------------------------------------------------
      &      SWIDOT, TLNO, TMAX, TMIN, TRWUP, TSEN, VegFrac,   !Input
      &      WLIDOT, WRIDOT, WSIDOT, XNTI, XSTAGE,             !Input
      &      YRDOY, YRPLT, SKi_Avail,                          !Input
-     &      EARS, GPP, MDATE,HARVFRAC,                        !I/O
+     &      EARS, GPP, MDATE,                                 !I/O
      &      AGEFAC, APTNUP, AREALF, CANHT, CANNAA, CANWAA,    !Output
      &      CANWH, CARBO, GNUP, GPSM, GRNWT, GRORT, HI, HIP,  !Output
      &      LEAFNO, NSTRES, PCNGRN, PCNL, PCNRT, PCNST,       !Output
@@ -515,7 +523,7 @@ C-----------------------------------------------------------------------
      &      STOVN, STOVWT, SUMP, SWFAC, TOPWT, TURFAC, UNH4,  !Output
      &      UNO3, VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST,  !Output
      &      WTNUP, WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD,      !Output
-     &      KUptake, KSTRES,                                  !Output
+     &      KUptake, KSTRES, CropStatus,                      !Output
      &      TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,   !Output
      &      GRNDMC, MILKLN, SDFWT,                            !Output
      &      STPCT, OMDIG, CPPCT, UFL, UFLHA)                  !Output
@@ -539,7 +547,7 @@ C-----------------------------------------------------------------------
      &      SI1, SI3, SKERWT, SLA, STMWTO, STOVER, STOVN,       !Output
      &      STOVWT, SUMP, SWFAC, TOPWT, TURFAC, UNH4, UNO3,     !Output
      &      VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST, WTNUP,   !Output
-     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD)               !Output
+     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD, CropStatus)   !Output
           CASE ('SWCER')  !Sweet corn  
           CALL SW_GROSUB (DYNAMIC, ISWITCH, 
      &      ASMDOT, CDAY, CO2, DLAYR, DS, DTT, EOP, FILEIO,   !Input
@@ -560,7 +568,7 @@ C-----------------------------------------------------------------------
      &      SHELPC, SKERWT, SLA, STMWTO, STOVER, STOVN,       !Output
      &      STOVWT, SUMP, SWFAC, TOPWT, TURFAC, UNH4, UNO3,   !Output
      &      VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST, WTNUP, !Output
-     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD)             !Output
+     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD, CropStatus) !Output
           END SELECT
                          
           CALL MZ_ROOTGR (DYNAMIC,ISWNIT,                         !C
@@ -643,19 +651,19 @@ C----------------------------------------------------------------------
           IF (CROP .NE. 'FA') THEN
             IF(MODEL(1:5).EQ.'MZCER'.OR.MODEL(1:5).EQ.'SWCER') THEN
               CALL MZ_PHENOL(DYNAMIC,ISWWAT,FILEIO,IDETO,             !C
-     &        CUMDEP,DAYL,DLAYR,LEAFNO,LL,NLAYR,PLTPOP,SDEPTH,        !I
-     &        SI1,SI3,SNOW, SRAD,SUMP,SW,TMAX,TMIN, TWILEN,           !I
-     &        XN,YRDOY,YRSIM,                                         !I
-     &        CUMDTT,DTT,EARS,GPP,ISDATE, ISTAGE,MDATE,STGDOY,SUMDTT, !O
-     &        XNTI,TLNO,XSTAGE,YREMRG,RUE,KCAN,KEP, P3, TSEN, CDAY,   !O
-     &        SeedFrac, VegFrac)                                      !O
+     &    CUMDEP,DAYL,DLAYR,LEAFNO,LL,NLAYR,PLTPOP,SDEPTH,        !I
+     &    SNOW, SRAD,SUMP,SW,TMAX,TMIN, TWILEN,                   !I
+     &    XN,YRDOY,YRSIM,                                         !I
+     &    CUMDTT,DTT,EARS,GPP,ISDATE, ISTAGE,MDATE,STGDOY,SUMDTT, !O
+     &    XNTI,TLNO,XSTAGE,YREMRG,RUE,KCAN,KEP, P3, TSEN, CDAY,   !O
+     &    SeedFrac, VegFrac, CropStatus)                          !O
 	      ELSEIF(MODEL(1:5).EQ.'MZIXM')THEN
               CALL MZ_IX_PHENOL(DYNAMIC,ISWWAT,FILEIO,IDETO,      !C
      &    CUMDEP,DAYL,DLAYR,LEAFNO,LL,NLAYR,PLTPOP,SDEPTH,        !I
      &    SNOW, SRAD,SW,TMAX,TMIN, TWILEN,XN,YRDOY,YRSIM,         !I
      &    CUMDTT,DTT,GPP,ISDATE, ISTAGE,MDATE,STGDOY,SUMDTT,      !O
      &    XNTI,TLNO,XSTAGE,YREMRG,RUE,KCAN,KEP, P3, TSEN, CDAY,   !O
-     &    PEAR,PSTM,GDDAE,SeedFrac,VegFrac,Z2STAGE)               !O
+     &    PEAR,PSTM,GDDAE,SeedFrac,VegFrac,Z2STAGE,CropStatus)    !O
 	      ENDIF
           ENDIF
         ENDIF
@@ -673,7 +681,7 @@ C----------------------------------------------------------------------
      &      SWIDOT, TLNO, TMAX, TMIN, TRWUP, TSEN, VegFrac,   !Input
      &      WLIDOT, WRIDOT, WSIDOT, XNTI, XSTAGE,             !Input
      &      YRDOY, YRPLT, SKi_Avail,                          !Input
-     &      EARS, GPP, MDATE,HARVFRAC,                        !I/O
+     &      EARS, GPP, MDATE,                                 !I/O
      &      AGEFAC, APTNUP, AREALF, CANHT, CANNAA, CANWAA,    !Output
      &      CANWH, CARBO, GNUP, GPSM, GRNWT, GRORT, HI, HIP,  !Output
      &      LEAFNO, NSTRES, PCNGRN, PCNL, PCNRT, PCNST,       !Output
@@ -685,7 +693,7 @@ C----------------------------------------------------------------------
      &      STOVN, STOVWT, SUMP, SWFAC, TOPWT, TURFAC, UNH4,  !Output
      &      UNO3, VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST,  !Output
      &      WTNUP, WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD,      !Output
-     &      KUptake, KSTRES,                                  !Output
+     &      KUptake, KSTRES, CropStatus,                      !Output
      &      TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,   !Output
      &      GRNDMC,MILKLN, SDFWT,                             !Output
      &      STPCT, OMDIG, CPPCT, UFL, UFLHA)                  !Output
@@ -710,7 +718,7 @@ C----------------------------------------------------------------------
      &      SI1, SI3, SKERWT, SLA, STMWTO, STOVER, STOVN,       !Output
      &      STOVWT, SUMP, SWFAC, TOPWT, TURFAC, UNH4, UNO3,     !Output
      &      VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST, WTNUP,   !Output
-     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD)               !Output
+     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD, CropStatus)   !Output
 
           CASE ('SWCER')  !Sweet corn  
           CALL SW_GROSUB (DYNAMIC, ISWITCH, 
@@ -732,7 +740,7 @@ C----------------------------------------------------------------------
      &      SHELPC, SKERWT, SLA, STMWTO, STOVER, STOVN,       !Output
      &      STOVWT, SUMP, SWFAC, TOPWT, TURFAC, UNH4, UNO3,   !Output
      &      VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST, WTNUP, !Output
-     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD)             !Output
+     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD, CropStatus) !Output
           END SELECT
         ELSE
           UNO3 = 0.0
@@ -777,7 +785,7 @@ C----------------------------------------------------------------------
      &      SWIDOT, TLNO, TMAX, TMIN, TRWUP, TSEN, VegFrac,   !Input
      &      WLIDOT, WRIDOT, WSIDOT, XNTI, XSTAGE,             !Input
      &      YRDOY, YRPLT, SKi_Avail,                          !Input
-     &      EARS, GPP, MDATE,HARVFRAC,                        !I/O
+     &      EARS, GPP, MDATE,                                 !I/O
      &      AGEFAC, APTNUP, AREALF, CANHT, CANNAA, CANWAA,    !Output
      &      CANWH, CARBO, GNUP, GPSM, GRNWT, GRORT, HI, HIP,  !Output
      &      LEAFNO, NSTRES, PCNGRN, PCNL, PCNRT, PCNST,       !Output
@@ -789,7 +797,7 @@ C----------------------------------------------------------------------
      &      STOVN, STOVWT, SUMP, SWFAC, TOPWT, TURFAC, UNH4,  !Output
      &      UNO3, VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST,  !Output
      &      WTNUP, WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD,      !Output
-     &      KUptake, KSTRES,                                  !Output
+     &      KUptake, KSTRES, CropStatus,                      !Output
      &      TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,   !Output
      &      GRNDMC,MILKLN, SDFWT,                             !Output
      &      STPCT, OMDIG, CPPCT, UFL, UFLHA)                  !Output
@@ -813,7 +821,7 @@ C----------------------------------------------------------------------
      &      SI1, SI3, SKERWT, SLA, STMWTO, STOVER, STOVN,       !Output
      &      STOVWT, SUMP, SWFAC, TOPWT, TURFAC, UNH4, UNO3,     !Output
      &      VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST, WTNUP,   !Output
-     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD)               !Output
+     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD, CropStatus)   !Output
           CASE ('SWCER')  !Sweet corn  
           CALL SW_GROSUB (DYNAMIC, ISWITCH, 
      &      ASMDOT, CDAY, CO2, DLAYR, DS, DTT, EOP, FILEIO,   !Input
@@ -834,7 +842,7 @@ C----------------------------------------------------------------------
      &      SHELPC, SKERWT, SLA, STMWTO, STOVER, STOVN,       !Output
      &      STOVWT, SUMP, SWFAC, TOPWT, TURFAC, UNH4, UNO3,   !Output
      &      VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST, WTNUP, !Output
-     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD)             !Output
+     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD, CropStatus) !Output
           END SELECT
         ENDIF   
 
@@ -891,7 +899,7 @@ C----------------------------------------------------------------------
      &      SWIDOT, TLNO, TMAX, TMIN, TRWUP, TSEN, VegFrac,   !Input
      &      WLIDOT, WRIDOT, WSIDOT, XNTI, XSTAGE,             !Input
      &      YRDOY, YRPLT, SKi_Avail,                          !Input
-     &      EARS, GPP, MDATE,HARVFRAC,                        !I/O
+     &      EARS, GPP, MDATE,                                 !I/O
      &      AGEFAC, APTNUP, AREALF, CANHT, CANNAA, CANWAA,    !Output
      &      CANWH, CARBO, GNUP, GPSM, GRNWT, GRORT, HI, HIP,  !Output
      &      LEAFNO, NSTRES, PCNGRN, PCNL, PCNRT, PCNST,       !Output
@@ -903,7 +911,7 @@ C----------------------------------------------------------------------
      &      STOVN, STOVWT, SUMP, SWFAC, TOPWT, TURFAC, UNH4,  !Output
      &      UNO3, VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST,  !Output
      &      WTNUP, WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD,      !Output
-     &      KUptake, KSTRES,                                  !Output
+     &      KUptake, KSTRES, CropStatus,                      !Output
      &      TOTFWT, PODFWT, TOTDMC, COBDMC, EARDMC, EARFRC,   !Output
      &      GRNDMC,MILKLN, SDFWT,                             !Output
      &      STPCT, OMDIG, CPPCT, UFL, UFLHA)                  !Output
@@ -927,7 +935,7 @@ C----------------------------------------------------------------------
      &      SI1, SI3, SKERWT, SLA, STMWTO, STOVER, STOVN,       !Output
      &      STOVWT, SUMP, SWFAC, TOPWT, TURFAC, UNH4, UNO3,     !Output
      &      VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST, WTNUP,   !Output
-     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD)               !Output
+     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD, CropStatus)   !Output
           CASE ('SWCER')  !Sweet corn  
           CALL SW_GROSUB (DYNAMIC, ISWITCH, 
      &      ASMDOT, CDAY, CO2, DLAYR, DS, DTT, EOP, FILEIO,   !Input
@@ -948,7 +956,7 @@ C----------------------------------------------------------------------
      &      SHELPC, SKERWT, SLA, STMWTO, STOVER, STOVN,       !Output
      &      STOVWT, SUMP, SWFAC, TOPWT, TURFAC, UNH4, UNO3,   !Output
      &      VSTAGE, WTLF, WTNCAN, WTNLF, WTNSD, WTNST, WTNUP, !Output
-     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD)             !Output
+     &      WTNVEG, XGNP, XHLAI, XLAI, XN, YIELD, CropStatus) !Output
           END SELECT
 
         CALL MZ_OPGROW(CONTROL, ISWITCH,  
