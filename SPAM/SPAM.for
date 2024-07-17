@@ -65,7 +65,7 @@ C=======================================================================
      &    TMAX, TMIN, WINDSP, XHLAI, XLAI
       REAL CEF, CEM, CEO, CEP, CES, CET, CEVAP
       REAL EF, EM, EO, EP, ES, ET, EVAP
-      REAL TRWU, TRWUP, U
+      REAL TRWU, TRWUP, U, VPD, TDEW
       REAL EOS, EOP, WINF, MSALB, ET_ALB
       REAL XLAT, TAV, TAMP, SRFTEMP
       REAL EORATIO, KSEVAP, KTRANS
@@ -130,6 +130,7 @@ C=======================================================================
       TMIN   = WEATHER % TMIN
       WINDSP = WEATHER % WINDSP
       XLAT   = WEATHER % XLAT
+      TDEW   = WEATHER % TDEW
 
 !***********************************************************************
 !***********************************************************************
@@ -179,6 +180,7 @@ C=======================================================================
         CASE DEFAULT  !DSSAT soil temperature
           CALL STEMP(CONTROL, ISWITCH,
      &      SOILPROP, SRAD, SW, TAVG, TMAX, XLAT, TAV, TAMP, !Input
+     &      EOP, TRWUP, XHLAI, VPD, TDEW,                    !Input
      &      SRFTEMP, ST)                                     !Output
         END SELECT
       ENDIF
@@ -260,6 +262,7 @@ C=======================================================================
 !       CASE ('D')  !DSSAT soil temperature
           CALL STEMP(CONTROL, ISWITCH,
      &      SOILPROP, SRAD, SW, TAVG, TMAX, XLAT, TAV, TAMP,!Input
+     &      EOP, TRWUP, XHLAI, VPD, TDEW,                   !Input
      &      SRFTEMP, ST)                                    !Output
         END SELECT
       ENDIF
@@ -507,6 +510,7 @@ C-----------------------------------------------------------------------
           CASE DEFAULT  !DSSAT soilt temperature
             CALL STEMP(CONTROL, ISWITCH,
      &        SOILPROP, SRAD, SW, TAVG, TMAX, XLAT, TAV, TAMP,!Input
+     &        EOP, TRWUP, XHLAI, VPD, TDEW,                   !Input
      &        SRFTEMP, ST)                                    !Output
           END SELECT
       ENDIF
@@ -546,6 +550,7 @@ C-----------------------------------------------------------------------
           CASE DEFAULT  !DSSAT soilt temperature
             CALL STEMP(CONTROL, ISWITCH,
      &        SOILPROP, SRAD, SW, TAVG, TMAX, XLAT, TAV, TAMP,!Input
+     &        EOP, TRWUP, XHLAI, VPD, TDEW,                   !Input
      &        SRFTEMP, ST)                                    !Output
           END SELECT
       ENDIF
@@ -590,7 +595,7 @@ C-----------------------------------------------------------------------
 ! CET         Cumulative evapotranspiration (mm)
 ! CLOUDS      Relative cloudiness factor (0-1)
 ! CO2         Atmospheric carbon dioxide concentration
-!              (µmol[CO2] / mol[air])
+!              (ï¿½mol[CO2] / mol[air])
 ! CONTROL     Composite variable containing variables related to control
 !               and/or timing of simulation.    See Appendix A.
 ! CROP        Crop identification code
@@ -641,8 +646,8 @@ C-----------------------------------------------------------------------
 !               density, drained upper limit, lower limit, pH, saturation
 !               water content.  Structure defined in ModuleDefs.
 ! SRAD        Solar radiation (MJ/m2-d)
-! SRFTEMP     Temperature of soil surface litter (°C)
-! ST(L)       Soil temperature in soil layer L (°C)
+! SRFTEMP     Temperature of soil surface litter (ï¿½C)
+! ST(L)       Soil temperature in soil layer L (ï¿½C)
 ! SUMES1      Cumulative soil evaporation in stage 1 (mm)
 ! SUMES2      Cumulative soil evaporation in stage 2 (mm)
 ! SW(L)       Volumetric soil water content in layer L
@@ -658,14 +663,14 @@ C-----------------------------------------------------------------------
 !               layer L (cm3 [water] / cm3 [soil])
 ! T           Number of days into Stage 2 evaporation (WATBAL); or time
 !               factor for hourly temperature calculations
-! TA          Daily normal temperature (°C)
+! TA          Daily normal temperature (ï¿½C)
 ! TAMP        Amplitude of temperature function used to calculate soil
-!               temperatures (°C)
+!               temperatures (ï¿½C)
 ! TAV         Average annual soil temperature, used with TAMP to calculate
-!               soil temperature. (°C)
-! TAVG        Average daily temperature (°C)
-! TMAX        Maximum daily temperature (°C)
-! TMIN        Minimum daily temperature (°C)
+!               soil temperature. (ï¿½C)
+! TAVG        Average daily temperature (ï¿½C)
+! TMAX        Maximum daily temperature (ï¿½C)
+! TMIN        Minimum daily temperature (ï¿½C)
 ! TRWU        Actual daily root water uptake over soil profile (cm/d)
 ! TRWUP       Potential daily root water uptake over soil profile (cm/d)
 ! U           Evaporation limit (cm)
