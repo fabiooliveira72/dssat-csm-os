@@ -124,6 +124,15 @@ set(
         "CROP2ML_Modules/CROP2ML-DEPIC/stemp_DEPIC.f90"
 
         "CROP2ML_Modules/CROP2ML-DSSAT/STEMP_C2ML.f90"
+        
+        "CROP2ML_Modules/CROP2ML-MONICA/nosnowsoilsurfacetemperature.f90"
+        "CROP2ML_Modules/CROP2ML-MONICA/soiltemperature.f90"
+        "CROP2ML_Modules/CROP2ML-MONICA/SoilTemperatureCompComponent.f90"
+        "CROP2ML_Modules/CROP2ML-MONICA/withsnowsoilsurfacetemperature.f90"
+        
+        "CROP2ML_Modules/CROP2ML-SIMPLACE/SoilTemperatureComponent.f90"
+        "CROP2ML_Modules/CROP2ML-SIMPLACE/stmpsimcalculator.f90"
+        "CROP2ML_Modules/CROP2ML-SIMPLACE/snowcovercalculator.f90"
 
         "CROP2ML_Modules/CROP2ML-SIRIUS/SoilTemperatureComponent.f90"
         "CROP2ML_Modules/CROP2ML-SIRIUS/calculatesoiltemperature.f90"

@@ -62,6 +62,13 @@ C=======================================================================
 !-----------------------------------------------------------------------
 !     C2ML DSSAT
 !-----------------------------------------------------------------------
+!     MONICA
+      USE Soiltemperaturecompmod
+!-----------------------------------------------------------------------
+!     Simplace
+      USE Snowcovercalculatormod
+      USE Stmpsimcalculatormod
+!-----------------------------------------------------------------------
 !     SIRIUS-Quality
       USE Soiltemperaturemod_SIRIUS
 !-----------------------------------------------------------------------
@@ -141,6 +148,54 @@ C=======================================================================
 !-----------------------------------------------------------------------
 !     C2ML DSSAT
       REAL HDAY, ATOT
+!-----------------------------------------------------------------------
+!     MONICA
+      REAL timeStep, baseTemp
+      REAL initialSurfaceTemp, densityAir, densityHumus
+      REAL specificHeatCapacityHumus, densityWater
+      REAL specificHeatCapacityAir
+      REAL specificHeatCapacityWater, quartzRawDensity
+      REAL specificHeatCapacityQuartz, nTau
+      INTEGER noOfTempLayers, noOfSoilLayers, noOfTempLayersPlus1
+      INTEGER LTK, TMPLY
+      REAL, DIMENSION(:), ALLOCATABLE :: layerThickness
+      REAL, DIMENSION(:), ALLOCATABLE :: soilBulkDensity
+      REAL, DIMENSION(:), ALLOCATABLE :: saturation
+      REAL, DIMENSION(:), ALLOCATABLE :: soilOrganicMatter
+      REAL, DIMENSION(:), ALLOCATABLE :: soilMoistureConst
+      REAL, DIMENSION(:), ALLOCATABLE :: V
+      REAL, DIMENSION(:), ALLOCATABLE :: B_monica
+      REAL, DIMENSION(:), ALLOCATABLE :: volumeMatrix
+      REAL, DIMENSION(:), ALLOCATABLE :: volumeMatrixOld
+      REAL, DIMENSION(:), ALLOCATABLE :: matrixPrimaryDiagonal
+      REAL, DIMENSION(:), ALLOCATABLE :: matrixSecondaryDiagonal
+      REAL, DIMENSION(:), ALLOCATABLE :: heatConductivity
+      REAL, DIMENSION(:), ALLOCATABLE :: heatConductivityMean
+      REAL, DIMENSION(:), ALLOCATABLE :: heatCapacity_monica
+      REAL, DIMENSION(:), ALLOCATABLE :: solution 
+      REAL, DIMENSION(:), ALLOCATABLE :: matrixDiagonal
+      REAL, DIMENSION(:), ALLOCATABLE :: matrixLowerTriangle
+      REAL, DIMENSION(:), ALLOCATABLE :: heatFlow
+      REAL, DIMENSION(:), ALLOCATABLE :: soilTemperature
+      REAL dampingFactor, soilCoverage, auxstemp
+      REAL soilSurfaceTemperatureBelowSnow
+      LOGICAL hasSnowCover
+!-----------------------------------------------------------------------
+!     Simplace
+      INTEGER AgeOfSnow, rAgeOfSnowRate, cInitialAgeOfSnow
+      REAL cFirstDayMeanTemp
+      REAL cAverageBulkDensity, iSoilWaterContent
+      REAL rSnowWaterContentRate, cInitialSnowWaterContent
+      REAL rSoilSurfaceTemperatureRate
+      REAL SnowIsolationIndex
+      REAL cSnowIsolationFactorA, cSnowIsolationFactorB
+      REAL pInternalAlbedo, iSoilSurfaceTemperature
+      REAL cCarbonContent, cDampingDepth
+      REAL TSW, SABDM, CUMDEP
+      REAL , ALLOCATABLE, DIMENSION(: ):: SoilTempArray
+      REAL , ALLOCATABLE, DIMENSION(: ):: rSoilTempArrayRate
+      REAL , ALLOCATABLE, DIMENSION(: ):: pSoilLayerDepth
+      REAL , ALLOCATABLE, DIMENSION(: ) :: cSoilLayerDepth
 !-----------------------------------------------------------------------
 !     SIRIUS-Quality
       REAL deepLayerT, deepLayerT_t1, lambda_, a,b,c
@@ -237,7 +292,7 @@ C=======================================================================
       !SoilProfileDepth = INPITF % SLDP / 100
       SoilProfileDepth = SOILPROP % DS(NLAYR) / 100
       !DO I = 0, INPITF % NLAYR
-      THICKNESS(I) = 0.0
+      THICKNESS = 0.0
       DO I = 1, NLAYR
             THICKNESS(I) = SOILPROP % DS(I) / 100
       ENDDO
@@ -247,7 +302,7 @@ C=======================================================================
       !SoilProfileDepth = INPITF % SLDP / 100
       SoilProfileDepth = SOILPROP % DS(NLAYR) / 100
       !DO I = 0, INPITF % NLAYR
-      THICKNESS(I) = 0.0
+      THICKNESS = 0.0
       DO I = 1, NLAYR
             THICKNESS(I) = SOILPROP % DS(I) / 100
       ENDDO
@@ -256,6 +311,97 @@ C=======================================================================
 !     C2ML DSSAT-EPIC
 !-----------------------------------------------------------------------
 !     C2ML DSSAT
+!-----------------------------------------------------------------------
+!     MONICA
+      timeStep = 1.0
+      soilCoverage = 1 - EXP(-0.5 * XHLAI);
+      baseTemp = 9.5
+      dampingFactor = 0.8
+      initialSurfaceTemp = 10.0
+      densityAir = 1.25
+      specificHeatCapacityAir = 1005
+      densityHumus = 1300
+      specificHeatCapacityHumus = 1920
+      densityWater = 1000
+      specificHeatCapacityWater = 4192
+      quartzRawDensity = 2650
+      specificHeatCapacityQuartz = 750
+      nTau = 0.65
+      noOfTempLayers = 44
+      noOfSoilLayers = 42
+      noOfTempLayersPlus1 = 45
+      hasSnowCover = .FALSE.
+      
+      IF(.NOT. allocated(layerThickness)) THEN
+          allocate(layerThickness(noOfTempLayers))
+          allocate(soilBulkDensity(noOfSoilLayers))
+          allocate(saturation(noOfSoilLayers))
+          allocate(soilOrganicMatter(noOfSoilLayers))
+          allocate(soilMoistureConst(noOfSoilLayers))
+          allocate(V(noOfTempLayers))
+          allocate(volumeMatrix(noOfTempLayers))
+          allocate(volumeMatrixOld(noOfTempLayers))
+          allocate(B_monica(noOfTempLayers))
+          allocate(matrixPrimaryDiagonal(noOfTempLayers))
+          allocate(matrixSecondaryDiagonal(noOfTempLayersPlus1))
+          allocate(heatConductivity(noOfTempLayers))
+          allocate(heatConductivityMean(noOfTempLayers))
+          allocate(heatCapacity_monica(noOfTempLayers))
+          allocate(solution(noOfTempLayers))
+          allocate(matrixDiagonal(noOfTempLayers))
+          allocate(matrixLowerTriangle(noOfTempLayers))
+          allocate(heatFlow(noOfTempLayers))
+          allocate(soilTemperature(noOfTempLayers))
+        ENDIF
+
+        ! Thickness is m. However every layer is 5cm
+        layerThickness = 0.05
+        
+        TMPLY= 1
+        DO I = 1, SOILPROP % NLAYR
+          LTK = SOILPROP % DS(I) / 5
+          DO WHILE (LTK > 0 .AND. TMPLY <= noOfSoilLayers)
+            saturation(TMPLY) = SOILPROP % SAT(I)
+            !Convert from g/cm3 to kg/m3
+            soilBulkDensity(TMPLY) = SOILPROP % BD(I) * 1000
+            soilOrganicMatter(TMPLY) =(SOILPROP % OC(I)/0.57)/100
+            ! DSSAT Calculates soilMoistureConst as SW.
+!            soilMoistureConst(TMPLY)= SOILPROP % LL(I) + 
+!     &      INPITF % AWC * (SOILPROP % DUL (I) - SOILPROP % LL(I))
+            soilMoistureConst(TMPLY)= SW(I)
+            
+            LTK = LTK - 1
+            TMPLY = TMPLY + 1
+          ENDDO
+        ENDDO
+!-----------------------------------------------------------------------
+!     Simplace
+      DO I = 1, NLAYR
+        TSW = TSW + 
+     &       SW(I) * SOIlPROP % DLAYR(I)
+      ENDDO
+      IF(.NOT. allocated(cSoilLayerDepth)) THEN
+        allocate(cSoilLayerDepth(NLAYR))
+      ENDIF
+      iSoilWatercontent =  TSW * 10 ! cm to mm
+      cCarbonContent = SOILPROP % OC(1)
+      cSoilLayerDepth = SOILPROP % LL * 0.01 ! cm to m
+      cDampingDepth = 6.0
+      AgeOfSnow = 0
+      cFirstDayMeanTemp = TAV
+      cInitialAgeOfSnow = 0
+      cInitialSnowWaterContent = 0.0
+      cSnowIsolationFactorA = 0.47
+      cSnowIsolationFactorB = 0.62
+      pInternalAlbedo = SOILPROP % MSALB
+      ! Calculate average bulk density
+      SABDM = 0.0
+      CUMDEP = 0.0
+      DO I = 1, NLAYR
+          SABDM = SABDM + SOILPROP % BD(I) * SOILPROP % DLAYR(I)
+          CUMDEP = CUMDEP + SOILPROP % DLAYR(I)
+      ENDDO
+      SABDM = SABDM / CUMDEP
 !-----------------------------------------------------------------------
 !     SIRIUS-Quality
       lambda_ = 2.454
@@ -291,8 +437,18 @@ C=======================================================================
 !*********************************************************************** 
 !     CSM_Reverse_ST_Modeling by FO
 !     CROP2ML - CONTROL VARIABLES
+!     Select case METMP:
+!         F - C2ML-BIOMA-Parton
+!         G - C2ML-Bioma-SWAT
+!         H - C2ML-DSSAT Epic
+!         I - C2Ml-DSSAT
+!         J - C2ML-MONICA
+!         K - C2ML-Simplace
+!         L - C2ML-Sirius-Quality
+!         M - C2ML-Stics
 !***********************************************************************
         CASE('F') ! BIOMA-Parton
+            WRITE(*,*) 'BIOMA-Parton running...'
             CALL init_soiltemperatureswat(
 !     &            INPITF % SWLD, ! VolumetricWaterContent
      &            SW, ! VolumetricWaterContent
@@ -310,6 +466,7 @@ C=======================================================================
              CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
 !-----------------------------------------------------------------------
         CASE('G') ! BIOMA-SWAT
+            WRITE(*,*) 'BIOMA-SWAT running...'
             CALL init_soiltemperatureswat_SW(
 !     &            INPITF % SWLD, ! VolumetricWaterContent
      &            SW, ! VolumetricWaterContent
@@ -327,6 +484,7 @@ C=======================================================================
              CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
 !-----------------------------------------------------------------------
         CASE('H') ! C2ML DSSAT-EPIC
+            WRITE(*,*) 'C2ML DSSAT-EPIC running...'
             CALL GET('PLANT','BIOMAS',BIOMAS)      !kg/ha
             CALL GET('ORGC' ,'MULCHMASS',MULCHMASS)   !kg/ha
             CALL GET('WATER','SNOW',SNOW)       !mm
@@ -365,6 +523,7 @@ C=======================================================================
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
 !-----------------------------------------------------------------------
         CASE ('I') ! C2ML DSSAT
+            WRITE(*,*) 'C2ML DSSAT running...'
             CALL init_stemp(NL, ISWWAT,                                    
 !     &            INPITF % SLBDM,                                      
      &            SOILPROP % BD,
@@ -394,8 +553,85 @@ C=======================================================================
 
              CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
 !-----------------------------------------------------------------------
-        CASE ('J') ! SIRIUS-Quality
-
+        CASE ('J') ! MONICA
+            WRITE(*,*) 'MONICA running...'
+            CALL init_soiltemperature(
+     &        noOfSoilLayers, 
+     &        noOfTempLayers, 
+     &        noOfTempLayersPlus1, 
+     &        timeStep, 
+     &        soilMoistureConst, 
+     &        baseTemp, 
+     &        initialSurfaceTemp, 
+     &        densityAir, 
+     &        specificHeatCapacityAir, 
+     &        densityHumus, 
+     &        specificHeatCapacityHumus, 
+     &        densityWater, 
+     &        specificHeatCapacityWater, 
+     &        quartzRawDensity, 
+     &        specificHeatCapacityQuartz, 
+     &        nTau, 
+     &        layerThickness, 
+     &        soilBulkDensity, 
+     &        saturation, 
+     &        soilOrganicMatter, 
+     &        SRFTEMP, !OUTITF % TSLD(0), ! soilSurfaceTemperature, 
+     &        soilTemperature, 
+     &        V, 
+     &        B_monica, 
+     &        volumeMatrix, 
+     &        volumeMatrixOld, 
+     &        matrixPrimaryDiagonal, 
+     &        matrixSecondaryDiagonal, 
+     &        heatConductivity, 
+     &        heatConductivityMean, 
+     &        heatCapacity_monica, 
+     &        solution, 
+     &        matrixDiagonal, 
+     &        matrixLowerTriangle, 
+     &        heatFlow)
+            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+!-----------------------------------------------------------------------
+        CASE ('K') ! Simplace
+            WRITE(*,*) 'Simplace running...'
+            CALL GET('ORGC' ,'MULCHMASS',MULCHMASS)   !kg/ha
+            CALL GET('WATER','SNOW',SNOW)       !mm  
+            CALL init_snowcovercalculator(
+     &            cCarbonContent,
+     &            cInitialAgeOfSnow, 
+     &            cInitialSnowWaterContent, 
+     &            SOILPROP % MSALB, ! Albedo, 
+     &            cSnowIsolationFactorA, 
+     &            cSnowIsolationFactorB, 
+     &            WEATHER % TMAX, ! iTempMax, 
+     &            WEATHER % TMIN, ! iTempMin, 
+     &            WEATHER % SRAD, ! iRadiation, 
+     &            WEATHER % RAIN, ! iRAIN, 
+     &            MULCHMASS,! iCropResidues,
+     &            EOS_SOIL, ! iPotentialSoilEvaporation
+     &            XHLAI, ! iLeafAreaIndex
+     &            SoilTempArray,
+     &            pInternalAlbedo, 
+     &            SNOW, ! SnowWaterContent
+     &            SRFTEMP, ! SoilSurfaceTemperature
+     &            AgeOfSnow)
+     
+            CALL init_stmpsimcalculator(
+     &            cSoilLayerDepth, 
+     &            cFirstDayMeanTemp, 
+     &            WEATHER % TAV, ! cAVT: cAverageGroundTemperature
+     &            SABDM, ! cABD: cAverageBulkDensity
+     &            cDampingDepth, 
+     &            iSoilWaterContent, 
+     &            SRFTEMP, ! SoilSurfaceTemperature
+     &            SoilTempArray,
+     &            rSoilTempArrayRate,
+     &            pSoilLayerDepth)
+            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+!-----------------------------------------------------------------------
+        CASE ('L') ! SIRIUS-Quality
+            WRITE(*,*) 'SIRIUS-Quality running...'
             CALL init_calculatesoiltemperature(
 !     &            INPITF % T2M, ! meanTAir 
      &            WEATHER % TAVG, ! meanTAir 
@@ -410,7 +646,8 @@ C=======================================================================
 
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
 !-----------------------------------------------------------------------
-        CASE ('K') ! STICS
+        CASE ('M') ! STICS
+            WRITE(*,*) 'STICS running...'
 !            LTHICK = INT(INPITF % THICK)
             LTHICK(1:NL) = INT(SOILPROP % DLAYR)
 
@@ -514,7 +751,6 @@ C=======================================================================
 !     CROP2ML - RATE CALCULATIONS
 !***********************************************************************
         CASE('F') ! BIOMA-Parton
-            WRITE(*,*) 'BIOMA-Parton running...'
             CALL GET('PLANT','BIOMAS',BIOMAS)      !kg/ha
 
             CALL model_surfacepartonsoilswatc(
@@ -548,7 +784,6 @@ C=======================================================================
      &            ST(1:NLAYR))! SoilTemperatureByLayers
 !-----------------------------------------------------------------------     
         CASE('G') ! BIOMA-SWAT
-            WRITE(*,*) 'BIOMA-SWAT running...'
             CALL GET('PLANT','BIOMAS',BIOMAS)      !kg/ha
             CALL GET('WATER','SNOW', WaterEquivalentOfSnowPack)       !mm
 
@@ -581,7 +816,6 @@ C=======================================================================
      &            ST(1:NLAYR))! SoilTemperatureByLayers
 !-----------------------------------------------------------------------
         CASE('H') ! C2ML DSSAT-EPIC
-            WRITE(*,*) 'C2ML DSSAT-EPIC running...'
             CALL GET('PLANT','BIOMAS',BIOMAS)      !kg/ha
             CALL GET('ORGC' ,'MULCHMASS',MULCHMASS)   !kg/ha
             CALL GET('WATER','SNOW',SNOW)       !mm
@@ -619,7 +853,6 @@ C=======================================================================
      &            SNOW)
 !-----------------------------------------------------------------------
         CASE ('I') ! C2ML DSSAT
-            WRITE(*,*) 'C2ML DSSAT running...'
             CALL model_stemp(NL, ISWWAT,
 !     &            INPITF % SLBDM,  
      &            SOILPROP % BD,    
@@ -646,8 +879,133 @@ C=======================================================================
      &            SRFTEMP, ST,   
      &            DOY, HDAY)
 !-----------------------------------------------------------------------
-        CASE ('J') ! SIRIUS-Quality
-          WRITE(*,*) 'SIRIUS-Quality running...'
+        CASE ('J') ! MONICA
+          CALL model_soiltemperaturecomp(
+     &            WEATHER % TMIN, ! tmin
+     &            WEATHER % TMAX, ! tmax
+     &            WEATHER % SRAD, ! globrad
+     &            dampingFactor, 
+     &            soilCoverage, 
+     &            soilSurfaceTemperatureBelowSnow, 
+     &            hasSnowCover, 
+     &            timeStep, 
+     &            soilMoistureConst, 
+     &            baseTemp, 
+     &            initialSurfaceTemp, 
+     &            densityAir, 
+     &            specificHeatCapacityAir, 
+     &            densityHumus, 
+     &            specificHeatCapacityHumus, 
+     &            densityWater, 
+     &            specificHeatCapacityWater, 
+     &            quartzRawDensity, 
+     &            specificHeatCapacityQuartz, 
+     &            nTau, 
+     &            noOfTempLayers, 
+     &            noOfTempLayersPlus1, 
+     &            noOfSoilLayers, 
+     &            layerThickness,
+     &            soilBulkDensity, 
+     &            saturation, 
+     &            soilOrganicMatter, 
+     &            V, 
+     &            B_monica, 
+     &            volumeMatrix, 
+     &            volumeMatrixOld, 
+     &            matrixPrimaryDiagonal, 
+     &            matrixSecondaryDiagonal, 
+     &            heatConductivity, 
+     &            heatConductivityMean, 
+     &            heatCapacity_monica, 
+     &            solution, 
+     &            matrixDiagonal, 
+     &            matrixLowerTriangle, 
+     &            heatFlow, 
+     &            SRFTEMP,!OUTITF % TSLD(0), ! soilSurfaceTemperature
+     &            soilTemperature)
+
+            ! Matching SQ outputs for ST.
+            auxstemp = 0
+            DO I = 1, noOfSoilLayers
+              auxstemp = auxstemp + soilTemperature(I) 
+              SELECT CASE(I)
+                CASE(1)
+                  ST(1) = auxstemp
+                  auxstemp = 0
+                CASE(3)
+                  ST(2) = auxstemp / 2
+                  auxstemp = 0
+                CASE(6)
+                    ST(3) = auxstemp / 3
+                  auxstemp = 0
+                CASE(9)
+                  ST(4) = auxstemp / 3
+                  auxstemp = 0
+                CASE(12)
+                  ST(5) = auxstemp / 3
+                  auxstemp = 0
+                CASE(18)
+                  ST(6) = auxstemp / 6
+                  auxstemp = 0
+                CASE(24)
+                  ST(7) = auxstemp / 6
+                  auxstemp = 0
+                CASE(30)
+                  ST(8) = auxstemp / 6
+                  auxstemp = 0
+                CASE(36)
+                  ST(9) = auxstemp / 6
+                  auxstemp = 0
+                CASE(42)
+                  ST(10) = auxstemp / 6
+                  auxstemp = 0
+                CASE DEFAULT
+              END SELECT
+            ENDDO          
+!-----------------------------------------------------------------------
+        CASE ('K') ! Simplace
+            CALL GET('ORGC' ,'MULCHMASS',MULCHMASS)   !kg/ha
+            CALL GET('WATER','SNOW',SNOW)       !mm
+            
+            CALL model_snowcovercalculator(
+     &            cCarbonContent, 
+     &            cInitialAgeOfSnow, 
+     &            cInitialSnowWaterContent, 
+     &            SOILPROP % MSALB, ! Albedo,
+     &            pInternalAlbedo, 
+     &            cSnowIsolationFactorA, 
+     &            cSnowIsolationFactorB, 
+     &            WEATHER % TMAX, ! iTempMax, 
+     &            WEATHER % TMIN, ! iTempMin, 
+     &            WEATHER % SRAD, ! iRadiation, 
+     &            WEATHER % RAIN, ! iRAIN, 
+     &            MULCHMASS,! iCropResidues,
+     &            EOS_SOIL, ! iPotentialSoilEvaporation
+     &            XHLAI, ! iLeafAreaIndex
+     &            SoilTempArray,
+     &            SNOW, ! SnowWaterContent
+     &            SRFTEMP, ! SoilSurfaceTemperature
+     &            AgeOfSnow, 
+     &            rSnowWaterContentRate, 
+     &            rSoilSurfaceTemperatureRate, 
+     &            rAgeOfSnowRate, 
+     &            SnowIsolationIndex)
+
+            CALL model_stmpsimcalculator(
+     &            cSoilLayerDepth, 
+     &            cFirstDayMeanTemp, 
+     &            WEATHER % TAV, ! cAVT: cAverageGroundTemperature
+     &            SABDM, ! cABD: cAverageBulkDensity
+     &            cDampingDepth, 
+     &            iSoilWaterContent, 
+     &            SRFTEMP, ! SoilSurfaceTemperature
+     &            SoilTempArray,
+     &            rSoilTempArrayRate, 
+     &            pSoilLayerDepth)
+
+             ST(1:NLAYR) = SoilTempArray(1:NLAYR)
+!-----------------------------------------------------------------------
+        CASE ('L') ! SIRIUS-Quality
             CALL model_soiltemperature(
 !     &            INPITF % T2M,  ! meanTAir
      &            WEATHER % TAVG,  ! meanTAir
@@ -677,8 +1035,7 @@ C=======================================================================
 !                  OUTITF % TSLD(2:INPITF % NLAYR) = deepLayerT
                   ST(2:NLAYR) = deepLayerT
 !-----------------------------------------------------------------------
-        CASE ('K') ! STICS
-            WRITE(*,*) 'STICS running...'
+        CASE ('M') ! STICS
             CALL model_soil_temp(
 !     &            INPITF % TMIN, !min_temp
      &            WEATHER % TMIN, !min_temp
@@ -976,10 +1333,16 @@ C-----------------------------------------------------------------------
           CASE('I') ! C2ML DSSAT
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
 !-----------------------------------------------------------------------
-          CASE('J') ! SIRIUS-Quality
+          CASE('J') ! MONICA
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
 !-----------------------------------------------------------------------
-          CASE('K') ! STICS
+          CASE('K') ! Simplace
+            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+!-----------------------------------------------------------------------
+          CASE('L') ! SIRIUS-Quality
+            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+!-----------------------------------------------------------------------
+          CASE('M') ! STICS
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
 !-----------------------------------------------------------------------
 !     CSM_Reverse_ST_Modeling by FO
