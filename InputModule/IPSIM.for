@@ -1438,7 +1438,7 @@ C  FO - 05/07/2020 Add new Y4K subroutine call to convert YRDOY
             IF (INDEX('RS' ,MESEV) == 0) MESEV = ' '
             IF (INDEX('Z'  ,MEEVP)  > 0) MEPHO = 'L'
 !           IF (INDEX('ED' ,METMP) == 0) METMP = 'E' !3/27/2016
-            IF (INDEX('ED' ,METMP) == 0) METMP = 'D' !7/21/2016
+!            IF (INDEX('ED' ,METMP) == 0) METMP = 'D' !7/21/2016
             IF (INDEX('01' ,MEGHG) == 0) MEGHG = '0'
 
 !         Fourth line of simulation controls

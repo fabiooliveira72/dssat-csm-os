@@ -294,7 +294,7 @@ C=======================================================================
       !DO I = 0, INPITF % NLAYR
       THICKNESS = 0.0
       DO I = 1, NLAYR
-            THICKNESS(I) = SOILPROP % DS(I) / 100
+            THICKNESS(I) = SOILPROP % DLAYR(I) / 100
       ENDDO
       LagCoefficient = 0.8
 !-----------------------------------------------------------------------
@@ -304,7 +304,7 @@ C=======================================================================
       !DO I = 0, INPITF % NLAYR
       THICKNESS = 0.0
       DO I = 1, NLAYR
-            THICKNESS(I) = SOILPROP % DS(I) / 100
+            THICKNESS(I) = SOILPROP % DLAYR(I) / 100
       ENDDO
       LagCoefficient = 0.8
 !-----------------------------------------------------------------------
@@ -327,8 +327,8 @@ C=======================================================================
       quartzRawDensity = 2650
       specificHeatCapacityQuartz = 750
       nTau = 0.65
-      noOfTempLayers = 44
-      noOfSoilLayers = 42
+      noOfSoilLayers = (SOILPROP % DS(NLAYR)/5)
+      noOfTempLayers = noOfSoilLayers + 2
       noOfTempLayersPlus1 = 45
       hasSnowCover = .FALSE.
       
@@ -359,7 +359,7 @@ C=======================================================================
         
         TMPLY= 1
         DO I = 1, SOILPROP % NLAYR
-          LTK = SOILPROP % DS(I) / 5
+          LTK = SOILPROP % DLAYR(I) / 5
           DO WHILE (LTK > 0 .AND. TMPLY <= noOfSoilLayers)
             saturation(TMPLY) = SOILPROP % SAT(I)
             !Convert from g/cm3 to kg/m3
@@ -385,7 +385,7 @@ C=======================================================================
       ENDIF
       iSoilWatercontent =  TSW * 10 ! cm to mm
       cCarbonContent = SOILPROP % OC(1)
-      cSoilLayerDepth = SOILPROP % LL * 0.01 ! cm to m
+      cSoilLayerDepth = SOILPROP % DS * 0.01 ! cm to m
       cDampingDepth = 6.0
       AgeOfSnow = 0
       cFirstDayMeanTemp = TAV
@@ -464,6 +464,8 @@ C=======================================================================
      &            ST(1:NLAYR))! SoilTemperatureByLayers
 
              CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+             CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
+             CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET)
 !-----------------------------------------------------------------------
         CASE('G') ! BIOMA-SWAT
             WRITE(*,*) 'BIOMA-SWAT running...'
@@ -482,6 +484,8 @@ C=======================================================================
      &            ST(1:NLAYR))! SoilTemperatureByLayers
 
              CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+             CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
+             CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET)
 !-----------------------------------------------------------------------
         CASE('H') ! C2ML DSSAT-EPIC
             WRITE(*,*) 'C2ML DSSAT-EPIC running...'
@@ -521,6 +525,8 @@ C=======================================================================
 !     &            OUTITF % TSLD(0), OUTITF % TSLD(1:INPITF % NLAYR))
      &            SRFTEMP, ST)
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+            CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET)
 !-----------------------------------------------------------------------
         CASE ('I') ! C2ML DSSAT
             WRITE(*,*) 'C2ML DSSAT running...'
@@ -552,6 +558,8 @@ C=======================================================================
      &            HDAY)
 
              CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+             CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
+             CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET)
 !-----------------------------------------------------------------------
         CASE ('J') ! MONICA
             WRITE(*,*) 'MONICA running...'
@@ -592,6 +600,8 @@ C=======================================================================
      &        matrixLowerTriangle, 
      &        heatFlow)
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+            CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET)
 !-----------------------------------------------------------------------
         CASE ('K') ! Simplace
             WRITE(*,*) 'Simplace running...'
@@ -609,7 +619,7 @@ C=======================================================================
      &            WEATHER % SRAD, ! iRadiation, 
      &            WEATHER % RAIN, ! iRAIN, 
      &            MULCHMASS,! iCropResidues,
-     &            EOS_SOIL, ! iPotentialSoilEvaporation
+     &            EOS, ! iPotentialSoilEvaporation
      &            XHLAI, ! iLeafAreaIndex
      &            SoilTempArray,
      &            pInternalAlbedo, 
@@ -629,6 +639,8 @@ C=======================================================================
      &            rSoilTempArrayRate,
      &            pSoilLayerDepth)
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+            CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET)
 !-----------------------------------------------------------------------
         CASE ('L') ! SIRIUS-Quality
             WRITE(*,*) 'SIRIUS-Quality running...'
@@ -645,6 +657,8 @@ C=======================================================================
      &            deepLayerT)
 
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+            CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET)
 !-----------------------------------------------------------------------
         CASE ('M') ! STICS
             WRITE(*,*) 'STICS running...'
@@ -663,6 +677,8 @@ C=======================================================================
      &            prev_canopy_temp)
 
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+            CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET)
 !-----------------------------------------------------------------------
 !     CSM_Reverse_ST_Modeling by FO
 !     END
@@ -980,7 +996,7 @@ C=======================================================================
      &            WEATHER % SRAD, ! iRadiation, 
      &            WEATHER % RAIN, ! iRAIN, 
      &            MULCHMASS,! iCropResidues,
-     &            EOS_SOIL, ! iPotentialSoilEvaporation
+     &            EOS, ! iPotentialSoilEvaporation
      &            XHLAI, ! iLeafAreaIndex
      &            SoilTempArray,
      &            SNOW, ! SnowWaterContent
@@ -1323,27 +1339,43 @@ C-----------------------------------------------------------------------
 !***********************************************************************
           CASE('F') ! BIOMA-Parton
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+            CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET)
 !-----------------------------------------------------------------------
           CASE('G') ! BIOMA-SWAT
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+            CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET)
 !-----------------------------------------------------------------------
           CASE('H') ! C2ML DSSAT-EPIC
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+            CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET)
 !-----------------------------------------------------------------------
           CASE('I') ! C2ML DSSAT
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+            CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET)
 !-----------------------------------------------------------------------
           CASE('J') ! MONICA
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+            CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET)
 !-----------------------------------------------------------------------
           CASE('K') ! Simplace
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+            CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET)
 !-----------------------------------------------------------------------
           CASE('L') ! SIRIUS-Quality
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+            CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET)
 !-----------------------------------------------------------------------
           CASE('M') ! STICS
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
+            CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET)
 !-----------------------------------------------------------------------
 !     CSM_Reverse_ST_Modeling by FO
 !     END

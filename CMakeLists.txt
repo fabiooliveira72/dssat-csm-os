@@ -667,6 +667,8 @@ set(
         "SPAM/ETPHR.for"
         "SPAM/OPETPHOT.for"
         "SPAM/OpStemp.for"
+        "SPAM/OpStemp_AMEI_ST.for"
+        "SPAM/OpStemp_AMEI_CL.for"
         "SPAM/PET.for"
         "SPAM/ROOTWU.for"
         "SPAM/SAL_Stemp.for"
