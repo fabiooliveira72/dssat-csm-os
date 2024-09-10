@@ -27,6 +27,7 @@ C=======================================================================
 
       INTEGER DAS, DOY, DYNAMIC, ERRNUM, FROP, L, N_LYR
       INTEGER NOUTDT, RUN, YEAR, YRDOY, MONTH, DAY, REPNO
+      INTEGER       DATE_TIME(8)
       REAL ST(NL), SRFTEMP, SW(NL)
 
       LOGICAL FEXIST, DOPRINT
@@ -122,7 +123,19 @@ C=======================================================================
 
  !        Write headers info to daily output file
           WRITE(NOUTDT,'(A)') 'AMEI Aimes fallow'
-          WRITE(NOUTDT,'(A)') 'Model: DSSAT'
+        CALL DATE_AND_TIME (VALUES=DATE_TIME)
+        WRITE (NOUTDT,100) 'Model: DSSAT Cropping System Model Ver. ',
+     &    Version%Major,'.', Version%Minor,'.',
+     &    Version%Model,'.', Version%Build,
+     &    VBranch, MonthTxt(DATE_TIME(2)),' ',
+     &    DATE_TIME(3), ', ', DATE_TIME(1), '; ', 
+     &    DATE_TIME(5), ':',DATE_TIME(6),':', DATE_TIME(7)
+  100   FORMAT (A,
+     &    I1,A1,I1,A1,
+     &    I1,A1,I3.3,4X,
+     &    A,4X,A3,A1,
+     &    I2.2,A2,I4,A2,
+     &    I2.2,A1,I2.2,A1,I2.2)
           WRITE(NOUTDT,'(A)') 'Modeler_name: ' //
      &    'Fabio Oliveira, Gerrit Hoogenboom and Thiago Ferreira'
           WRITE(NOUTDT,'(A)') 'soil_layer_top_depth ' //
