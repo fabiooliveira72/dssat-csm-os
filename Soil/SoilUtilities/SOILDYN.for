@@ -736,12 +736,12 @@ C     Initialize curve number (according to J.T. Ritchie) 1-JUL-97 BDB
 
       ENDIF     !End of IF block on MESOM & RNMODE
 !-----------------------------------------------------------------------
-!     20241004 FO: Added new computation for DUL and LL by A. Suleiman.
+!     2024-10-04 FO: Added new computation for DUL and LL by A. Suleiman.
       DO L = 1, NLAYR
-        DUL(L)= -0.222 * OC(L) + 0.051 * 
-     &                    (SAND(L) * OC(L)) + 0.085 * (CLAY(L) * OC(L))
-        LL(L) = -0.309 * OC(L) + 0.022 * 
-     &                    (SAND(L) * OC(L)) + 0.022 * (CLAY(L) * OC(L))
+        DUL(L)= (-0.222 * OC(L) + 0.051 * 
+     &          (SAND(L) * OC(L)) + 0.085 * (CLAY(L) * OC(L))) / 100
+        LL(L) = (-0.309 * OC(L) + 0.022 * 
+     &          (SAND(L) * OC(L)) + 0.022 * (CLAY(L) * OC(L))) / 100
       ENDDO
 !-----------------------------------------------------------------------
       DO L = 1, NLAYR
