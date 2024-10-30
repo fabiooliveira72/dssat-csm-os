@@ -736,14 +736,6 @@ C     Initialize curve number (according to J.T. Ritchie) 1-JUL-97 BDB
 
       ENDIF     !End of IF block on MESOM & RNMODE
 !-----------------------------------------------------------------------
-!     2024-10-04 FO: Added new computation for DUL and LL by A. Suleiman.
-      DO L = 1, NLAYR
-        DUL(L)= (-0.222 * OC(L) + 0.051 * 
-     &          (SAND(L) * OC(L)) + 0.085 * (CLAY(L) * OC(L))) / 100
-        LL(L) = (-0.309 * OC(L) + 0.022 * 
-     &          (SAND(L) * OC(L)) + 0.022 * (CLAY(L) * OC(L))) / 100
-      ENDDO
-!-----------------------------------------------------------------------
       DO L = 1, NLAYR
 !       Conversion from kg/ha to ppm (or mg/l).  Recalculate daily.
         KG2PPM(L) = 10.0 / (BD(L) * DLAYR(L))   
@@ -1147,21 +1139,29 @@ C  tillage and rainfall kinetic energy
 !           Change in %SOM
             dOC = SOM_PCT(L) - SOM_PCT_init(L)
 
-!           Equation to modify DUL depends on soil texture (Gupta & Larson, 1979)
-            IF (COARSE(L)) THEN
-!             Coarse soils  --  use DUL10
-              dDUL_SOM = 0.004966 * dOC - 0.2423 * dBD_SOM 
-            ELSE
-!             Other soils -- use DUL33
-              dDUL_SOM = 0.002208 * dOC - 0.1434 * dBD_SOM 
-            ENDIF
-            DUL_SOM(L) = DUL_INIT(L) + dDUL_SOM
-
-!           Lower limit
-            dLL_SOM = 0.002228 * dOC + 0.02671 * dBD_SOM
-            LL_SOM(L)  = LL_INIT(L) + dLL_SOM
-
-!            IF (L==1) WRITE(1000,*)dOC, dBD_SOM, dLL_SOM, LL_SOM(1)
+!!           Equation to modify DUL depends on soil texture (Gupta & Larson, 1979)
+!            IF (COARSE(L)) THEN
+!!             Coarse soils  --  use DUL10
+!              dDUL_SOM = 0.004966 * dOC - 0.2423 * dBD_SOM 
+!            ELSE
+!!             Other soils -- use DUL33
+!              dDUL_SOM = 0.002208 * dOC - 0.1434 * dBD_SOM 
+!            ENDIF
+!            DUL_SOM(L) = DUL_INIT(L) + dDUL_SOM
+!
+!!           Lower limit
+!            dLL_SOM = 0.002228 * dOC + 0.02671 * dBD_SOM
+!            LL_SOM(L)  = LL_INIT(L) + dLL_SOM
+!
+!!            IF (L==1) WRITE(1000,*)dOC, dBD_SOM, dLL_SOM, LL_SOM(1)
+!           2024-10-30 FO: Added new computation for DUL and LL 
+!                          by A. Suleiman.
+            DUL_SOM(L)= (-0.222 * dOC + 0.051 * 
+     &               (SOILPROP % SAND(L) * dOC) + 0.085 * 
+     &               (SOILPROP % CLAY(L) * dOC)) / 100
+            LL_SOM(L) = (-0.309 * dOC + 0.022 * 
+     &                (SOILPROP % SAND(L) * dOC) + 0.022 * 
+     &                (SOILPROP % CLAY(L) * dOC)) / 100
           ENDIF
         ENDDO
       ENDIF
