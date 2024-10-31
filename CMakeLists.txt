@@ -22,7 +22,7 @@ PROJECT(DSSAT-CSM Fortran)
 SET(MAJOR 4)
 SET(MINOR 8)
 SET(MODEL 2)
-SET(BUILD 18)
+SET(BUILD 24)
 
 # Get the current working branch
 execute_process(
@@ -653,6 +653,7 @@ set(
         "Soil/SoilUtilities/TextureClass.for"
         "Soil/SoilWater/CapFringe.f90"
         "Soil/SoilWater/INFIL.for"
+        "Soil/SoilWater/OPSWBL.for"
         "Soil/SoilWater/OPWBAL.for"
         "Soil/SoilWater/RETC_VG.for"
         "Soil/SoilWater/RNOFF.for"
