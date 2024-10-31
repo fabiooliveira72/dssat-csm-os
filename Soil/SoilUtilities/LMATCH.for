@@ -413,6 +413,8 @@ C----------------------------------------------------------------------
       ! Fixed Layer Thickness (cm)
       FTHICK = 5.0
       
+      DS     = 0.0
+      THICK  = 0.0
       NLAYRO = 0
       DEPTH  = 0.0
       PDEPTH = 0.0
