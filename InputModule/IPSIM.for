@@ -303,7 +303,7 @@ C
 !  MESOL = '1' Original soil layer distribution. Calls LYRSET.
 !  MESOL = '2' New soil layer distribution. Calls LYRSET2.
 !  MESOL = '3' User specified soil layer distribution. Calls LYRSET3.
-         IF (INDEX('123',MESOL) < 1) THEN
+         IF (INDEX('1234',MESOL) < 1) THEN
             MESOL = '2'
          ENDIF
 
@@ -1434,7 +1434,7 @@ C  FO - 05/07/2020 Add new Y4K subroutine call to convert YRDOY
             MEGHG = UPCASE(MEGHG)
 
             IF (INDEX('PG' ,MESOM) == 0) MESOM = ' '
-            IF (INDEX('123',MESOL) == 0) MESOL = ' '
+            IF (INDEX('1234',MESOL)== 0)MESOL = ' '
             IF (INDEX('RS' ,MESEV) == 0) MESEV = ' '
             IF (INDEX('Z'  ,MEEVP)  > 0) MEPHO = 'L'
 !           IF (INDEX('ED' ,METMP) == 0) METMP = 'E' !3/27/2016

@@ -391,3 +391,64 @@ C----------------------------------------------------------------------
       RETURN
       END SUBROUTINE LYRSET3
 C=======================================================================
+
+C=======================================================================
+C  LYRSET4, Subroutine
+C
+C  Fixed size for layer thickness across all the soil profile.
+C-----------------------------------------------------------------------
+C  Revision history
+C
+C  10/29/2024 FO Written based on LYRSET
+C=======================================================================
+      SUBROUTINE LYRSET4 (NLAYRI, ZLAYR,          !Input
+     &            DS, NLAYRO, THICK)              !Output
+      Use ModuleDefs
+      IMPLICIT NONE
+
+      INTEGER  I, L, NLAYRI, NLAYRO
+      REAL FTHICK, ROD, DEPTH, PDEPTH
+      REAL, INTENT(OUT) :: DS(NL), ZLAYR(NL),THICK(NL)
+C----------------------------------------------------------------------
+      ! Fixed Layer Thickness (cm)
+      FTHICK = 5.0
+      
+      NLAYRO = 0
+      DEPTH  = 0.0
+      PDEPTH = 0.0
+      DO I = 1, NLAYRI
+        DEPTH  = ZLAYR(I) - PDEPTH
+        PDEPTH = ZLAYR(I)
+        L = INT(DEPTH / FTHICK)
+        
+        ROD = 0.0
+        IF(AMOD(DEPTH, FTHICK) .NE. 0.0) THEN
+          ROD = AMOD(DEPTH, FTHICK)
+        ENDIF
+        
+        DO WHILE (L .GT. 0 .AND. NLAYRO .LE. NL)
+          NLAYRO = NLAYRO + 1
+          IF(NLAYRO == 1) THEN
+            DS(NLAYRO) = DS(NLAYRO) + FTHICK
+          ELSE
+            DS(NLAYRO) = DS(NLAYRO-1) + FTHICK
+          ENDIF
+          THICK(NLAYRO) = FTHICK
+          L = L - 1
+        ENDDO
+
+        ! Create a new layer just for the remainder of division
+        IF(ROD .GT. 0.0 .AND. L .EQ. 0.0) THEN
+          NLAYRO = NLAYRO + 1
+          IF(NLAYRO .EQ. 1) THEN
+            DS(NLAYRO) = DS(NLAYRO) + ROD
+          ELSE
+            DS(NLAYRO) = DS(NLAYRO-1) + ROD
+          ENDIF
+          THICK(NLAYRO) = ROD
+        ENDIF
+      ENDDO
+
+      RETURN
+      END SUBROUTINE LYRSET4
+C=======================================================================

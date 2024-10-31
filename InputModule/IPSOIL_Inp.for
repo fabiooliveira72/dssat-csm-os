@@ -539,6 +539,7 @@ C-KRT*******************************************************************
          SELECT CASE (ISWITCH % MESOL)
          CASE('1'); CALL LYRSET (NLAYRI, ZLYR, NLAYR, DS, DLAYR, DEPMAX)
          CASE('3'); CALL LYRSET3(NLAYRI, ZLYR, DS, NLAYR, DLAYR, DEPMAX)
+         CASE('4'); CALL LYRSET4(NLAYRI, ZLYR, DS, NLAYR, DLAYR)
          CASE DEFAULT
                     CALL LYRSET2(NLAYRI, ZLYR, DS, NLAYR, DLAYR, DEPMAX)
          END SELECT
