@@ -1154,14 +1154,17 @@ C  tillage and rainfall kinetic energy
 !            LL_SOM(L)  = LL_INIT(L) + dLL_SOM
 !
 !!            IF (L==1) WRITE(1000,*)dOC, dBD_SOM, dLL_SOM, LL_SOM(1)
-!           2024-10-30 FO: Added new computation for DUL and LL 
+!           2024-11-05 FO: Added new computation for DUL and LL 
 !                          by A. Suleiman.
-            DUL_SOM(L)= (-0.222 * dOC + 0.051 * 
+            dDUL_SOM= (-0.222 * dOC + 0.051 * 
      &               (SOILPROP % SAND(L) * dOC) + 0.085 * 
      &               (SOILPROP % CLAY(L) * dOC)) / 100
-            LL_SOM(L) = (-0.309 * dOC + 0.022 * 
+            DUL_SOM(L) = DUL_INIT(L) + dDUL_SOM
+            
+            dLL_SOM = (-0.309 * dOC + 0.022 * 
      &                (SOILPROP % SAND(L) * dOC) + 0.022 * 
      &                (SOILPROP % CLAY(L) * dOC)) / 100
+            LL_SOM(L)  = LL_INIT(L) + dLL_SOM
           ENDIF
         ENDDO
       ENDIF
