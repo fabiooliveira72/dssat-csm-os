@@ -1032,6 +1032,13 @@ C=======================================================================
       character(len=8) model
       real ccneff, cicad, cmxsf, cqesf
 
+C     Initialize
+      pgpath =  '  '
+      cicad  = -99.0
+      ccneff = -99.0
+      cmxsf  = -99.0
+      cqesf  = -99.0
+
 C     Read IBSNAT35.INP file.
 
       OPEN(LUNIO,FILE=FILEIO,STATUS='OLD',IOSTAT=ERRNUM)
@@ -1108,21 +1115,12 @@ C     Read species file.
       READ(C80,'(4F6.0)',IOSTAT=ERRNUM) SLWREF,SLWSLO,NSLOPE,LNREF
       IF (ERRNUM .NE. 0) CALL ERROR(ERRKEY,ERRNUM,FILECC,LNUM)
 
-      if( model(1:5) == 'PRFRM' ) then
-         CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
-         CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
-         CALL IGNORE(LUNCRP,LNUM,ISECT,C80) !12th line
-         READ(C80,'(4F6.0,2X,A)',IOSTAT=ERRNUM) CICAD,CCNEFF,
+      CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+      CALL IGNORE(LUNCRP,LNUM,ISECT,C80)
+      CALL IGNORE(LUNCRP,LNUM,ISECT,C80) !12th line
+      READ(C80,'(4F6.0,2X,A)',IOSTAT=ERRNUM) CICAD,CCNEFF,
      &        CMXSF,CQESF,PGPATH
-         IF (ERRNUM .NE. 0) CALL ERROR(ERRKEY,ERRNUM,FILECC,LNUM)
-      else
-         pgpath='  '
-         cicad = -99
-         ccneff = -99
-         cmxsf = -99
-         cqesf = -99
-      end if
-
+      IF (ERRNUM .NE. 0) CALL ERROR(ERRKEY,ERRNUM,FILECC,LNUM)
 
       CLOSE(LUNCRP)
 
