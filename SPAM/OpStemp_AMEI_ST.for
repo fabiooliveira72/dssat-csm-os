@@ -73,35 +73,39 @@ C=======================================================================
         CALL YR_DOY(YRDOY, YEAR, DOY)
 
         SELECT CASE (METMP)
-          CASE('F') ! BIOMA-Parton
+          CASE('F') ! APSIM
+            STM = 'AP'
+            WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
+     &                   'Layers',TRIM(SITE),YEAR,'.txt'
+          CASE('G') ! BIOMA-Parton
             STM = 'PS'
             WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
      &                   'Layers',TRIM(SITE),YEAR,'.txt'
-          CASE('G') ! BIOMA-SWAT
+          CASE('H') ! BIOMA-SWAT
             STM = 'DS'
             WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
      &                   'Layers',TRIM(SITE),YEAR,'.txt'
-          CASE('H') ! C2ML DSSAT-EPIC
+          CASE('I') ! C2ML DSSAT-EPIC
             STM = 'DE'
             WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
      &                   'Layers',TRIM(SITE),YEAR,'.txt'
-          CASE('I') ! C2ML DSSAT
+          CASE('J') ! C2ML DSSAT
             STM = 'DC'
             WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
      &                   'Layers',TRIM(SITE),YEAR,'.txt'
-          CASE('J') ! MONICA
+          CASE('K') ! MONICA
             STM = 'MO'
             WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
      &                   'Layers',TRIM(SITE),YEAR,'.txt'
-          CASE('K') ! Simplace
+          CASE('L') ! Simplace
             STM = 'SA'
             WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
      &                   'Layers',TRIM(SITE),YEAR,'.txt'
-          CASE('L') ! SIRIUS-Quality
+          CASE('M') ! SIRIUS-Quality
             STM = 'SQ'
             WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
      &                   'Layers',TRIM(SITE),YEAR,'.txt'
-          CASE('M') ! STICS
+          CASE('N') ! STICS
             STM = 'ST'
             WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
      &                   'Layers',TRIM(SITE),YEAR,'.txt'

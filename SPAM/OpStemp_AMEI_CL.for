@@ -9,7 +9,7 @@ C  Called from:   STEMP
 C  Calls:         None
 C=======================================================================
       SUBROUTINE OPSTEMP_AMEI_CL(CONTROL, ISWITCH, 
-     &                           EOS,ES,EO,ET)
+     &                           EOS,ES,EO,ET,RNET)
 
 !-----------------------------------------------------------------------
       USE ModuleDefs
@@ -23,12 +23,14 @@ C=======================================================================
 !-----------------------------------------------------------------------
       CHARACTER*1  RNMODE, METMP
       CHARACTER*2  FM, STM, CMONTH, CDAY
+      CHARACTER*8  CRNET
       CHARACTER*50 OUTCL, SITE
 
       INTEGER DAS, DOY, DYNAMIC, ERRNUM, FROP, L, N_LYR
       INTEGER NOUTDT, RUN, YEAR, YRDOY, MONTH, DAY, REPNO
       INTEGER       DATE_TIME(8)
-      REAL ST(NL), SRFTEMP, SW(NL), EOS,ES,EO,ET
+      REAL ST(NL), SRFTEMP, SW(NL), EOS,ES,EO,ET, RNET
+
 
       LOGICAL FEXIST, DOPRINT
 
@@ -73,35 +75,39 @@ C=======================================================================
         SITE = 'Aimes'
 
         SELECT CASE (METMP)
-          CASE('F') ! BIOMA-Parton
+          CASE('F') ! APSIM
+            STM = 'AP'
+            WRITE(OUTCL,'(A2,A2,A,I4,A4)')STM,FM,
+     &                   TRIM(SITE),YEAR,'.txt'
+          CASE('G') ! BIOMA-Parton
             STM = 'PS'
             WRITE(OUTCL,'(A2,A2,A,I4,A4)')STM,FM,
      &                   TRIM(SITE),YEAR,'.txt'
-          CASE('G') ! BIOMA-SWAT
+          CASE('H') ! BIOMA-SWAT
             STM = 'DS'
             WRITE(OUTCL,'(A2,A2,A,I4,A4)')STM,FM,
      &                   TRIM(SITE),YEAR,'.txt'
-          CASE('H') ! C2ML DSSAT-EPIC
+          CASE('I') ! C2ML DSSAT-EPIC
             STM = 'DE'
             WRITE(OUTCL,'(A2,A2,A,I4,A4)')STM,FM,
      &                   TRIM(SITE),YEAR,'.txt'
-          CASE('I') ! C2ML DSSAT
+          CASE('J') ! C2ML DSSAT
             STM = 'DC'
             WRITE(OUTCL,'(A2,A2,A,I4,A4)')STM,FM,
      &                   TRIM(SITE),YEAR,'.txt'
-          CASE('J') ! MONICA
+          CASE('K') ! MONICA
             STM = 'MO'
             WRITE(OUTCL,'(A2,A2,A,I4,A4)')STM,FM,
      &                   TRIM(SITE),YEAR,'.txt'
-          CASE('K') ! Simplace
+          CASE('L') ! Simplace
             STM = 'SA'
             WRITE(OUTCL,'(A2,A2,A,I4,A4)')STM,FM,
      &                   TRIM(SITE),YEAR,'.txt'
-          CASE('L') ! SIRIUS-Quality
+          CASE('M') ! SIRIUS-Quality
             STM = 'SQ'
             WRITE(OUTCL,'(A2,A2,A,I4,A4)')STM,FM,
      &                   TRIM(SITE),YEAR,'.txt'
-          CASE('M') ! STICS
+          CASE('N') ! STICS
             STM = 'ST'
             WRITE(OUTCL,'(A2,A2,A,I4,A4)')STM,FM,
      &                   TRIM(SITE),YEAR,'.txt'
@@ -182,16 +188,22 @@ C=======================================================================
             WRITE(CDAY,'(I2)') DAY
           ENDIF
 
+          IF(RNET .EQ. -99.0) THEN
+            WRITE(CRNET,'(A2)') 'na'
+          ELSE
+            WRITE(CRNET,'(F8.3)') RNET
+          ENDIF
 
           WRITE(NOUTDT,300) FM, TAB, STM, 
      &        TAB, YEAR,'-',CMONTH,'-',CDAY,
      &        TAB, EOS, TAB, ES, TAB, EO, TAB, ET, 
-     &        TAB, 'na', TAB, 'na', TAB, 'na'
+     &        TAB, 'na', TAB, 'na', TAB, CRNET
      
   300 FORMAT(A,A1,A,A1,
      &       I4,A1,A2,A1,A2,A1,
      &       4(F8.3,A1),
-     &       3(A2,A1))
+     &       2(A2,A1),
+     &       A)
           
         ENDIF
 

@@ -479,7 +479,7 @@ C             CHP Added TRTNUM to CONTROL variable.
       Type OrgCType
         REAL TOMINFOM, TOMINSOM, TOMINSOM1, TOMINSOM2
         REAL TOMINSOM3, TNIMBSOM
-        REAL MULCHMASS
+        REAL MULCHMASS, MULCHTHICK
         REAL TSOMC
       End Type OrgCType
 
@@ -743,6 +743,7 @@ C             CHP Added TRTNUM to CONTROL variable.
       Case ('ORGC')
         SELECT CASE (VarName)
         Case ('MULCHMASS');Value = SAVE_data % ORGC % MULCHMASS
+        Case ('MULCHTHICK');Value= SAVE_data % ORGC % MULCHTHICK
         Case ('TOMINFOM'); Value = SAVE_data % ORGC % TOMINFOM
         Case ('TOMINSOM'); Value = SAVE_data % ORGC % TOMINSOM
         Case ('TOMINSOM1');Value = SAVE_data % ORGC % TOMINSOM1

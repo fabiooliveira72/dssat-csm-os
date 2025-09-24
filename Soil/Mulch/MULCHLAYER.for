@@ -52,6 +52,7 @@ C=======================================================================
       MULCH % MULCHTHICK = MULCHTHICK
 
       CALL PUT('ORGC','MULCHMASS',MULCH % MULCHMASS)
+      CALL PUT('ORGC','MULCHTHICK',MULCH % MULCHTHICK)
 !     ----------------------------------------------------------------
       RETURN
       END SUBROUTINE MULCHLAYER

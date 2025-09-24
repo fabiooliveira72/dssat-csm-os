@@ -43,6 +43,7 @@ C=======================================================================
      &      ET_ALB, XHLAI, MEEVP, WEATHER,  !Input for all
      &      EORATIO, !Needed by Penman-Monteith
      &      CANHT,   !Needed by dynamic Penman-Monteith
+     &      RNET,    !Output for AMEI-Project
      &      EO,      !Output
      &      ET0)     !Output hourly Priestly-Taylor with VPD effect
 
@@ -58,7 +59,7 @@ C=======================================================================
       INTEGER YRDOY, YEAR, DOY
       REAL CANHT, CLOUDS, EO, EORATIO, ET_ALB, RHUM, SRAD, TAVG
       REAL TDEW, TMAX, TMIN, VAPR, WINDHT, WINDSP, XHLAI
-      REAL WINDRUN, XLAT, XELEV
+      REAL WINDRUN, XLAT, XELEV, RNET
       REAL, DIMENSION(TS)    ::RADHR, TAIRHR, ET0
       LOGICAL NOTDEW, NOWIND
       CHARACTER*78  MSG(2)
@@ -87,6 +88,9 @@ C=======================================================================
       FILEX = CONTROL % FILEX
       CALL YR_DOY(YRDOY, YEAR, DOY)
 
+      !Added for AMEI project
+      RNET = -99.0
+
       SELECT CASE (MEEVP)
 !         ------------------------
           !Priestley-Taylor potential evapotranspiration
@@ -101,7 +105,7 @@ C=======================================================================
             CALL PETPEN(
      &        CLOUDS, EORATIO, ET_ALB, SRAD, TAVG, TDEW,  !Input
      &        TMAX, TMIN, VAPR, WINDSP, WINDHT, XHLAI,    !Input
-     &        EO)                                         !Output
+     &        EO, RNET)                                   !Output
 !         ------------------------
           !ASCE Standardized Reference Evapotranspiration Equation
           !for the short reference crop (12-cm grass, "S") or the
@@ -120,14 +124,14 @@ C=======================================================================
             CALL PETDYN(
      &        CANHT, CLOUDS, ET_ALB, SRAD, TAVG, TDEW,    !Input
      &        TMAX, TMIN, WINDSP, XHLAI,                  !Input
-     &        EO)                                         !Output
+     &        EO, RNET)                                   !Output
 !         ------------------------
           !FAO Penman (FAO-24) potential evapotranspiration
           CASE ('P')
             CALL PETPNO(
      &        CLOUDS, ET_ALB, SRAD, TAVG, TDEW,           !Input
      &        TMAX, TMIN, WINDSP, XHLAI,                  !Input
-     &        EO)                                         !Output
+     &        EO, RNET)                                   !Output
 !         ------------------------
           !Penman - Meyer routine for estimation of Et in Southern NSW
           CASE ('M')
@@ -424,7 +428,7 @@ C=======================================================================
       SUBROUTINE PETPEN(
      &    CLOUDS, EORATIO, MSALB, SRAD, TAVG, TDEW,       !Input
      &    TMAX, TMIN, VAPR, WINDSP, WINDHT, XHLAI,        !Input
-     &    EO)                                             !Output
+     &    EO, RNET)                                       !Output
 !-----------------------------------------------------------------------
       IMPLICIT NONE
       EXTERNAL VPSAT, VPSLOP
@@ -618,11 +622,11 @@ C     EO=ET0
 ! SBZCON   Stefan Boltzmann constant = 4.903E-9 (MJ/m2/d)
 ! SHAIR    = 1005.0
 ! SRAD    Solar radiation (MJ/m2-d)
-! TAVG    Average daily temperature (°C)
-! TDEW    Dewpoint temperature (°C)
+! TAVG    Average daily temperature (ï¿½C)
+! TDEW    Dewpoint temperature (ï¿½C)
 ! TK4     Temperature to 4th power ((oK)**4)
-! TMAX    Maximum daily temperature (°C)
-! TMIN    Minimum daily temperature (°C)
+! TMAX    Maximum daily temperature (ï¿½C)
+! TMIN    Minimum daily temperature (ï¿½C)
 ! Tprev   3-day sum of average temperature:
 ! VHCAIR
 ! VPD     Vapor pressure deficit (Pa)
@@ -658,7 +662,7 @@ C=======================================================================
       SUBROUTINE PETDYN(
      &    CANHT, CLOUDS, MSALB, SRAD, TAVG, TDEW,         !Input
      &    TMAX, TMIN, WINDSP, XHLAI,                      !Input
-     &    EO)                                             !Output
+     &    EO, RNET)                                       !Output
 C  Calculates Penman-Monteith evapotranspiration
 !-----------------------------------------------------------------------
       IMPLICIT NONE
@@ -925,9 +929,9 @@ C=======================================================================
 ! MSALB   Soil albedo with mulch and soil water effects (fraction)
 ! SLANG   Solar radiation
 ! SRAD    Solar radiation (MJ/m2-d)
-! TD      Approximation of average daily temperature (ºC)
-! TMAX    Maximum daily temperature (°C)
-! TMIN    Minimum daily temperature (°C)
+! TD      Approximation of average daily temperature (ï¿½C)
+! TMAX    Maximum daily temperature (ï¿½C)
+! TMIN    Minimum daily temperature (ï¿½C)
 ! XHLAI   Leaf area index (m2[leaf] / m2[ground])
 !-----------------------------------------------------------------------
 !     END SUBROUTINE PETPT
@@ -957,7 +961,7 @@ C=======================================================================
       SUBROUTINE PETPNO(
      &    CLOUDS, MSALB, SRAD, TAVG, TDEW,                !Input
      &    TMAX, TMIN, WINDSP, XHLAI,                      !Input
-     &    EO)                                             !Output
+     &    EO, RNET)                                       !Output
 !-----------------------------------------------------------------------
       IMPLICIT NONE
       EXTERNAL VPSAT, VPSLOP
@@ -1054,11 +1058,11 @@ C     Pa to kPa. Equation for RNETMG converts from MJ/m2/d to mm/day.
 ! SBZCON   Stefan Boltzmann constant = 4.093E-9 (MJ/m2/d)
 ! SHAIR    = 1005.0
 ! SRAD    Solar radiation (MJ/m2-d)
-! TAVG    Average daily temperature (°C)
-! TDEW    Dewpoint temperature (°C)
+! TAVG    Average daily temperature (ï¿½C)
+! TDEW    Dewpoint temperature (ï¿½C)
 ! TK4     Temperature to 4th power ((oK)**4)
-! TMAX    Maximum daily temperature (°C)
-! TMIN    Minimum daily temperature (°C)
+! TMAX    Maximum daily temperature (ï¿½C)
+! TMIN    Minimum daily temperature (ï¿½C)
 ! VHCAIR
 ! VPD     Vapor pressure deficit (Pa)
 ! VPSAT   Saturated vapor pressure of air (Pa)
@@ -1409,10 +1413,10 @@ C=======================================================================
 ! PHSV          Slope of VPD response, #/kPa               (negative, set in CSYCA047.SPE)
 ! RADHR         Solar radiation, hourly                    (from WEATHER % RADHR  in ModuleDefs)
 ! SLANG   Solar radiation
-! TAIRHR        Air temperature, hourly, °C                (from WEATHER % TAIRHR in ModuleDefs)
-! TDEW          Dew point tempreature,°C                   (from WEATHER % TDEW   in ModuleDefs)
-! TMAX    Maximum daily temperature (°C)
-! TMIN    Minimum daily temperature (°C)
+! TAIRHR        Air temperature, hourly, ï¿½C                (from WEATHER % TAIRHR in ModuleDefs)
+! TDEW          Dew point tempreature,ï¿½C                   (from WEATHER % TDEW   in ModuleDefs)
+! TMAX    Maximum daily temperature (ï¿½C)
+! TMIN    Minimum daily temperature (ï¿½C)
 ! XHLAI   Leaf area index (m2[leaf] / m2[ground])
 ! VPDFPHR       VPD factor, hourly (#, 0-1)
 !-----------------------------------------------------------------------

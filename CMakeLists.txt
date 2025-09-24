@@ -113,6 +113,8 @@ ENDIF(WIN32)
 set(
     source_list
     	"${OSDefinitions}"
+        "CROP2ML_Modules/CROP2ML-APSIM/soiltemperature_APSIM.f90"
+
         "CROP2ML_Modules/CROP2ML-BIOMA-PARTON/soiltemperatureparton.f90"
         "CROP2ML_Modules/CROP2ML-BIOMA-PARTON/SurfacePartonSoilpartonComponent.f90"
         "CROP2ML_Modules/CROP2ML-BIOMA-PARTON/surfacetemperatureparton.f90"
