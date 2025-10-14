@@ -15,6 +15,7 @@
 
       USE Aloha_mod
       IMPLICIT  NONE
+      EXTERNAL GETLUN, HEADER, TIMDIF, YR_DOY
       SAVE
 
       INTEGER DYNAMIC, ERRNUM, NOUTDG, NOUTPN, RUN, ISTAGE, TIMDIF
@@ -22,7 +23,7 @@
       LOGICAL FEXIST
       REAL SWF_AV, TUR_AV, NST_AV, EXW_AV, PS1_AV , PS2_AV, KST_AV
       REAL SWFAC, TURFAC, NSTRES, PSTRES1, PSTRES2, KSTRES
-      REAL LFWT, PLTPOP, SDWT, XLAI, LAI, CRWNWT, LN
+      REAL LFWT, PLTPOP, SDWT, XLAI, LAI, CRWNWT, LN   
       REAL GM2KG, HI, BIOMAS, VWAD, STMWT
       REAL RTWT, RTDEP, RLV(NL)
       REAL BASLFWT, SKWT, TOPWT 
@@ -187,22 +188,21 @@
 !-----------------------------------------------------------------------
 !         PlantGro.OUT
 !-----------------------------------------------------------------------
-          IF (IDETG == 'Y') THEN
+!         IF (IDETG == 'Y') THEN
 
-           LEAFNO = LN
-           VSTAGE = REAL (LEAFNO)
+            LEAFNO = LN
+            VSTAGE = REAL (LEAFNO)
 
 !           GM2KG converts gm/plant to kg/ha
             GM2KG  = PLTPOP * 10.0
-                                   
+            
             TOPWT  = BIOMAS * 10.    !topwt in kg/ha, biomas in g/m2
 
             WTLF = LFWT * PLTPOP      !leaf, g/m2
             LWAD = LFWT * GM2KG       !leaf, kg/ha
             SWAD = STMWT* GM2KG       !stem, kg/ha
             VWAD = LWAD + SWAD        !veg,  kg/ha
-                      
-            
+
             BWAD = BASLFWT * GM2KG    !basal, kg/ha
             SUGD = SKWT    * GM2KG    !sucker,kg/ha
             RWAD = RTWT    * GM2KG    !roots, kg/ha
@@ -238,17 +238,7 @@
             
             XLAI   = LAI
             IF (WTLF .GT. 0.0) THEN
-               !SLA  = LAI * 10000 / WTLF   ! SLA es el área específica de la hoja dividida entre su peso seco. Por lo que creo que lo correcto es:
-                                            
-               SLA  = LAI * 10000 / LWAD
-            
-               
-                                           ! Puesto que SLA = LAI*10000 / WTLF  (divide el área de las hoja en una hectárea (Lo que es correcto) 
-                                           ! entre gramos de hoja por metro cuadrado (que es incorrecto) que es lo que representa WTLF), ya que
-                                           ! debería ser Kg de hoja en una hectárea. No es lo mismo gr/m2 que Kg/ha (hay un digito demás en el calculo)
-               
-               
-               
+               SLA  = LAI * 10000 / WTLF
             ELSE
                SLA = 0.0
             ENDIF
@@ -275,7 +265,7 @@
               PCNL = 0.0
             ENDIF
 
-            IF (FMOPT /= 'C') THEN   ! VSH
+            IF (IDETG == 'Y' .AND. FMOPT /= 'C') THEN   ! VSH
               WRITE (NOUTDG,400) YEAR, DOY, DAS, DAP, VSTAGE, ISTAGE, XLAI,         &
                 NINT(TOPWT),  NINT(VWAD), NINT(LWAD), NINT(SWAD), NINT(FLWAD),      &
                 NINT(FWAD), NINT(CRAD), NINT(BWAD), NINT(SUGD), NINT(RWAD), HI,     &
@@ -307,12 +297,12 @@
               !
               !CALL Linklst(vCsvline)
             ENDIF
-          ENDIF     !Print PlantGro report
+!         ENDIF     !Print PlantGro report
 
 !-----------------------------------------------------------------------
 !         PlantN.OUT
 !-----------------------------------------------------------------------
-          IF (IDETN .EQ. 'Y' .AND. ISWNIT .EQ. 'Y') THEN
+          IF (ISWNIT .EQ. 'Y') THEN
 
             WTNSD = GRAINN * PLTPOP
             WTNRT = ROOTN * PLTPOP        ! Is this right?
@@ -347,7 +337,7 @@
 
 !-----------------------------------------------------------------------
 
-            IF (FMOPT /= 'C') THEN       ! VSH
+            IF (IDETN == 'Y' .AND. FMOPT /= 'C') THEN       ! VSH
               WRITE (NOUTPN,300) YEAR, DOY, DAS, DAP,                   &
                      (WTNUP*10.0), (WTNCAN*10.0), (WTNVEG*10.0), (WTNLF*10.0), (WTNST*10.0), (WTNRT*10),     &
                      PCNVEG, PCNL, PCNST, PCNRT

@@ -17,6 +17,7 @@ C=======================================================================
 !-----------------------------------------------------------------------
       USE ModuleDefs     
       IMPLICIT NONE
+      EXTERNAL FIND, ERROR
       SAVE
 
       CHARACTER*6 ERRKEY, SECTION
@@ -82,6 +83,7 @@ C     Find layer number for tile
         ENDDO
       ENDIF
 
+      TDFC = 0.
 !***********************************************************************
 !***********************************************************************
 !     Seasonal initialization - run once per season

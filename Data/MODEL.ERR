@@ -157,6 +157,33 @@ Error a new weather year is defined prior to the start of simulation.
 FRHARV    1
 Error in forage harvest. Mow input date is defined prior to the start of simulation.
 
+FRHARV    2
+Error reading stuble mass and percent leaf forage harvest in species file.
+
+FRHARV    3
+Error in Automatic Management section. Correct mow harvest frequency (days).
+
+FRHARV    4
+Error in Automatic Management section. Correct mow harvest frequency (GDD).
+
+FRHARV    5
+Error in Automatic Management section. Correct the stubble percent leaf.
+
+FRHARV    6
+Error in Automatic Management section. Correct the cutting height.
+
+FRHARV    7
+Error in Automatic Management section. Correct the stubble mass.
+
+FRHARV    8
+Error in Automatic Management section. Correct residual veg. stage after mowing.
+
+FRHARV    9
+Missing AutoMOW section in the species file.
+
+FRSHWT    1
+Pod/Fruit harvest age (XMAGE) is not properly defined. Fix the Ecotype file.
+
 GETDSC   29
 Detail.CDE file not found.  Program will stop.
 
@@ -187,8 +214,17 @@ Chemical input level not found. Please correct input file.
 IPCHEM    3
 First chemical application date is defined prior to the start of simulation.
 
+IPCHEM   4
+Error in chemical code.  Correct input file.
+
 IPCHEM   11
 No input amount defined for chemical applications.
+
+IPDMND   1
+Time for pod/fruit to reach har. maturity (XFPHT) not set properly.
+
+IPDMND   2
+Initial partitioning to pod/fruit in early growth (XFINT) not set properly.
 
 IPCUL     2
 Cultivar input level not found. Please correct input file.
@@ -415,6 +451,9 @@ Residue input level not found. Please correct input file.
 IPRES     3
 First residue application date is defined prior to the start of simulation.
 
+IPRES     4
+Error in residue code.  Correct input file.
+
 IPRES    10
 Error in date of residue application input.  Correct input file.
 
@@ -568,6 +607,9 @@ Soil input section not found.  Please correct file.
 IPSOIL   29
 File not found.  Please check soil profile name or create file.
 
+IPSOIL   98
+Tab detected in the soil profile. Please correct input file.
+
 IPTILL    2
 Tillage input level not found. Please correct input file.
 
@@ -658,6 +700,9 @@ File not found.  Please check file name or create file.
 IPWTH    30
 Error opening file.
 
+IPWTH    98
+Tab detected in the weather file. Please correct input file.
+
 IPASCE    1
 Error reading species parameters for evapotranspiration.
 
@@ -666,6 +711,12 @@ Incompatibility between Century SOM method and flooded field management.
 
 LAND      2
 Planting date is defined prior to the start of simulation date.
+
+LTGROW   10
+Percent Lint (PCTLT) missing in the Ecotype file. Please correct file. 
+
+LTGROW   11
+Percent Lint (PCTLT) out of range. Range is from 25 to 60. Please correct file.
 
 MODELN    1
 Error opening file. Please check file.
@@ -697,8 +748,8 @@ Configuration file not found.
 PATH      3
 Path error in configuration file. Please correct file.
 
-PETASCE  50
-ASCE reference ET method is not available for this crop.
+PET       1
+Undefined EVAPO parameter in FileX.
 
 PPLANT   10
 Review P parameters in species file.
@@ -793,25 +844,28 @@ Insufficient soil P data provided.  Program will stop.
 SWCROP    1
 Error in Crop entry.  Fix entry or batch file.
 
-SWFERT   1
+SWFERT    1
 Error in Fertilizer Sensitivity Analysis Selection.  Fix entry or batch file.
 
-SWFIX    1
+SWFIX     1
 Error in Fertilizer Sensitivity Analysis Selection.  Fix entry or batch file.
 
-SWINSC   1
+SWINSC    1
 Error in Initial Soil Sensitivity Analysis Selection.  Fix entry or batch file.
 
-SWIRR    1
+SWIRR     1
 Error in Irrigation Sensitivity Analysis Selection.  Fix entry or batch file.
 
-SWWTH    1
+SWWTH     1
 Error in Weather Sensitivity Analysis Selection.  Fix entry or batch file.
 
 TILLAG  29
 Tillage operations file not found.
 
-WEATHR   1
+TILLAG    4
+Tillage implement is not defined or missing. Please correct input file.
+
+WEATHR    1
 Weather method selected not available.  Please fix input file.
 
 WTHMOD    1
@@ -889,7 +943,6 @@ Invalid format in file.
 GENERI   75
 Array size exceeded.
 
-
 MAKEFW    1
 Field level not found. Please correct input file.
 
@@ -901,7 +954,6 @@ Weather station input is missing. Please add to input file.
 
 MAKEFW    4
 Error in weather station input. Correct input file.
-
 
 MAKEFW    5
 Simulation Controls level not found. Please correct input file.
@@ -915,7 +967,6 @@ Start simulation date input is missing. Please add to input file.
 MAKEFW    8
 Error in Start simulation date input. Correct input file.
 
-
 MAKEFW    9
 Weather method section not found. Please add to input file.
 
@@ -925,7 +976,6 @@ Weather method input is missing. Please add to input file.
 MAKEFW   11
 Error in weather method input. Correct input file.
 
-
 MAKEFW   12
 Planting input section not found. Please add to input file.
 
@@ -934,7 +984,6 @@ Planting input is missing. Please add to input file.
 
 MAKEFW   14
 Error in planting date input. Correct input file.
-
 
 MAKEFW   15
 Start simulation date or planting date missing. Correct input file.
@@ -956,3 +1005,9 @@ Input date is greather than 99 years after start simulation date.
 
 FORCST    1
 Forecast date is before start of simulation date.
+
+TRANS     1
+VPD sensitivity parameter PHSV missing for EVAPO method H.
+
+TRANS     2
+VPD threshold parameter PHTV missing for EVAPO method H.

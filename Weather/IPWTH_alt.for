@@ -20,6 +20,7 @@ C                   a sequence occurs on Jan 1.
 !  10/18/2016 CHP Read daily ozone values (ppb)
 !  05/28/2021 FO  Added code for LAT,LONG and ELEV output in Summary.OUT
 !  08/20/2021 FO  Added support for LAT, LONG and ELEV to NASA format files.
+!  11/19/2024 FO  Added protection for NaN data.
 C-----------------------------------------------------------------------
 C  Called by: WEATHR
 C  Calls:     None
@@ -41,6 +42,9 @@ C=======================================================================
       USE SumModule
 
       IMPLICIT NONE
+      EXTERNAL YR_DOY, INCYD, ERROR, FIND, GETLUN, WARNING, UPCASE, 
+     &  IGNORE, PARSE_HEADERS, WEATHERERROR, IGNORE2,
+     &  CHECK_WEATHER_HEADERS, SUMVALS, IPWREC, DAILYWEATHERCHECK
       SAVE
 
       CHARACTER*1  BLANK, MEWTH, RNMODE, UPCASE
@@ -401,7 +405,7 @@ C     The components are copied into local variables for use here.
               CASE('LAT','WTHLAT')
                 READ(LINE(C1:C2),*,IOSTAT=ERR) XLAT
                 READ(LINE(C1:C2),*,IOSTAT=ERR) CYCRD
-                IF (ERR .NE. 0) THEN
+                IF (ERR .NE. 0 .OR. ISNAN(XLAT)) THEN
                   XLAT = 0.0
                   MSG(1) = 'Error reading latitude, value of zero'
      &              //  ' will be used.'
@@ -411,32 +415,32 @@ C     The components are copied into local variables for use here.
               CASE('LONG','WTHLONG')
                 READ(LINE(C1:C2),*,IOSTAT=ERR) XLONG
                 READ(LINE(C1:C2),*,IOSTAT=ERR) CXCRD
-                IF (ERR .NE. 0) XLONG = -99.0
+                IF (ERR .NE. 0 .OR. ISNAN(XLONG)) XLONG = -99.0
 
               CASE('ELEV','WELEV')
                 READ(LINE(C1:C2),*,IOSTAT=ERR) XELEV
                 READ(LINE(C1:C2),*,IOSTAT=ERR) CELEV
-                IF (ERR .NE. 0) XELEV = -99.0
+                IF (ERR .NE. 0 .OR. ISNAN(XELEV)) XELEV = -99.0
 
               CASE('TAV')
                 READ(LINE(C1:C2),*,IOSTAT=ERR) TAV
-                IF (ERR .NE. 0) TAV = -99.0
+                IF (ERR .NE. 0 .OR. ISNAN(TAV)) TAV = -99.0
 
               CASE('AMP')
                 READ(LINE(C1:C2),*,IOSTAT=ERR) TAMP
-                IF (ERR .NE. 0) TAMP = -99.0
+                IF (ERR .NE. 0 .OR. ISNAN(TAMP)) TAMP = -99.0
 
               CASE('REFHT')
                 READ(LINE(C1:C2),*,IOSTAT=ERR) REFHT
-                IF (ERR .NE. 0) REFHT = 1.5
+                IF (ERR .NE. 0 .OR. ISNAN(REFHT)) REFHT = 1.5
 
               CASE('WNDHT')
                 READ(LINE(C1:C2),*,IOSTAT=ERR) WINDHT
-                IF (ERR .NE. 0) WINDHT = 2.0
+                IF (ERR .NE. 0 .OR. ISNAN(WINDHT)) WINDHT = 2.0
 
               CASE('CCO2','CO2')
                 READ(LINE(C1:C2),*,IOSTAT=ERR) CCO2
-                IF (ERR .NE. 0) CCO2 = -99.0
+                IF (ERR .NE. 0 .OR. ISNAN(CCO2)) CCO2 = -99.0
             END SELECT
           ENDIF
         ENDDO
@@ -619,8 +623,8 @@ C     Send labels and values to OPSUM
 
 !     Error checking
       CALL DailyWeatherCheck(CONTROL,
-     &    "WTHINIT", FILEWW, RAIN, RecNum, RHUM,          !Input
-     &    SRAD, TDEW, TMAX, TMIN, WINDSP, YRDOY,          !Input
+     &    "WTHINIT", FILEWW, RAIN, RecNum,                !Input
+     &    SRAD, TMAX, TMIN, YRDOY,                        !Input
      &    YREND)                                          !Output
 
       IF (YREND > 0) THEN
@@ -640,8 +644,8 @@ C     Send labels and values to OPSUM
       
 !       Error checking
         CALL DailyWeatherCheck(CONTROL,
-     &    ERRKEY, FILEWW, RAIN, RecNum, RHUM,             !Input
-     &    SRAD, TDEW, TMAX, TMIN, WINDSP, YRDOY,          !Input
+     &    ERRKEY, FILEWW, RAIN, RecNum,                   !Input
+     &    SRAD, TMAX, TMIN, YRDOY,                        !Input
      &    YREND)                                          !Output
 
       ENDIF
@@ -796,8 +800,8 @@ C         Read in weather file header.
 
 !     Error checking
       CALL DailyWeatherCheck(CONTROL,
-     &    ERRKEY, FILEWW, RAIN, RecNum, RHUM,             !Input
-     &    SRAD, TDEW, TMAX, TMIN, WINDSP, YRDOY,          !Input
+     &    ERRKEY, FILEWW, RAIN, RecNum,                   !Input
+     &    SRAD, TMAX, TMIN, YRDOY,                        !Input
      &    YREND)                                          !Output
 
 !      ERR = 0
@@ -902,6 +906,8 @@ C         Read in weather file header.
       USE ModuleDefs
       USE Forecast
       IMPLICIT NONE
+      EXTERNAL IGNORE, WEATHERERROR, Y2K_DOYW, YR_DOY, WARNING, IGNORE4,
+     &         ERROR
       SAVE
 
       INTEGER MaxRecords
@@ -971,7 +977,8 @@ C         Read in weather file header.
 !       Read array of weather records for this calendar year 
 !       starting with simulation start date and ending at end 
 !       of file or at MaxRecords # of records
-        CALL IGNORE(LUNWTH,LINWTH,FOUND,LINE)
+        CALL IGNORE4(LUNWTH,LINWTH,FOUND,LINE)
+        IF (FOUND .EQ. 4) CALL ERROR (ERRKEY,98,FILEWW,LINWTH)
         IF (FOUND == 1) THEN
 
           SRAD  = -99.
@@ -1017,49 +1024,49 @@ C         Read in weather file header.
 
               CASE('SRAD')  !Solar radiation MJ/m2/d
                 READ(LINE(C1:C2),*,IOSTAT=ERR) SRAD
-                IF (ERR .NE. 0) SRAD = -99.
+                IF (ERR .NE. 0 .OR. ISNAN(SRAD)) SRAD = -99.
 
               CASE('TMAX')  !Max daily temperature (C)
                 READ(LINE(C1:C2),*,IOSTAT=ERR) TMAX
-                IF (ERR .NE. 0) TMAX = -99.
+                IF (ERR .NE. 0 .OR. ISNAN(TMAX)) TMAX = -99.
 
               CASE('TMIN')  !Min daily temperature (C)
                 READ(LINE(C1:C2),*,IOSTAT=ERR) TMIN
-                IF (ERR .NE. 0) TMIN = -99.
+                IF (ERR .NE. 0 .OR. ISNAN(TMIN)) TMIN = -99.
 
               CASE('RAIN')  !Daily precip (mm)
                 READ(LINE(C1:C2),*,IOSTAT=ERR) RAIN
-                IF (ERR .NE. 0) RAIN = -99.
+                IF (ERR .NE. 0 .OR. ISNAN(RAIN)) RAIN = -99.
 
               CASE('DEWP', 'TDEW')  !Dewpoint temp (C)
                 READ(LINE(C1:C2),*,IOSTAT=ERR) TDEW
-                IF (ERR .NE. 0) TDEW = -99.0
+                IF (ERR .NE. 0 .OR. ISNAN(TDEW)) TDEW = -99.0
 
               CASE('WIND')  !Daily wind run (km/d)
                 READ(LINE(C1:C2),*,IOSTAT=ERR) WINDSP
-                IF (ERR .NE. 0) WINDSP = -99.0
+                IF (ERR .NE. 0 .OR. ISNAN(WINDSP)) WINDSP = -99.0
 
               CASE('PAR')   
 !               Photosynthetically active radiation (Einstein/m2/day)
                 READ(LINE(C1:C2),*,IOSTAT=ERR) PAR
-                IF (ERR .NE. 0) PAR = -99.0
+                IF (ERR .NE. 0 .OR. ISNAN(PAR)) PAR = -99.0
 
               CASE('RHUM')  
 !               Relative humidity at TMIN (or max rel. hum) (%)
                 READ(LINE(C1:C2),*,IOSTAT=ERR) RHUM
-                IF (ERR .NE. 0) RHUM = -99.0
+                IF (ERR .NE. 0 .OR. ISNAN(RHUM)) RHUM = -99.0
 
               CASE('VAPR','VPRS')   !Vapor pressure (kPa)
                 READ(LINE(C1:C2),*,IOSTAT=ERR) VAPR
-                IF (ERR .NE. 0) VAPR = -99.0
+                IF (ERR .NE. 0 .OR. ISNAN(VAPR)) VAPR = -99.0
 
               CASE('DCO2','CO2')   !Atmospheric CO2 (ppm)
                 READ(LINE(C1:C2),*,IOSTAT=ERR) DCO2
-                IF (ERR .NE. 0) DCO2 = -99.0
+                IF (ERR .NE. 0 .OR. ISNAN(DCO2)) DCO2 = -99.0
 
               CASE('OZON7')   !Daily 7-hr mean ozone conc, ppb (9am-4pm)
                 READ(LINE(C1:C2),*,IOSTAT=ERR) OZON7
-                IF (ERR .NE. 0) OZON7 = -99.0
+                IF (ERR .NE. 0 .OR. ISNAN(OZON7)) OZON7 = -99.0
             END SELECT
           ENDDO
 
@@ -1068,7 +1075,7 @@ C         Read in weather file header.
             CALL Y2K_DOYW(MULTI, YRDOYWY, YRDOYW, CENTURY)
             IF (NRecords == 0 .AND. YRDOY == YRSIM .AND.  !First record
      &          YRDOYW > YRSIM .AND.                      ! > YRSIM
-     &          YRDOYW_SAVE < 99366) THEN       ! & century set by program
+     &          YRDOYW_SAVE < 99366) THEN     ! & century set by program
               CENTURY = CENTURY - 1
               YRDOYW = YRDOYW - 100000
             ENDIF
@@ -1171,6 +1178,8 @@ C         Read in weather file header.
 !     Checks that required headers are found in weather file.  Reports
 !     to INFO.OUT the headers that are found.
 !-----------------------------------------------------------------------
+      EXTERNAL UPCASE, INFO, WARNING, ERROR
+
       CHARACTER*1 UPCASE
       CHARACTER*92 FILEWW
       INTEGER IM, LINWTH
@@ -1252,8 +1261,8 @@ C         Read in weather file header.
 ! 09/01/2009 CHP Written
 !-----------------------------------------------------------------------
       Subroutine DailyWeatherCheck(CONTROL,
-     &    ERRKEY, FILEWW, RAIN, RecNum, RHUM,             !Input
-     &    SRAD, TDEW, TMAX, TMIN, WINDSP, YRDOYW,         !Input
+     &    ERRKEY, FILEWW, RAIN, RecNum,                   !Input
+     &    SRAD, TMAX, TMIN, YRDOYW,                       !Input
      &    YREND)                                          !Output
 
 !     Checks validity of daily weather for observed or generated values.
@@ -1261,12 +1270,12 @@ C         Read in weather file header.
       Use ModuleDefs
       Use ModuleData
       Implicit None
+      EXTERNAL WARNING, WeatherError
 
       CHARACTER*(*) ERRKEY, FILEWW
       CHARACTER*78 MSG(10)
       Integer ErrCode, NChar, RecNum, YRDOYW, YREND
-      REAL RAIN, RHUM, SRAD, TDEW, TMAX, TMIN, WINDSP
-      REAL CALC_TDEW
+      REAL RAIN, SRAD, TMAX, TMIN
       TYPE (ControlType) CONTROL
 
 !     Error checking
@@ -1343,29 +1352,6 @@ C         Read in weather file header.
         CALL WARNING(4,ERRKEY,MSG) 
       ENDIF
 
-!     Substitute default values if TDEW or WINDSP are missing.
-      IF (TDEW <= -90.)  THEN 
-c               MJ, 2007-04-05: set TDEW to TMIN if TDEW not otherwise available.  This is not
-c               appropriate to South African (and presumably other) conditions
-c               --> suggest replacing with a better calculation based on relative humidity, if
-c                   available.
-          IF (RHUM .GT. 0.01) THEN
-              TDEW = CALC_TDEW(TMIN, RHUM)
-          ELSE
-             TDEW = TMIN
-          ENDIF
-      ENDIF
-
-!      IF (WINDSP <= 0.) WINDSP = 86.4
-!      IF (WINDSP <= -1.E-6) THEN
-!        WINDSP = 86.4
-!      ELSEIF (WINDSP < 1.0) THEN
-!        MSG(1) = "Unlikely value for WINDSP in weather file."
-!        WRITE(MSG(2),'("WINDSP = ",F8.2," km/d")') WINDSP
-!        CALL WARNING(2,ERRKEY,MSG)
-!        CALL ERROR(ERRKEY,9,FILEW,RecNum)
-!      ENDIF
-
       Return
       End Subroutine DailyWeatherCheck
 
@@ -1380,6 +1366,7 @@ c                   available.
 !-----------------------------------------------------------------------
 ! REVISION HISTORY
 ! 09/01/2009 CHP Written
+! 06/15/2022 CHP Added CropStatus
 !-----------------------------------------------------------------------
       SUBROUTINE WeatherError(CONTROL, ErrCode, FILEWW, LNUM, 
      &      YRDOYW, YREND)
@@ -1387,6 +1374,7 @@ c                   available.
       USE ModuleDefs
       USE ModuleData
       IMPLICIT NONE
+      EXTERNAL YR_DOY, LENSTRING, WARNING, ERROR
 
       CHARACTER*6, PARAMETER :: ERRKEY = 'IPWTH '
       CHARACTER*78 MSG(4)
@@ -1462,6 +1450,7 @@ c                   available.
       MSG(NMSG) = "Simulation will end."
       YREND = CONTROL%YRDOY
       CONTROL % ErrCode = ErrCode
+      CONTROL % CropStatus = 200
       CALL PUT(CONTROL)
       CALL WARNING(NMSG,ERRKEY,MSG)
 
@@ -1487,8 +1476,6 @@ c                   available.
 
 !-----------------------------------------------------------------------
 ! BLANK   blank character 
-! CALC_TDEW Function that calculates dew point temperature from min and
-!           max temperatures and relative humidity.
 ! CCO2    Atmospheric CO2 concentration read from input file (ppm)
 ! ERRKEY  Subroutine name for error file 
 ! ERR  Error number for input 
