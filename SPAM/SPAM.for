@@ -129,77 +129,88 @@ C=======================================================================
 !     CROP2ML - CONTROL VARIABLES
 !***********************************************************************
 !     APSIM
-      REAL weather_AirPressure, weather_Wind
+      REAL(dp) weather_MinT      
+      REAL(dp) weather_MaxT      
+      REAL(dp) weather_MeanT     
+      REAL(dp) weather_Tav       
+      REAL(dp) weather_Amp       
+      REAL(dp) weather_Latitude  
+      REAL(dp) weather_Radn      
+      REAL(dp) waterBalance_Eos  
+      REAL(dp) waterBalance_Eo   
+      REAL(dp) waterBalance_Es   
+      REAL(dp) waterBalance_Salb
+      REAL(dp) weather_AirPressure, weather_Wind
       INTEGER clock_Today_DayOfYear
-      REAL microClimate_CanopyHeight
-      REAL ps
-      REAL, DIMENSION(:), ALLOCATABLE :: physical_Rocks
-      REAL, DIMENSION(:), ALLOCATABLE :: physical_ParticleSizeSand
-      REAL, DIMENSION(:), ALLOCATABLE :: physical_ParticleSizeSilt
-      REAL, DIMENSION(:), ALLOCATABLE :: physical_ParticleSizeClay
-      REAL, ALLOCATABLE :: waterBalance_SW(:)
-      REAL, DIMENSION(:), ALLOCATABLE :: organic_Carbon
-      REAL, DIMENSION(:), ALLOCATABLE :: physical_Thickness
-      REAL, DIMENSION(:), ALLOCATABLE :: physical_BD
-      REAL, DIMENSION(:), ALLOCATABLE :: pInitialValues
-      REAL DepthToConstantTemperature
-      REAL timestep_apsim
-      REAL latentHeatOfVapourisation
-      REAL stefanBoltzmannConstant
+      REAL(dp) microClimate_CanopyHeight
+      REAL(dp) ps
+      REAL(dp), DIMENSION(:), ALLOCATABLE :: physical_Rocks
+      REAL(dp), DIMENSION(:), ALLOCATABLE :: physical_ParticleSizeSand
+      REAL(dp), DIMENSION(:), ALLOCATABLE :: physical_ParticleSizeSilt
+      REAL(dp), DIMENSION(:), ALLOCATABLE :: physical_ParticleSizeClay
+      REAL(dp), ALLOCATABLE :: waterBalance_SW(:)
+      REAL(dp), DIMENSION(:), ALLOCATABLE :: organic_Carbon
+      REAL(dp), DIMENSION(:), ALLOCATABLE :: physical_Thickness
+      REAL(dp), DIMENSION(:), ALLOCATABLE :: physical_BD
+      REAL(dp), DIMENSION(:), ALLOCATABLE :: pInitialValues
+      REAL(dp) DepthToConstantTemperature
+      REAL(dp) timestep_apsim
+      REAL(dp) latentHeatOfVapourisation
+      REAL(dp) stefanBoltzmannConstant
       INTEGER airNode
       INTEGER surfaceNode
       INTEGER topsoilNode
       INTEGER numPhantomNodes
-      REAL constantBoundaryLayerConductance
+      REAL(dp) constantBoundaryLayerConductance
       INTEGER numIterationsForBoundaryLayerConductance
-      REAL defaultTimeOfMaximumTemperature
-      REAL defaultInstrumentHeight
-      REAL bareSoilRoughness
-      REAL, ALLOCATABLE :: nodeDepth(:)
-      REAL, ALLOCATABLE :: thermCondPar1(:)
-      REAL, ALLOCATABLE :: thermCondPar2(:)
-      REAL, ALLOCATABLE :: thermCondPar3(:)
-      REAL, ALLOCATABLE :: thermCondPar4(:)
-      REAL pom
-      REAL soilRoughnessHeight
-      REAL nu
+      REAL(dp) defaultTimeOfMaximumTemperature
+      REAL(dp) defaultInstrumentHeight
+      REAL(dp) bareSoilRoughness
+      REAL(dp), ALLOCATABLE :: nodeDepth(:)
+      REAL(dp), ALLOCATABLE :: thermCondPar1(:)
+      REAL(dp), ALLOCATABLE :: thermCondPar2(:)
+      REAL(dp), ALLOCATABLE :: thermCondPar3(:)
+      REAL(dp), ALLOCATABLE :: thermCondPar4(:)
+      REAL(dp) pom
+      REAL(dp) soilRoughnessHeight
+      REAL(dp) nu
       CHARACTER(65) boundarLayerConductanceSource
       CHARACTER(65) netRadiationSource
-      REAL MissingValue
-      CHARACTER(65) , DIMENSION(8) :: soilConstituentNames
-      REAL, DIMENSION(:), ALLOCATABLE :: InitialValues
+      REAL(dp) MissingValue
+      CHARACTER(65) , DIMENSION(dp) :: soilConstituentNames
+      REAL(dp), DIMENSION(:), ALLOCATABLE :: InitialValues
       LOGICAL doInitialisationStuff
-      REAL internalTimeStep
-      REAL timeOfDaySecs
+      REAL(dp) internalTimeStep
+      REAL(dp) timeOfDaySecs
       INTEGER numNodes
       INTEGER numLayers
-      REAL, ALLOCATABLE :: volSpecHeatSoil(:)
-      REAL, ALLOCATABLE :: soilTemp(:)
-      REAL, ALLOCATABLE :: morningSoilTemp(:)
-      REAL, ALLOCATABLE :: heatStorage(:)
-      REAL, ALLOCATABLE :: thermalcon(:)
-      REAL, ALLOCATABLE :: thermalConductivity(:)
-      REAL boundaryLayerConductance
-      REAL , DIMENSION(: ), ALLOCATABLE :: newTemperature
-      REAL airTemperature
-      REAL maxTempYesterday
-      REAL minTempYesterday
-      REAL, ALLOCATABLE :: soilWater(:)
-      REAL, ALLOCATABLE :: minSoilTemp(:)
-      REAL, ALLOCATABLE :: maxSoilTemp(:)
-      REAL, ALLOCATABLE :: aveSoilTemp(:)
-      REAL, ALLOCATABLE :: aveSoilWater(:)
-      REAL, ALLOCATABLE :: thickness_apsim(:)
-      REAL, ALLOCATABLE :: bulkDensity(:)
-      REAL, ALLOCATABLE :: rocks(:)
-      REAL, ALLOCATABLE :: carbon(:)
-      REAL, ALLOCATABLE :: sand(:)
-      REAL, ALLOCATABLE :: silt(:)
-      REAL, ALLOCATABLE :: clay(:)
-      REAL instrumentHeight
-      REAL netRadiation
-      REAL canopyHeight
-      REAL instrumHeight
+      REAL(dp), ALLOCATABLE :: volSpecHeatSoil(:)
+      REAL(dp), ALLOCATABLE :: soilTemp(:)
+      REAL(dp), ALLOCATABLE :: morningSoilTemp(:)
+      REAL(dp), ALLOCATABLE :: heatStorage(:)
+      REAL(dp), ALLOCATABLE :: thermalcon(:)
+      REAL(dp), ALLOCATABLE :: thermalConductivity(:)
+      REAL(dp) boundaryLayerConductance
+      REAL(dp) , DIMENSION(: ), ALLOCATABLE :: newTemperature
+      REAL(dp) airTemperature
+      REAL(dp) maxTempYesterday
+      REAL(dp) minTempYesterday
+      REAL(dp), ALLOCATABLE :: soilWater(:)
+      REAL(dp), ALLOCATABLE :: minSoilTemp(:)
+      REAL(dp), ALLOCATABLE :: maxSoilTemp(:)
+      REAL(dp), ALLOCATABLE :: aveSoilTemp(:)
+      REAL(dp), ALLOCATABLE :: aveSoilWater(:)
+      REAL(dp), ALLOCATABLE :: thickness_apsim(:)
+      REAL(dp), ALLOCATABLE :: bulkDensity(:)
+      REAL(dp), ALLOCATABLE :: rocks(:)
+      REAL(dp), ALLOCATABLE :: carbon(:)
+      REAL(dp), ALLOCATABLE :: sand(:)
+      REAL(dp), ALLOCATABLE :: silt(:)
+      REAL(dp), ALLOCATABLE :: clay(:)
+      REAL(dp) instrumentHeight
+      REAL(dp) netRadiation
+      REAL(dp) canopyHeight
+      REAL(dp) instrumHeight
 !-----------------------------------------------------------------------
 !     BIOMA-Parton
       REAL LagCoefficient, SoilProfileDepth
@@ -375,6 +386,18 @@ C=======================================================================
           allocate(physical_Thickness(NLAYR))
           allocate(physical_BD(NLAYR))
       ENDIF
+      clock_Today_DayOfYear = DOY
+      weather_MinT      = WEATHER % TMIN
+      weather_MaxT      = WEATHER % TMAX
+      weather_MeanT     = WEATHER % TAVG
+      weather_Tav       = WEATHER % TAV
+      weather_Amp       = WEATHER % TAMP
+      weather_Latitude  = WEATHER % XLAT
+      weather_Radn      = WEATHER % SRAD
+      waterBalance_Eos  = EOS
+      waterBalance_Eo   = EO
+      waterBalance_Es   = ES
+      waterBalance_Salb = SOILPROP % SALB     
       physical_ParticleSizeSand(1:NLAYR) = SOILPROP % SAND(1:NLAYR)
       physical_ParticleSizeSilt(1:NLAYR) = SOILPROP % SILT(1:NLAYR)
       physical_ParticleSizeClay(1:NLAYR) = SOILPROP % CLAY(1:NLAYR)
@@ -382,27 +405,11 @@ C=======================================================================
       physical_BD(1:NLAYR) = SOILPROP % BD(1:NLAYR)
       waterBalance_SW(1:NLAYR) = SW(1:NLAYR)
       organic_Carbon(1:NLAYR) = SOILPROP % OC(1:NLAYR)
-      stefanBoltzmannConstant = 0.0000000567
       weather_AirPressure = 1010.0
       weather_Wind = 3.0
-      clock_Today_DayOfYear = 1
       microClimate_CanopyHeight = 0.0
-      ps = 2.63
       physical_Rocks = 0.0
-      DepthToConstantTemperature = 10000.0
-      timestep = 24 * 60 * 60
-      latentHeatOfVapourisation = 2465000.0
-      airNode = 0.0
-      surfaceNode = 1
-      topsoilNode = 2
-      numPhantomNodes = 5
-      constantBoundaryLayerConductance = 20.0
-      numIterationsForBoundaryLayerConductance = 1
-      defaultTimeOfMaximumTemperature = 14.0
-      defaultInstrumentHeight = 1.2
-      bareSoilRoughness = 57
-      pom = 1.3
-      nu = 0.6
+      timestep_apsim = 24 * 60 * 60
       boundarLayerConductanceSource = 'calc'
       netRadiationSource = 'calc'
       MissingValue = 999999
@@ -414,9 +421,25 @@ C=======================================================================
       soilConstituentNames(6) = 'Water'
       soilConstituentNames(7) = 'Ice'
       soilConstituentNames(8) = 'Air'
+      internalTimestep = 0.0
       doInitialisationStuff = .FALSE.
       instrumentHeight = 0.0 
       soilRoughnessHeight = 0.0 
+      ps = 2.63
+      nu = 0.6
+      DepthToConstantTemperature = 10000.0
+      latentHeatOfVapourisation = 2465000.0
+      stefanBoltzmannConstant = 0.0000000567
+      airNode = 0.0
+      surfaceNode = 1
+      topsoilNode = 2
+      numPhantomNodes = 5
+      constantBoundaryLayerConductance = 20.0
+      numIterationsForBoundaryLayerConductance = 1
+      defaultTimeOfMaximumTemperature = 14.0
+      defaultInstrumentHeight = 1.2
+      bareSoilRoughness = 57
+      pom = 1.3
 !-----------------------------------------------------------------------
 !     BIOMA-Parton
       !SoilProfileDepth = INPITF % SLDP / 100
@@ -581,15 +604,15 @@ C=======================================================================
         CASE('F') ! APSIM
            WRITE(*,*) 'APSIM running...'
            CALL init_soiltemperature_APSIM(
-     &         WEATHER % TMIN, !weather_MinT, 
-     &         WEATHER % TMAX, !weather_MaxT, 
-     &         WEATHER % TAVG, !weather_MeanT, 
-     &         WEATHER % TAV, !weather_Tav, 
-     &         WEATHER % TAMP, !weather_Amp, 
+     &         weather_MinT, 
+     &         weather_MaxT, 
+     &         weather_MeanT, 
+     &         weather_Tav, 
+     &         weather_Amp, 
      &         weather_AirPressure, 
      &         weather_Wind, 
-     &         WEATHER % XLAT, !weather_Latitude, 
-     &         WEATHER % SRAD, !weather_Radn, 
+     &         weather_Latitude, 
+     &         weather_Radn, 
      &         clock_Today_DayOfYear, 
      &         microClimate_CanopyHeight, 
      &         physical_Thickness,
@@ -601,10 +624,10 @@ C=======================================================================
      &         physical_ParticleSizeClay,
      &         organic_Carbon,
      &         waterBalance_SW, 
-     &         EOS, !waterBalance_Eos, 
-     &         EO, !waterBalance_Eo, 
-     &         ES, !waterBalance_Es, 
-     &         SOILPROP % SALB, !waterBalance_Salb, 
+     &         waterBalance_Eos, 
+     &         waterBalance_Eo, 
+     &         waterBalance_Es, 
+     &         waterBalance_Salb, 
      &         pInitialValues, 
      &         DepthToConstantTemperature, 
      &         timestep_apsim, 
@@ -990,15 +1013,15 @@ C=======================================================================
 !***********************************************************************
         CASE('F') ! APSIM
            CALL model_soiltemperature_APSIM(
-     &         WEATHER % TMIN, !weather_MinT, 
-     &         WEATHER % TMAX, !weather_MaxT, 
-     &         WEATHER % TAVG, !weather_MeanT, 
-     &         WEATHER % TAV, !weather_Tav, 
-     &         WEATHER % TAMP, !weather_Amp, 
+     &         weather_MinT, 
+     &         weather_MaxT, 
+     &         weather_MeanT, 
+     &         weather_Tav, 
+     &         weather_Amp, 
      &         weather_AirPressure, 
      &         weather_Wind, 
-     &         WEATHER % XLAT, !weather_Latitude, 
-     &         WEATHER % SRAD, !weather_Radn, 
+     &         weather_Latitude, 
+     &         weather_Radn, 
      &         clock_Today_DayOfYear, 
      &         microClimate_CanopyHeight, 
      &         physical_Thickness,
@@ -1010,10 +1033,10 @@ C=======================================================================
      &         physical_ParticleSizeClay, 
      &         organic_Carbon, 
      &         waterBalance_SW, 
-     &         EOS, !waterBalance_Eos, 
-     &         EO, !waterBalance_Eo, 
-     &         ES, !waterBalance_Es, 
-     &         SOILPROP % SALB, !waterBalance_Salb, 
+     &         waterBalance_Eos, 
+     &         waterBalance_Eo, 
+     &         waterBalance_Es, 
+     &         waterBalance_Salb, 
      &         InitialValues, 
      &         pInitialValues, 
      &         DepthToConstantTemperature, 
