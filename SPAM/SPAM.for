@@ -346,6 +346,57 @@ C=======================================================================
       XLAT   = WEATHER % XLAT
 
       CALL YR_DOY(YRDOY, YEAR, DOY)
+!*********************************************************************** 
+!     CSM_Reverse_ST_Modeling by FO
+!     CROP2ML - INTERFACE INDIVIDUAL ATTRIBUTIONS
+!***********************************************************************
+!     APSIM
+      IF(.NOT. allocated(waterBalance_SW)) THEN
+          allocate(waterBalance_SW(NLAYR))
+          allocate(physical_Rocks(NLAYR))
+          allocate(physical_ParticleSizeSand(NLAYR))
+          allocate(physical_ParticleSizeSilt(NLAYR))
+          allocate(physical_ParticleSizeClay(NLAYR))
+          allocate(organic_Carbon(NLAYR))
+          allocate(physical_Thickness(NLAYR))
+          allocate(physical_BD(NLAYR))
+      ENDIF
+      clock_Today_DayOfYear = DOY
+      weather_MinT      = WEATHER % TMIN
+      weather_MaxT      = WEATHER % TMAX
+      weather_MeanT     = WEATHER % TAVG
+      weather_Tav       = WEATHER % TAV
+      weather_Amp       = WEATHER % TAMP
+      weather_Latitude  = WEATHER % XLAT
+      weather_Radn      = WEATHER % SRAD
+      waterBalance_Eos  = EOS
+      waterBalance_Eo   = EO
+      waterBalance_Es   = ES
+      waterBalance_Salb = SOILPROP % SALB     
+      physical_ParticleSizeSand(1:NLAYR) = SOILPROP % SAND(1:NLAYR)
+      physical_ParticleSizeSilt(1:NLAYR) = SOILPROP % SILT(1:NLAYR)
+      physical_ParticleSizeClay(1:NLAYR) = SOILPROP % CLAY(1:NLAYR)
+      physical_Thickness(1:NLAYR) = SOILPROP % DLAYR(1:NLAYR) * 10
+      physical_BD(1:NLAYR) = SOILPROP % BD(1:NLAYR)
+      waterBalance_SW(1:NLAYR) = SW(1:NLAYR)
+      organic_Carbon(1:NLAYR) = SOILPROP % OC(1:NLAYR)
+      weather_AirPressure = 1010.0
+      weather_Wind = 3.0
+      microClimate_CanopyHeight = 0.0
+      physical_Rocks = 0.0
+      timestep_apsim = 24 * 60 * 60
+      boundarLayerConductanceSource = 'calc'
+      netRadiationSource = 'calc'
+      MissingValue = 999999
+      soilConstituentNames(1) = 'Rocks'
+      soilConstituentNames(2) = 'OrganicMatter'
+      soilConstituentNames(3) = 'Sand'
+      soilConstituentNames(4) = 'Silt'
+      soilConstituentNames(5) = 'Clay'
+      soilConstituentNames(6) = 'Water'
+      soilConstituentNames(7) = 'Ice'
+      soilConstituentNames(8) = 'Air'
+      internalTimestep = 0.0
 !***********************************************************************
 !***********************************************************************
 !     Run Initialization - Called once per simulation

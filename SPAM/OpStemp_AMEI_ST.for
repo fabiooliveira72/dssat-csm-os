@@ -82,7 +82,7 @@ C=======================================================================
             WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
      &                   'Layers',TRIM(SITE),YEAR,'.txt'
           CASE('H') ! BIOMA-SWAT
-            STM = 'DS'
+            STM = 'SW'
             WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
      &                   'Layers',TRIM(SITE),YEAR,'.txt'
           CASE('I') ! C2ML DSSAT-EPIC
@@ -90,7 +90,7 @@ C=======================================================================
             WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
      &                   'Layers',TRIM(SITE),YEAR,'.txt'
           CASE('J') ! C2ML DSSAT
-            STM = 'DC'
+            STM = 'DS'
             WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
      &                   'Layers',TRIM(SITE),YEAR,'.txt'
           CASE('K') ! MONICA
