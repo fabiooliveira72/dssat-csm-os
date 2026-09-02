@@ -232,6 +232,7 @@ C  05/01/2022 FO  Added N2O.csv output
 !-------------------------------------------------------------------
       USE CsvOutput 
       USE Linklist
+      USE AMEIDailyData
       IMPLICIT NONE
       EXTERNAL GETLUN, HEADER, YR_DOY, SUMVALS
       SAVE
@@ -522,6 +523,9 @@ C-----------------------------------------------------------------------
      &      (cvNOflux(i),i=1,n_lyr)
         ENDIF
 
+!     2026-01-30 FO AMEI outputs added for CERES-Wheat
+      DAILYOUTAMEI % N2OED  = N2O_emitted
+      DAILYOUTAMEI % NDND   = TNOXD
 
       ENDIF ! Close FMOPT
 

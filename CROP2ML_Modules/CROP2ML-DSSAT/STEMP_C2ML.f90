@@ -572,7 +572,7 @@
         DO L = 1 , NLAYR + 1-1, 1
             ZD = -DSMID((L - 1)+1) / DD
             ST(L - 1+1) = TAV + ((TAMP / 2.0 * COS((ALX + ZD)) + DT) * EXP(ZD))
-            ST(L - 1+1) = INT(ST((L - 1)+1) * 1000.) / 1000.
+            !ST(L - 1+1) = INT(ST((L - 1)+1) * 1000.) / 1000.
         END DO
         SRFTEMP = TAV + (TAMP / 2. * COS(ALX) + DT)
     END SUBROUTINE SOILT_DSSAT_C2ML

@@ -179,6 +179,7 @@
       USE CSVOUTPUT  ! VSH
       USE ModuleDefs
       USE CER_First_Trans_m
+      USE AMEIDailyData
       
       IMPLICIT NONE
       EXTERNAL CER_Init, CER_Growth, CER_Integrate, CER_Output
@@ -214,6 +215,8 @@
       YEARDOY = YEAR*1000 + DOY
 
       IF (DYNAMIC.EQ.RUNINIT .OR. DYNAMIC.EQ.SEASINIT) THEN
+
+        CALL INITAMEICL()
 
         CALL CER_Init (LAI, CANHT,
      &     CN, DOY, HARVFRAC,

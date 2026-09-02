@@ -28,6 +28,8 @@ C  08/20/2002 GH  Modified for Y2K
 !     VSH
       USE CsvOutput 
       USE Linklist
+      USE AMEISummaryData
+      USE AMEIDailyData
       IMPLICIT NONE
       EXTERNAL GETLUN, HEADER, INCDAT, SUMVALS, YR_DOY
       SAVE
@@ -210,7 +212,10 @@ C-----------------------------------------------------------------------
      &       10F8.2,2F8.1, !HJ modified
      &       30F8.2) 
           END IF   ! VSH
-          
+
+!     2026-01-30 FO AMEI outputs added for CERES-Wheat
+      DAILYOUTAMEI % NIAD  = TNH4NO3
+
 !         VSH
           IF (FMOPT == 'C') THEN 
             CALL CsvOutSoilNi(EXPNAME, RUN, CONTROL%TRTNUM, 
@@ -248,6 +253,10 @@ C-----------------------------------------------------------------------
           !Send labels and values to OPSUM
           CALL SUMVALS (SUMNUM, LABEL, VALUE) 
 !      ENDIF
+
+!       2026-02-12 FO AMEI outputs added for exercise
+        SUMMOUTAMEI % NIMCM = CIMMOBN
+        SUMMOUTAMEI % NDNCM = CNOX
 
       !Close daily output files.
 !      IF (IDETN .EQ. 'Y') CLOSE(NOUTDN)

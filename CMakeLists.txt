@@ -672,6 +672,7 @@ set(
         "SPAM/OpStemp.for"
         "SPAM/OpStemp_AMEI_ST.for"
         "SPAM/OpStemp_AMEI_CL.for"
+        "SPAM/OpStemp_AMEI_SM.for"
         "SPAM/PET.for"
         "SPAM/ROOTWU.for"
         "SPAM/SAL_Stemp.for"

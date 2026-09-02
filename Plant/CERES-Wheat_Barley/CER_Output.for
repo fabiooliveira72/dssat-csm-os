@@ -15,6 +15,8 @@
         USE ModuleDefs
         USE CSVOUTPUT  ! VSH
         USE CER_First_Trans_m
+        USE AMEIDailyData
+        USE AMEISummaryData
 
         IMPLICIT NONE
         EXTERNAL YR_DOY, GETLUN, SUMVALS, HEADER, TVILENT, TVICOLNM, 
@@ -312,6 +314,17 @@
      &        1.0-TFP,1.0-TFG,
      &        1.0-VF,1.0-DF 
 
+!     2026-01-30 FO AMEI outputs added for CERES-Wheat
+      DAILYOUTAMEI % LNUM  = LNUMSD
+      DAILYOUTAMEI % GSTZD = ZSTAGE
+      DAILYOUTAMEI % LAID  = LAI
+      DAILYOUTAMEI % LIPCD = PARIP
+      DAILYOUTAMEI % CWAD  = CWAD
+      DAILYOUTAMEI % GWAD  = GWAD
+      DAILYOUTAMEI % RDPD  = RTDEP/100.0 ! cm to m
+
+      SUMMOUTAMEI % RDPM   = MAX(SUMMOUTAMEI % RDPM,RTDEP/100.0)
+
 !     VSH CSV output corresponding to PlantGro.OUT
       IF (FMOPT == 'C') THEN 
          CALL CsvOut(EXCODE, RUN,TN,RN,SN, ON, REP, CN, YEAR,DOY,
@@ -410,6 +423,10 @@
      &           GRAINANC*100.0,SDNC*100.0, VANC*100.0,
      &           LCNF, SCNF, RCNF,
      &           VCNC*100.0, VMNC*100.0, AMIN1(2.0,NUPR),ANDEM
+
+!     2026-01-30 FO AMEI outputs added for CERES-Wheat
+      DAILYOUTAMEI % CNAD  = CNAD
+      DAILYOUTAMEI % GNAD  = GNAD
 
 !     VSH
       IF (FMOPT == 'C') then  
@@ -2173,6 +2190,12 @@ C  FO - 07/16/2021 Added more characters for H#AMS and H#GMS because of GLUE err
             
               CLOSE(FNUMTMP)   
 
+              !2026-02-12 FO AMEI outputs added for CERES-Wheat
+              SUMMOUTAMEI % LnoSM   = lnumsm
+              SUMMOUTAMEI % CWAA    = NINT(cwaa)
+              SUMMOUTAMEI % HnoAM   = HNUMAM
+              SUMMOUTAMEI % CNAA    = vnaa
+              
             ELSE
             
                OPEN (UNIT=FNUMTMP,FILE='OVERVIEW,OUT')

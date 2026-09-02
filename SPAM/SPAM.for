@@ -46,6 +46,8 @@ C=======================================================================
       USE ModuleDefs
       USE ModuleData
       USE FloodModule
+      USE AMEISummaryData
+      USE AMEIDailyData
 !*********************************************************************** 
 !     CSM_Reverse_ST_Modeling by FO
 !     CROP2ML - DEFINE MODULES
@@ -98,8 +100,8 @@ C=======================================================================
 
       REAL CANHT, CO2, SRAD, TAVG,
      &    TMAX, TMIN, WINDSP, XHLAI, XLAI
-      REAL CEF, CEM, CEO, CEP, CES, CET, CEVAP
-      REAL EF, EM, EO, EP, ES, ET, EVAP, RNET
+      REAL CEF, CEM, CEO, CEP, CES, CET, CEVAP, CEOS
+      REAL EF, EM, EO, EP, ES, ET, EVAP, RNET, CEOP
       REAL TRWU, TRWUP, U
       REAL EOS, EOP, WINF, MSALB, ET_ALB
       REAL XLAT, TAV, TAMP, SRFTEMP
@@ -622,7 +624,7 @@ C=======================================================================
 !     END
 !***********************************************************************
 
-      EF   = 0.0; CEF  = 0.0
+      EF   = 0.0; CEF  = 0.0; CEOP = 0.0; CEOS = 0.0
       EM   = 0.0; CEM  = 0.0
       EO   = 0.0; CEO  = 0.0
       EP   = 0.0; EOP  = 0.0; CEP  = 0.0
@@ -741,7 +743,7 @@ C=======================================================================
 
            CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
            CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
-           CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET,RNET)
+           CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH)
 !-----------------------------------------------------------------------
         CASE('G') ! BIOMA-Parton
             WRITE(*,*) 'BIOMA-Parton running...'
@@ -761,7 +763,7 @@ C=======================================================================
 
              CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
              CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
-             CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET,RNET)
+             CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH)
 !-----------------------------------------------------------------------
         CASE('H') ! BIOMA-SWAT
             WRITE(*,*) 'BIOMA-SWAT running...'
@@ -781,7 +783,7 @@ C=======================================================================
 
              CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
              CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
-             CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET,RNET)
+             CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH)
 !-----------------------------------------------------------------------
         CASE('I') ! C2ML DSSAT-EPIC
             WRITE(*,*) 'C2ML DSSAT-EPIC running...'
@@ -822,7 +824,7 @@ C=======================================================================
      &            SRFTEMP, ST)
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
             CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
-            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET,RNET)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH)
 !-----------------------------------------------------------------------
         CASE ('J') ! C2ML DSSAT
             WRITE(*,*) 'C2ML DSSAT running...'
@@ -855,7 +857,7 @@ C=======================================================================
 
              CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
              CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
-             CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET,RNET)
+             CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH)
 !-----------------------------------------------------------------------
         CASE ('K') ! MONICA
             WRITE(*,*) 'MONICA running...'
@@ -897,7 +899,7 @@ C=======================================================================
      &        heatFlow)
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
             CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
-            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET,RNET)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH)
 !-----------------------------------------------------------------------
         CASE ('L') ! Simplace
             WRITE(*,*) 'Simplace running...'
@@ -936,7 +938,7 @@ C=======================================================================
      &            pSoilLayerDepth)
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
             CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
-            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET,RNET)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH)
 !-----------------------------------------------------------------------
         CASE ('M') ! SIRIUS-Quality
             WRITE(*,*) 'SIRIUS-Quality running...'
@@ -954,7 +956,7 @@ C=======================================================================
 
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
             CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
-            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET,RNET)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH)
 !-----------------------------------------------------------------------
         CASE ('N') ! STICS
             WRITE(*,*) 'STICS running...'
@@ -974,7 +976,7 @@ C=======================================================================
 
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
             CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
-            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET,RNET)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH)
 !-----------------------------------------------------------------------
 !     CSM_Reverse_ST_Modeling by FO
 !     END
@@ -1658,7 +1660,9 @@ C=======================================================================
         CEF = CEF + EF
         CEM = CEM + EM
         CEO = CEO + EO
+        CEOP= CEOP+ EOP
         CEP = CEP + EP
+        CEOS= CEOS+ EOS
         CES = CES + ES
         CEVAP=CEVAP + EVAP
         CET = CET + ET
@@ -1687,6 +1691,16 @@ C=======================================================================
 !***********************************************************************
       ELSEIF (DYNAMIC .EQ. OUTPUT) THEN
 C-----------------------------------------------------------------------
+!     2026-01-30 FO AMEI outputs added for CERES-Wheat
+      DAILYOUTAMEI % TGAV  = WEATHER % TGROAV
+      DAILYOUTAMEI % TSSAV = SRFTEMP
+      DAILYOUTAMEI % EOAD  = EO
+      DAILYOUTAMEI % ETAD  = ET
+      DAILYOUTAMEI % EPSAD = EOS
+      DAILYOUTAMEI % ESAD  = EVAP
+      DAILYOUTAMEI % EPPAD = EOP
+      DAILYOUTAMEI % EPAD  = EP
+C-----------------------------------------------------------------------
 !     Flood water evaporation can be modified by Paddy_Mgmt routine.
       EF = FLOODWAT % EF
 
@@ -1700,47 +1714,47 @@ C-----------------------------------------------------------------------
           CASE('F') ! APSIM
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
             CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
-            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET,RNET)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH)
    !-----------------------------------------------------------------------
           CASE('G') ! BIOMA-Parton
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
             CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
-            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET,RNET)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH)
 !-----------------------------------------------------------------------
           CASE('H') ! BIOMA-SWAT
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
             CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
-            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET,RNET)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH)
 !-----------------------------------------------------------------------
           CASE('I') ! C2ML DSSAT-EPIC
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
             CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
-            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET,RNET)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH)
 !-----------------------------------------------------------------------
           CASE('J') ! C2ML DSSAT
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
             CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
-            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET,RNET)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH)
 !-----------------------------------------------------------------------
           CASE('K') ! MONICA
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
             CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
-            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET,RNET)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH)
 !-----------------------------------------------------------------------
           CASE('L') ! Simplace
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
             CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
-            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET,RNET)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH)
 !-----------------------------------------------------------------------
           CASE('M') ! SIRIUS-Quality
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
             CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
-            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET,RNET)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH)
 !-----------------------------------------------------------------------
           CASE('N') ! STICS
             CALL OPSTEMP(CONTROL, ISWITCH, DOY, SRFTEMP, ST, TAV, TAMP)
             CALL OPSTEMP_AMEI_ST(CONTROL, ISWITCH,DOY,SRFTEMP,ST,SW)
-            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH,EOS,ES,EO,ET,RNET)
+            CALL OPSTEMP_AMEI_CL(CONTROL, ISWITCH)
 !-----------------------------------------------------------------------
 !     CSM_Reverse_ST_Modeling by FO
 !     END
@@ -1812,6 +1826,14 @@ C-----------------------------------------------------------------------
       CALL PUT('SPAM', 'CET', CET)
       CALL PUT('SPAM', 'ET',  ET)
       CALL PUT('SPAM', 'CEVAP', CEVAP)
+
+      !2026-02-12 FO AMEI outputs added for exercise
+      SUMMOUTAMEI % EOCM   = CEO
+      SUMMOUTAMEI % ETCM   = CET
+      SUMMOUTAMEI % EPSCM  = CEOS
+      SUMMOUTAMEI % ESCM   = CEVAP
+      SUMMOUTAMEI % EPPCM  = CEOP
+      SUMMOUTAMEI % EPCM   = CEP
 
 !      CALL OPSTRESS(CONTROL, ET=ET, EP=EP)
 

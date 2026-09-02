@@ -16,6 +16,7 @@
 
         USE ModuleDefs
         USE CER_First_Trans_m
+        USE AMEIDailyData
         IMPLICIT NONE
         EXTERNAL Cslayers, YVAL1, CALENDAR
 
@@ -1154,5 +1155,8 @@
 
         ENDIF
 
+!     2026-01-30 FO AMEI outputs added for CERES-Wheat
+      DAILYOUTAMEI % GWGD  = GWGD
+      DAILYOUTAMEI % GNGD  = GRAINN * 1000 ! g to mg
 
       END SUBROUTINE CER_Integrate

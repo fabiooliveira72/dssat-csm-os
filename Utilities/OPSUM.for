@@ -110,6 +110,7 @@ C-----------------------------------------------------------------------
 !     VSH
       USE CsvOutput
       USE Linklist
+      USE AMEISummaryData
       IMPLICIT NONE
       EXTERNAL ERROR, FIND, TIMDIF, GETLUN, LENSTRING, PrintText,  
      &  PrintTxtNeg, CLEAR, ROUND
@@ -421,6 +422,8 @@ C     Initialize OPSUM variables.
 !        WSTAT = WSTATION
 !      ENDIF
 
+!     2026-01-29 FO Added AMEI output for Canopy level
+      CALL OPSTEMP_AMEI_SM(CONTROL, ISWITCH)
 !***********************************************************************
 !***********************************************************************
 !    Seasonal output
@@ -525,6 +528,25 @@ C     Initialize OPSUM variables.
       LONG = ADJUSTR(LONG)
       ELEV = ADJUSTR(ELEV)
       HYEAR= INT(YRDOY/1000)
+
+!     2026-01-29 FO Added AMEI output for Canopy level
+      SUMMOUTAMEI % PDATE = YRPLT   !Planting Date
+      SUMMOUTAMEI % PLDAE = EDAT    !Emergence Date
+      SUMMOUTAMEI % ADAT  = ADAT    !Anthesis Date
+      SUMMOUTAMEI % MDAT  = MDAT    !Physiological Maturity Date
+      SUMMOUTAMEI % LAIX  = LAIX    !Leaf area index (mm2/mm2)
+      SUMMOUTAMEI % CWAM  = CWAM    !Tops Weight at Maturity (kg/ha)
+      SUMMOUTAMEI % GWAM  = HWAM    !Yield at Maturity (kg/ha)
+      SUMMOUTAMEI % GWGM  = HWUM    !Unit Weight at Maturity (mg/unit)
+      SUMMOUTAMEI % CNAM  = CNAM    !Tops N at Maturity (kg/ha)
+      SUMMOUTAMEI % GNAM  = GNAM    !Grain N at Maturity (kg/ha)      
+      SUMMOUTAMEI % ROCM  = ROCM    !Season Surface Runoff (mm)
+      SUMMOUTAMEI % DRCM  = DRCM    !Season Vertical Drainage (mm)
+      SUMMOUTAMEI % NLCM  = NLCM    !N leached (kg/ha)
+      SUMMOUTAMEI % NMNCM = NMINC   !Net mineralized N (kg N/ha)
+      SUMMOUTAMEI % N2OECM= N2OEM   !N2O emissions (kg[N]/ha)
+
+      CALL OPSTEMP_AMEI_SM(CONTROL, ISWITCH)
 C-------------------------------------------------------------------
 C
 C  Simulation Summary File

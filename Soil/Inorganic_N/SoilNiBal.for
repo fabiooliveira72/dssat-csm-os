@@ -17,6 +17,7 @@ C  03/04/2005 CHP wrote based on SoilNBal
       USE GHG_mod
       USE FertType_mod
       USE Interface_SoilNBalSum
+      USE AMEIDailyData
       IMPLICIT NONE
       EXTERNAL GETLUN, HEADER, INCDAT, YR_DOY
       SAVE
@@ -242,6 +243,10 @@ C  03/04/2005 CHP wrote based on SoilNBal
 
       TOTSTATY = TOTSTATE
 
+!     2026-01-30 FO AMEI outputs added for CERES-Wheat
+      DAILYOUTAMEI % NLCD  = LCHTODAY
+      DAILYOUTAMEI % NMND  = MINERTODAY
+      DAILYOUTAMEI % NIMD  = IMMOBTODAY
 !***********************************************************************
 !***********************************************************************
 !     Seasonal Output

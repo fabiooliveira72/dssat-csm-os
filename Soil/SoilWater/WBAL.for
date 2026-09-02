@@ -23,6 +23,7 @@ C=====================================================================
       USE ModuleDefs 
       USE ModuleData
       USE FloodModule
+      USE AMEIDailyData
       IMPLICIT NONE
       EXTERNAL GETLUN, HEADER, YR_DOY, INCDAT
       SAVE
@@ -228,6 +229,11 @@ C=====================================================================
         FLOODY = FLOOD
         SNOWY  = SNOW
         MWY    = MULCHWAT
+
+!     2026-01-30 FO AMEI outputs added for CERES-Wheat
+      DAILYOUTAMEI % DRND  = DRAIN
+      DAILYOUTAMEI % ROFD  = RUNOFF
+
       ENDIF
       
       CUMMULEVAP   = CUMMULEVAP + MULCHEVAP

@@ -27,7 +27,7 @@ C=======================================================================
 
       INTEGER DAS, DOY, DYNAMIC, ERRNUM, FROP, L, N_LYR
       INTEGER NOUTDT, RUN, YEAR, YRDOY, MONTH, DAY, REPNO
-      INTEGER       DATE_TIME(8)
+      INTEGER DATE_TIME(8), TRTNUM
       REAL ST(NL), SRFTEMP, SW(NL)
 
       LOGICAL FEXIST, DOPRINT
@@ -49,6 +49,7 @@ C=======================================================================
       DYNAMIC = CONTROL % DYNAMIC
       FROP    = CONTROL % FROP
       YRDOY   = CONTROL % YRDOY
+      TRTNUM  = CONTROL % TRTNUM
 
       FMOPT   = ISWITCH % FMOPT
       METMP   = ISWITCH % METMP
@@ -66,53 +67,42 @@ C=======================================================================
       IF (FMOPT == 'A' .OR. FMOPT == ' ') THEN   ! VSH
         CALL GETLUN('OUTST',NOUTDT)
 !       Create file name.
-!       STempModelCode|ModelingFrameworkCode|LayersAimes|Year.txt
+!       STempModelCode|ModelingFrameworkCode|LayersMaricopa|Trt|.txt
         FM = 'DC'
-        SITE = 'Aimes'
+        SITE = 'Maricopa'
 
         CALL YR_DOY(YRDOY, YEAR, DOY)
 
         SELECT CASE (METMP)
           CASE('F') ! APSIM
             STM = 'AP'
-            WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
-     &                   'Layers',TRIM(SITE),YEAR,'.txt'
           CASE('G') ! BIOMA-Parton
             STM = 'PS'
-            WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
-     &                   'Layers',TRIM(SITE),YEAR,'.txt'
           CASE('H') ! BIOMA-SWAT
             STM = 'SW'
-            WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
-     &                   'Layers',TRIM(SITE),YEAR,'.txt'
           CASE('I') ! C2ML DSSAT-EPIC
             STM = 'DE'
-            WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
-     &                   'Layers',TRIM(SITE),YEAR,'.txt'
           CASE('J') ! C2ML DSSAT
             STM = 'DS'
-            WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
-     &                   'Layers',TRIM(SITE),YEAR,'.txt'
           CASE('K') ! MONICA
             STM = 'MO'
-            WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
-     &                   'Layers',TRIM(SITE),YEAR,'.txt'
           CASE('L') ! Simplace
             STM = 'SA'
-            WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
-     &                   'Layers',TRIM(SITE),YEAR,'.txt'
           CASE('M') ! SIRIUS-Quality
             STM = 'SQ'
-            WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
-     &                   'Layers',TRIM(SITE),YEAR,'.txt'
           CASE('N') ! STICS
             STM = 'ST'
-            WRITE(OUTST,'(A2,A2,A,A,I4,A4)')STM,FM,
-     &                   'Layers',TRIM(SITE),YEAR,'.txt'
           CASE DEFAULT
-            OUTST = 'SoilTemp_AMEI_No_ST_Model.OUT'
             STM = 'DF'
         END SELECT
+
+        IF (INDEX('FGHIJKLMN',METMP) > 0) THEN
+          WRITE(OUTST,'(A2,A2,A,A,I3,A4)')STM,FM,
+     &          'Layers',TRIM(SITE),TRTNUM,'.txt'
+        ELSE
+          OUTST = 'SoilTemp_AMEI_No_ST_Model.txt'
+          STM = 'DF'
+        ENDIF
         
         INQUIRE (FILE = OUTST, EXIST = FEXIST)
         IF (FEXIST) THEN
@@ -126,7 +116,7 @@ C=======================================================================
 
 
  !        Write headers info to daily output file
-          WRITE(NOUTDT,'(A)') 'AMEI Aimes fallow'
+          WRITE(NOUTDT,'(A)') 'Maricopa Wheat FACE'
         CALL DATE_AND_TIME (VALUES=DATE_TIME)
         WRITE (NOUTDT,100) 'Model: DSSAT Cropping System Model Ver. ',
      &    Version%Major,'.', Version%Minor,'.',
@@ -142,14 +132,15 @@ C=======================================================================
      &    I2.2,A1,I2.2,A1,I2.2)
           WRITE(NOUTDT,'(A)') 'Modeler_name: ' //
      &    'Fabio Oliveira, Gerrit Hoogenboom and Thiago Ferreira'
-          WRITE(NOUTDT,'(A)') 'soil_layer_top_depth ' //
+          WRITE(NOUTDT,'(A)') 'framework_ID	model_ID	' //
+     &    'treatment_ID	date	soil_layer_top_depth	' //
      &    'soil_layer_base_depth	soil_temp_daily_avg	' //
      &    'maximum_soil_temp_daily	minimum_soil_temp_daily	' //
-     &    'soil_water_by_layer'
-          WRITE(NOUTDT,'(A)') 'Framework	Model	Date	cm	cm	' //
-     &    '°C	°C	°C	cm3/cm3'
-          WRITE(NOUTDT,'(A)') '(2letters)	(2letters)	(YYYY-MM-DD)	' //
-     &    'SLLT	SLLB	TSAV	TSMX	TSMN	SWLD'
+     &    'soil_water_by_layer	soil_N_by_layer'
+          WRITE(NOUTDT,'(A)') 'text	text	text	(YYYY-MM-DD)	' //
+     &    'cm	cm	°C	°C	°C	cm3/cm3	kg[N]/ha'
+          WRITE(NOUTDT,'(A)') 'FRAMEWORK_ID	MODEL_ID	TREAT_ID	' //
+     &    'DATE	SLLT	SLLB	TSAV	TSMX	TSMN	SWLD	SNLD'
 
 
       ENDIF !DYNAMIC
@@ -189,25 +180,28 @@ C=======================================================================
 
           DO L = 1, SOILPROP % NLAYR
             IF(L .EQ. 1) THEN
-              WRITE (NOUTDT,300) FM, TAB, STM, TAB, 
+              WRITE (NOUTDT,300) FM, TAB, STM, TAB, TRTNUM, TAB,
      &          YEAR,'-',CMONTH,'-',CDAY,
      &          TAB, INT(SOILPROP%DS(L)-SOILPROP%DS(L)), TAB, 
      &          INT(SOILPROP%DS(L)), 
-     &          TAB, ST(L), TAB, 'na', TAB, 'na', TAB, SW(L)
+     &          TAB, ST(L), TAB, 'na', TAB, 'na', TAB,
+     &          SW(L), TAB, 'na'
             ELSE
-              WRITE (NOUTDT,300) FM, TAB, STM, TAB, 
+              WRITE (NOUTDT,300) FM, TAB, STM, TAB, TRTNUM, TAB,
      &          YEAR,'-',CMONTH,'-',CDAY,
      &          TAB, INT(SOILPROP%DS(L-1)), TAB, 
      &          INT(SOILPROP%DS(L)), 
-     &          TAB, ST(L), TAB, 'na', TAB, 'na', TAB, SW(L)
+     &          TAB, ST(L), TAB, 'na', TAB, 'na', TAB, 
+     &          SW(L), TAB, 'na'
             ENDIF
           ENDDO
 
-  300 FORMAT(A2,A1,A2,A1,
+  300 FORMAT(A2,A1,A2,A1,I3,A1
      &       I4,A1,A2,A1,A2,A1,
      &       I4,A1,
      &       I4,A1,
-     &       F8.3,A1,A,A1,A,A1,F8.3)
+     &       F8.3,A1,A,A1,A,A1,
+     &       F8.3,A1,A)
           
         ENDIF
 
